@@ -127,6 +127,8 @@ def click_and_crop(event, x, y, flags, param):
             print("drag", drag)
         elif event == cv2.EVENT_MOUSEMOVE and flags == 1:
             # frame = to_frame(cap, df, current, n_frames)
+            cap.set(1, current)
+            status, frame = cap.read()
             cv2.rectangle(frame, left_top, (x, y), (0, 255, 0), 2)
             # print(f"right bottom: {right_bottom}")
             # df.at[current, 'x2'] = right_bottom[0]
@@ -272,57 +274,63 @@ if __name__ == '__main__':
         # frame = cv2.resize(frame, (w, h))
         cv2.imshow("image", frame)
         key = cv2.waitKeyEx(1)  # & 0xFF
-        # print(key)
-        if key == 27:  # Esc
+        # if key != -1:
+        #     print(key)
+        if key == 27:  # ESC
+            df = save_data(df, save_path)
+            custom_msg = "Data is saved ..."
+            frame = to_frame(cap, df, current, n_frames, custom_msg=custom_msg)
+            break
+        if key == 3014656:  # DEL
             df = save_data(df, save_path)
             custom_msg = "Data is saved ..."
             frame = to_frame(cap, df, current, n_frames, custom_msg=custom_msg)
             break
         elif key == ord('1'):
-            df.at[current, 'toss'] = False if df.at[current, "toss"] else True
-            print(current, f" toss: {df.at[current, 'toss']}")
+            df.at[current, 'service'] = False if df.at[current, "service"] else True
+            print(current, f" service: {df.at[current, 'service']}")
             df = save_data(df, save_path)
             frame = to_frame(cap, df, current, n_frames)
         elif key == ord('2'):
-            df.at[current, 'toss_end'] = False if df.at[current, "toss_end"] else True
+            df.at[current, 'service_end'] = False if df.at[current, "service_end"] else True
             df = save_data(df, save_path)
             frame = to_frame(cap, df, current, n_frames)
-            print(current, f" toss_end: {df.at[current, 'toss_end']}")
+            print(current, f" service_end: {df.at[current, 'service_end']}")
         elif key == ord('3'):
-            df.at[current, 'exclude'] = False if df.at[current, "exclude"] else True
+            df.at[current, 'set'] = False if df.at[current, "set"] else True
             df = save_data(df, save_path)
             frame = to_frame(cap, df, current, n_frames)
-            print(current, f" exclude: {df.at[current, 'exclude']}")
+            print(current, f" set: {df.at[current, 'set']}")
         elif key == ord('4'):
-            df.at[current, 'exclude_end'] = False if df.at[current, "exclude_end"] else True
+            df.at[current, 'set_end'] = False if df.at[current, "set_end"] else True
             df = save_data(df, save_path)
             frame = to_frame(cap, df, current, n_frames)
-            print(current, f" exclude_end: {df.at[current, 'exclude_end']}")
+            print(current, f" set_end: {df.at[current, 'set_end']}")
         elif key == ord('s'):
             df = save_data(df, save_path)
             custom_msg = "Data is saved ..."
             frame = to_frame(cap, df, current, n_frames, custom_msg=custom_msg)
         elif key == ord('t'):
-            next_frame, msg = go_to_next(df, column='toss', value=True, current=current)
+            next_frame, msg = go_to_next(df, column='set', value=True, current=current)
             if next_frame is not None:
                 frame = to_frame(cap, df, next_frame, n_frames, custom_msg='jumping to next toss')
             else:
                 frame = to_frame(cap, df, current, n_frames, custom_msg=msg)
         elif key == ord('g'):
-            prev_frame, msg = go_to_previous(df, column='toss', value=True, current=current)
+            prev_frame, msg = go_to_previous(df, column='set', value=True, current=current)
             if prev_frame is not None:
                 frame = to_frame(cap, df, prev_frame, n_frames, custom_msg='jumping to previous toss')
             else:
                 frame = to_frame(cap, df, current, n_frames, custom_msg=msg)
 
         elif key == ord('q'):
-            next_frame, msg = go_to_next(df, column='toss_end', value=True, current=current)
+            next_frame, msg = go_to_next(df, column='service', value=True, current=current)
             if next_frame is not None:
                 frame = to_frame(cap, df, next_frame, n_frames, custom_msg='jumping to next toss_end')
             else:
                 frame = to_frame(cap, df, current, n_frames, custom_msg=msg)
         elif key == ord('a'):
-            prev_frame, msg = go_to_previous(df, column='toss_end', value=True, current=current)
+            prev_frame, msg = go_to_previous(df, column='service_end', value=True, current=current)
             if prev_frame is not None:
                 frame = to_frame(cap, df, prev_frame, n_frames, custom_msg='jumping to previous toss_end')
             else:
