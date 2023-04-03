@@ -282,10 +282,18 @@ if __name__ == '__main__':
             frame = to_frame(cap, df, current, n_frames, custom_msg=custom_msg)
             break
         if key == 3014656:  # DEL
-            df = save_data(df, save_path)
-            custom_msg = "Data is saved ..."
+            if BBOX_ANNOTATION:
+                df.at[current, "x1"] = -1
+                df.at[current, "x2"] = -1
+                df.at[current, "y1"] = -1
+                df.at[current, "y2"] = -1
+            else:
+                df.at[current, 'x'] = -1
+                df.at[current, 'y'] = -1
+
+            custom_msg = "Data is reset ..."
             frame = to_frame(cap, df, current, n_frames, custom_msg=custom_msg)
-            break
+
         elif key == ord('1'):
             df.at[current, 'service'] = False if df.at[current, "service"] else True
             print(current, f" service: {df.at[current, 'service']}")
