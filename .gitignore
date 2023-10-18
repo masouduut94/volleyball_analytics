@@ -1,3 +1,4 @@
+# video and image files.
 *.mov
 *.mp4
 *.csv
@@ -5,4 +6,9 @@
 *.png
 *.jpeg
 *.ipynb_checkpoints
+
+# tensorflow - pytorch model weights
+*.pt
+*.tb
+*.h5
 
