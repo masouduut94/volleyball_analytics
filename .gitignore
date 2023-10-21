@@ -1,5 +1,7 @@
 # video and image files.
 *.mov
+*.mkv
+*.webm
 *.mp4
 *.csv
 *.jpg
