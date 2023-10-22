@@ -7,10 +7,12 @@
 *.jpg
 *.png
 *.jpeg
-*.ipynb_checkpoints
 
 # tensorflow - pytorch model weights
 *.pt
 *.tb
 *.h5
 
+# IDE files
+.idea
+*.ipynb_checkpoints
