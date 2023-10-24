@@ -293,7 +293,6 @@ if __name__ == '__main__':
 
             custom_msg = "Data is reset ..."
             frame = to_frame(cap, df, current, n_frames, custom_msg=custom_msg)
-
         elif key == ord('1'):
             df.at[current, 'service'] = False if df.at[current, "service"] else True
             print(current, f" service: {df.at[current, 'service']}")

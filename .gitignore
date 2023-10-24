@@ -14,7 +14,6 @@
 *.tb
 *.h5
 
-# ide files
+# IDE files
 .idea
-
-
+*.ipynb_checkpoints
