@@ -1,6 +1,8 @@
 # video and image files.
 *.mov
 *.mp4
+*.webm
+*.mkv
 *.csv
 *.jpg
 *.png
@@ -11,4 +13,8 @@
 *.pt
 *.tb
 *.h5
+
+# ide files
+.idea
+
 
