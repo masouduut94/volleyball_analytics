@@ -8,6 +8,7 @@
 *.png
 *.jpeg
 *.ipynb_checkpoints
+*.pyc
 
 # tensorflow - pytorch model weights
 *.pt
@@ -17,4 +18,4 @@
 # IDE files
 .idea
 *.ipynb_checkpoints
-/__pycache__
+*__pycache__
