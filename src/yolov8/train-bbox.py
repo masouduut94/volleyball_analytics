@@ -5,7 +5,7 @@ model = YOLO('../../models/yolov8n.pt')  # load a pretrained model (recommended 
 
 # Train the model with 1 GPU.
 results = model.train(
-    data='../../datasets/yaml_files/data.yaml',
+    data='../../datasets/data.yaml',
     epochs=200,
     batch=16,
     imgsz=736,
