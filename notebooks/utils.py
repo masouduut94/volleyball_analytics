@@ -32,9 +32,9 @@ class Bbox:
         
         return f"{l} {x_cen} {y_cen} {width} {height}"
 
-    # def draw(self, img: ArrayLike, color: tuple = (255, 0, 0)) -> ArrayLike:
-    #     img = cv2.rectangle(img, self.pt1, self.pt2, color, 2)
-    #     return img
+    def draw(self, img: ArrayLike, color: tuple = (255, 0, 0)) -> ArrayLike:
+        img = cv2.rectangle(img, self.pt1, self.pt2, color, 2)
+        return img
 
 class Segment:
     def __init__(self, polygon: List[float | int], label: int):

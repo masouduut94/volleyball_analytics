@@ -17,5 +17,3 @@
 
 # IDE files
 .idea
-*.ipynb_checkpoints
-*.pyc
