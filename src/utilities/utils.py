@@ -327,7 +327,7 @@ class KeyPointBox:
         self.bbox = bbox
         self.points = []
         self.colors = np.random.randint(low=0, high=255, size=(7, 3))
-        for i, (x, y, conf) in enumerate(self.keypoints):
+        for i, (x, y) in enumerate(self.keypoints):
             self.points.append((x, y))
         self.pose_pairs = [(0, 1), (0, 2), (1, 3), (2, 4), (5, 6), (5, 7), (7, 9), (5, 11), (6, 12),
                            (6, 8), (8, 10), (11, 12), (11, 13), (13, 15), (12, 14), (14, 16)]
@@ -430,12 +430,12 @@ class KeyPointBox:
 
     def plot(self, img: NDArray, align_numbers=True, align_line=False, hands_only=False) -> NDArray:
         if not hands_only:
-            for i, (x, y, conf) in enumerate(self.keypoints):
+            for i, (x, y) in enumerate(self.keypoints):
                 img = cv2.circle(img, (x, y), 8, Meta.white, -1)
                 if align_numbers:
                     img = cv2.putText(img, str(i), (x - 4, y + 2), cv2.FONT_HERSHEY_SIMPLEX, .3, Meta.black)
         else:
-            for i, (x, y, conf) in enumerate(self.keypoints[5:11]):
+            for i, (x, y) in enumerate(self.keypoints[5:11]):
                 img = cv2.circle(img, (x, y), 8, Meta.white, -1)
                 if align_numbers:
                     img = cv2.putText(img, str(i), (x - 4, y + 2), cv2.FONT_HERSHEY_SIMPLEX, .3, Meta.black)
@@ -462,19 +462,11 @@ class KeyPointBox:
                 (6, 12): Meta.purple,
                 (0, 'b_sh'): Meta.purple
             }
-            if not hands_only:
-                for pair in self.pose_pairs:
-                    part_a = pair[0]
-                    part_b = pair[1]
-                    cv2.line(img, self.points[part_a], self.points[part_b], points_colors[pair], 2)
-                b_shoulder = self.between_shoulders
-                b_sh_x, b_sh_y = b_shoulder
-                cv2.line(img, self.points[0], (b_sh_x, b_sh_y), points_colors[(0, 'b_sh')], 2)
-            else:
-                for pair in ((5, 6), (5, 7), (7, 9), (6, 8), (8, 10)):
-                    part_a = pair[0]
-                    part_b = pair[1]
-                    cv2.line(img, self.points[part_a], self.points[part_b], points_colors[pair], 2)
+
+            for pair in ((5, 6), (5, 7), (7, 9), (6, 8), (8, 10)):
+                part_a = pair[0]
+                part_b = pair[1]
+                cv2.line(img, self.points[part_a], self.points[part_b], points_colors[pair], 2)
         return img
 
     def json(self):

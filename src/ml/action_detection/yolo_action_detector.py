@@ -15,10 +15,10 @@ class YoloActionDetector:
 
     def detect(self, frame: NDArray) -> List[BoundingBox]:
         results = self.model(frame, verbose=False)
-        confs = results[0].boxes.conf
-        boxes = results[0].boxes.xyxy
-        classes = boxes.cls.cpu().detach().numpy().astype(int).tolist()
-        names = results.names
+        confs = results[0].boxes.conf.cpu().detach().numpy().tolist()
+        boxes = results[0].boxes.xyxy.cpu().detach().numpy().tolist()
+        classes = results[0].boxes.cls.cpu().detach().numpy().astype(int).tolist()
+        names = results[0].names
         detections = []
 
         for box, conf, cl in zip(boxes, confs, classes):
@@ -30,7 +30,7 @@ class YoloActionDetector:
         return detections
 
     @staticmethod
-    def plot(frame: NDArray, bboxes: List[BoundingBox]) -> NDArray:
+    def draw(frame: NDArray, bboxes: List[BoundingBox]) -> NDArray:
         for bbox in bboxes:
             frame = bbox.plot(frame, color=Meta.red)
         return frame
