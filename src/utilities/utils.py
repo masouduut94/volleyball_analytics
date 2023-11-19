@@ -82,10 +82,6 @@ class BoundingBox:
             'y2': self.y2
         }
 
-    @property
-    def xyxy_np(self):
-        return np.array([self.x1, self.y1, self.x2, self.y2])
-
     def __repr__(self):
         con = "Contour" if self.contour_type else "no Contour"
         if self.detected:
@@ -94,7 +90,7 @@ class BoundingBox:
             return f"""name={self.name} | NOT detected!"""
 
     @classmethod
-    def create_new(cls, x):
+    def create(cls, x):
         """
 
         Args:
@@ -231,6 +227,18 @@ class BoundingBox:
         return max(self.x1, self.x2), max(self.y1, self.y2)
 
     @property
+    def down_center(self):
+        x_center = (self.left_down[0] + self.right_down[0]) // 2
+        y_center = (self.left_down[1] + self.right_down[1]) // 2
+        return x_center, y_center
+
+    @property
+    def top_center(self):
+        x_center = (self.left_top[0] + self.right_top[0]) // 2
+        y_center = (self.left_top[1] + self.right_top[1]) // 2
+        return x_center, y_center
+
+    @property
     def diameter_size(self):
         return math.sqrt(self.width ** 2 + self.height ** 2)
 
@@ -255,33 +263,6 @@ class BoundingBox:
         else:
             color = (255, 0, 0) if not color else color
             img = cv2.drawContours(img, [self.contour.astype(int)], 0, color, 2)
-        return img
-
-    def center_plot(self, frame, color=None, title=None):
-        img = frame.copy()
-        if not color:
-            if self.name == "person":
-                color = (255, 0, 0)
-            elif self.name == 'ball':
-                color = (0, 255, 0)
-            else:
-                color = self.random_color
-        img = cv2.circle(img, (self.center[0], self.center[1]), 4, color, -3)
-        if title is not None:
-            img = cv2.putText(img, str(title), (self.x1, self.y1), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, thickness=2)
-        return img
-
-    def plot_with_margin(self, frame, margin=(0, 0)):
-        x_cen, y_cen = self.center
-        x1 = x_cen - margin[0]
-        x2 = x_cen + margin[0]
-        y1 = y_cen + margin[1]
-        y2 = y_cen + margin[1]
-
-        color = (0, 255, 0)
-        img = cv2.rectangle(frame, (x1, y1), (x2, y2), color=color, thickness=2)
-        title = 'Bbox + margin'
-        img = cv2.putText(img, title, ((x1 + x2) // 2, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, thickness=2)
         return img
 
     def is_inside(self, center):
@@ -315,7 +296,7 @@ class BoundingBox:
 
 
 class KeyPointBox:
-    def __init__(self, keypoints: NDArray, bbox: BoundingBox, name: str = None):
+    def __init__(self, keypoints: NDArray, conf: float = 0, name: str = None):
         """
         Single person keypoints from single detection. A frame will have a list of these objects.
         Args:
@@ -324,149 +305,144 @@ class KeyPointBox:
         """
         self.name = name
         self.keypoints = keypoints.astype(int)
-        self.bbox = bbox
         self.points = []
+        self.conf = conf
         self.colors = np.random.randint(low=0, high=255, size=(7, 3))
         for i, (x, y) in enumerate(self.keypoints):
             self.points.append((x, y))
-        self.pose_pairs = [(0, 1), (0, 2), (1, 3), (2, 4), (5, 6), (5, 7), (7, 9), (5, 11), (6, 12),
-                           (6, 8), (8, 10), (11, 12), (11, 13), (13, 15), (12, 14), (14, 16)]
 
-    @staticmethod
-    def as_tuple(output_dict):
-        return output_dict['x'], output_dict['y']
+        self.pose_pairs = {
+            'green': [(0, 1), (0, 2), (1, 3), (2, 4), (3, 5), (4, 6)],
+            'orange': [(5, 6), (5, 7), (7, 9), (6, 8), (8, 10)],
+            'purple': [(5, 11), (6, 12), (11, 12)],
+            'blue': [(11, 13), (12, 14), (13, 15), (14, 16)]
+        }
+
+    def get_bbox(self):
+        min_x = np.min(self.keypoints[:, 0])
+        min_y = np.min(self.keypoints[:, 1])
+        max_x = np.max(self.keypoints[:, 0])
+        max_y = np.max(self.keypoints[:, 1])
+
+        return BoundingBox([min_x, min_y, max_x, max_y], name=self.name, conf=self.conf)
 
     @property
     def nose(self):
-        return self.keypoints[0][0], self.keypoints[0][1]
+        return tuple(self.keypoints[0])
 
     @property
     def left_eye(self):
-        return self.keypoints[1][0], self.keypoints[1][1]
+        return tuple(self.keypoints[1])
 
     @property
     def right_eye(self):
-        return self.keypoints[2][0], self.keypoints[2][1]
+        return tuple(self.keypoints[2])
 
     @property
     def left_ear(self):
-        return self.keypoints[3][0], self.keypoints[3][1]
+        return tuple(self.keypoints[3])
 
     @property
     def right_ear(self):
-        return self.keypoints[4][0], self.keypoints[4][1]
+        return tuple(self.keypoints[4])
 
     @property
     def left_shoulder(self):
-        return self.keypoints[5][0], self.keypoints[5][1]
+        return tuple(self.keypoints[5])
 
     @property
     def right_shoulder(self):
-        return self.keypoints[6][0], self.keypoints[6][1]
-
-    @property
-    def between_shoulders(self):
-        l_shoulder = self.left_shoulder
-        l_x, l_y = l_shoulder[0], l_shoulder[1]
-        r_shoulder = self.right_shoulder
-        r_x, r_y = r_shoulder[0], r_shoulder[1]
-        x_dif = abs(r_x - l_x)
-        y_dif = abs(r_y - l_y)
-        b_x = l_x + x_dif // 2 if l_x < r_x else r_x + x_dif // 2
-        b_y = l_y + y_dif // 2 if l_y < r_y else r_y + y_dif // 2
-        return b_x, b_y
+        return tuple(self.keypoints[6])
 
     @property
     def left_elbow(self):
-        return self.keypoints[7][0], self.keypoints[7][1]
+        return tuple(self.keypoints[7])
 
     @property
     def right_elbow(self):
-        return self.keypoints[8][0], self.keypoints[8][1]
+        return tuple(self.keypoints[8])
 
     @property
     def left_wrist(self):
-        return self.keypoints[9][0], self.keypoints[9][1]
+        return tuple(self.keypoints[9])
 
     @property
     def right_wrist(self):
-        return self.keypoints[10][0], self.keypoints[10][1]
+        return tuple(self.keypoints[10])
 
     @property
     def left_hip(self):
-        return self.keypoints[11][0], self.keypoints[11][1]
+        return tuple(self.keypoints[11])
 
     @property
     def right_hip(self):
-        return self.keypoints[12][0], self.keypoints[12][1]
-
-    @property
-    def between_hips(self):
-        l_hip = self.left_hip
-        l_x, l_y = l_hip[0], l_hip[0]
-        r_hip = self.right_shoulder
-        r_x, r_y = r_hip[1], r_hip[1]
-        x_dif = abs(r_x - l_x)
-        y_dif = abs(r_y - l_y)
-        b_x = l_x + x_dif // 2 if l_x < r_x else r_x + x_dif // 2
-        b_y = l_y + y_dif // 2 if l_y < r_y else r_y + y_dif // 2
-        return b_x, b_y
+        return tuple(self.keypoints[12])
 
     @property
     def left_knee(self):
-        return self.keypoints[13][0], self.keypoints[13][1]
+        return tuple(self.keypoints[13])
 
     @property
     def right_knee(self):
-        return self.keypoints[14][0], self.keypoints[14][1]
+        return tuple(self.keypoints[14])
 
     @property
     def left_ankle(self):
-        return self.keypoints[15][0], self.keypoints[15][1]
+        return tuple(self.keypoints[15])
 
     @property
     def right_ankle(self):
-        return self.keypoints[16][0], self.keypoints[16][1]
+        return tuple(self.keypoints[16])
 
-    def plot(self, img: NDArray, align_numbers=True, align_line=False, hands_only=False) -> NDArray:
-        if not hands_only:
-            for i, (x, y) in enumerate(self.keypoints):
-                img = cv2.circle(img, (x, y), 8, Meta.white, -1)
-                if align_numbers:
-                    img = cv2.putText(img, str(i), (x - 4, y + 2), cv2.FONT_HERSHEY_SIMPLEX, .3, Meta.black)
-        else:
-            for i, (x, y) in enumerate(self.keypoints[5:11]):
-                img = cv2.circle(img, (x, y), 8, Meta.white, -1)
-                if align_numbers:
-                    img = cv2.putText(img, str(i), (x - 4, y + 2), cv2.FONT_HERSHEY_SIMPLEX, .3, Meta.black)
-                    # img, text, org, fontFace, fontScale, color[, thickness[, lineType
-        if hands_only:
-            align_line = True
-        if align_line:
-            points_colors = {
-                (0, 1): Meta.red,
-                (0, 2): Meta.red,
-                (1, 3): Meta.orange,
-                (2, 4): Meta.orange,
-                (5, 7): Meta.yellow,
-                (6, 8): Meta.yellow,
-                (8, 10): Meta.aqua,
-                (7, 9): Meta.aqua,
-                (12, 14): Meta.cyan,
-                (11, 13): Meta.cyan,
-                (14, 16): Meta.blue,
-                (13, 15): Meta.blue,
-                (11, 12): Meta.purple,
-                (5, 6): Meta.purple,
-                (5, 11): Meta.purple,
-                (6, 12): Meta.purple,
-                (0, 'b_sh'): Meta.purple
-            }
+    def plot(self, img: NDArray) -> NDArray:
+        for color, pairs in self.pose_pairs.items():
+            match color:
+                case 'green':
+                    for pair in pairs:
+                        pt1 = self.keypoints[pair[0]]
+                        pt2 = self.keypoints[pair[1]]
+                        img = cv2.line(img, pt1, pt2, Meta.green, 2)
+                case 'orange':
+                    for pair in pairs:
+                        pt1 = self.keypoints[pair[0]]
+                        pt2 = self.keypoints[pair[1]]
+                        img = cv2.line(img, pt1, pt2, Meta.orange, 2)
+                case 'purple':
+                    for pair in pairs:
+                        pt1 = self.keypoints[pair[0]]
+                        pt2 = self.keypoints[pair[1]]
+                        img = cv2.line(img, pt1, pt2, Meta.purple, 2)
+                case 'blue':
+                    for pair in pairs:
+                        pt1 = self.keypoints[pair[0]]
+                        pt2 = self.keypoints[pair[1]]
+                        img = cv2.line(img, pt1, pt2, Meta.blue, 2)
+        return img
 
-            for pair in ((5, 6), (5, 7), (7, 9), (6, 8), (8, 10)):
-                part_a = pair[0]
-                part_b = pair[1]
-                cv2.line(img, self.points[part_a], self.points[part_b], points_colors[pair], 2)
+    def draw_ellipse(self, img: NDArray, color: tuple = Meta.blue) -> NDArray:
+        down_center = self.get_bbox().down_center
+        width = self.get_bbox().width
+        img = cv2.ellipse(
+            img,
+            center=down_center,
+            axes=(int(width), int(0.35 * width)),
+            angle=0.0,
+            startAngle=-45,
+            endAngle=235,
+            color=color,
+            thickness=2,
+            lineType=cv2.LINE_4
+        )
+        return img
+
+    def draw_marker(self, img: np.ndarray, color: tuple = Meta.green) -> np.ndarray:
+        center = self.get_bbox().center
+        width = self.get_bbox().width
+        left = center[0] - 10, center[1] - 10
+        right = center[0] + 10, center[1] + 10
+        countour = np.array([left, right, center], dtype=np.float32)
+        img = cv2.drawContours(img, [countour], 0, color, -1)
+
         return img
 
     def json(self):

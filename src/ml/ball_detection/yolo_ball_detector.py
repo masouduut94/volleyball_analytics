@@ -6,7 +6,7 @@ from ultralytics import YOLO
 
 from src.utilities.utils import BoundingBox, Meta
 
-weights = '/home/masoud/Desktop/projects/volleyball_analytics/src/yolov8/runs/segment/train/weights/best.pt'
+weights = '/home/masoud/Desktop/projects/volleyball_analytics/runs/segment/train/weights/best.pt'
 
 
 class YoloBallDetector:
