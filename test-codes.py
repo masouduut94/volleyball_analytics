@@ -11,7 +11,7 @@ from src.ml.keypoint_detection.yolo_pose_estimator import YoloPoseEstimator
 def config():
     parser = ArgumentParser()
     parser.add_argument(
-        '--video', type=str, default='./data/raw/videos/test/videos/8.mp4'
+        '--video', type=str, default='./data/raw/videos/test/videos/11_short.mp4'
     )
     parser.add_argument(
         '--output', type=str, default='./runs/inference/'

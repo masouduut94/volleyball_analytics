@@ -71,7 +71,7 @@ class BoundingBox:
 
     @property
     def detected(self):
-        return True if self.x1 != -1 else False
+        return True if all((self.x1 < self.x2,  self.y1 < self.y2)) else False
 
     @property
     def xyxy_dict(self):
@@ -81,6 +81,10 @@ class BoundingBox:
             'y1': self.y1,
             'y2': self.y2
         }
+
+    @property
+    def xywh(self):
+        return
 
     def __repr__(self):
         con = "Contour" if self.contour_type else "no Contour"
@@ -305,11 +309,8 @@ class KeyPointBox:
         """
         self.name = name
         self.keypoints = keypoints.astype(int)
-        self.points = []
         self.conf = conf
         self.colors = np.random.randint(low=0, high=255, size=(7, 3))
-        for i, (x, y) in enumerate(self.keypoints):
-            self.points.append((x, y))
 
         self.pose_pairs = {
             'green': [(0, 1), (0, 2), (1, 3), (2, 4), (3, 5), (4, 6)],
@@ -317,12 +318,21 @@ class KeyPointBox:
             'purple': [(5, 11), (6, 12), (11, 12)],
             'blue': [(11, 13), (12, 14), (13, 15), (14, 16)]
         }
+        self.box = self.get_bbox()
 
     def get_bbox(self):
-        min_x = np.min(self.keypoints[:, 0])
-        min_y = np.min(self.keypoints[:, 1])
-        max_x = np.max(self.keypoints[:, 0])
-        max_y = np.max(self.keypoints[:, 1])
+        Xs = self.keypoints[:, 0]
+        Xs = Xs[Xs != 0]
+        Ys = self.keypoints[:, 1]
+        Ys = Ys[Ys != 0]
+
+        if not len(Xs) or not len(Ys):
+            return BoundingBox([0, 0, 0, 0], name=self.name, conf=self.conf)
+
+        min_x = np.min(Xs)
+        min_y = np.min(Ys)
+        max_x = np.max(Xs)
+        max_y = np.max(Ys)
 
         return BoundingBox([min_x, min_y, max_x, max_y], name=self.name, conf=self.conf)
 
@@ -394,29 +404,37 @@ class KeyPointBox:
     def right_ankle(self):
         return tuple(self.keypoints[16])
 
+    @property
+    def center(self):
+        return self.get_bbox().center
+
+    @staticmethod
+    def is_kp_detected(kp):
+        """
+        In yolo-v8 when the kp is not detected, it returns 0, 0 for x, y ...
+        Args:
+            kp:
+
+        Returns:
+
+        """
+        return kp[0] != 0 or kp[1] != 0
+
     def plot(self, img: NDArray) -> NDArray:
         for color, pairs in self.pose_pairs.items():
-            match color:
-                case 'green':
-                    for pair in pairs:
-                        pt1 = self.keypoints[pair[0]]
-                        pt2 = self.keypoints[pair[1]]
-                        img = cv2.line(img, pt1, pt2, Meta.green, 2)
-                case 'orange':
-                    for pair in pairs:
-                        pt1 = self.keypoints[pair[0]]
-                        pt2 = self.keypoints[pair[1]]
-                        img = cv2.line(img, pt1, pt2, Meta.orange, 2)
-                case 'purple':
-                    for pair in pairs:
-                        pt1 = self.keypoints[pair[0]]
-                        pt2 = self.keypoints[pair[1]]
-                        img = cv2.line(img, pt1, pt2, Meta.purple, 2)
-                case 'blue':
-                    for pair in pairs:
-                        pt1 = self.keypoints[pair[0]]
-                        pt2 = self.keypoints[pair[1]]
-                        img = cv2.line(img, pt1, pt2, Meta.blue, 2)
+            for pair in pairs:
+                pt1 = self.keypoints[pair[0]]
+                pt2 = self.keypoints[pair[1]]
+                if self.is_kp_detected(pt1) and self.is_kp_detected(pt2):
+                    match color:
+                        case 'green':
+                            cv2.line(img, pt1, pt2, Meta.green, 2)
+                        case 'orange':
+                            cv2.line(img, pt1, pt2, Meta.orange, 2)
+                        case 'purple':
+                            cv2.line(img, pt1, pt2, Meta.purple, 2)
+                        case 'blue':
+                            cv2.line(img, pt1, pt2, Meta.blue, 2)
         return img
 
     def draw_ellipse(self, img: NDArray, color: tuple = Meta.blue) -> NDArray:
