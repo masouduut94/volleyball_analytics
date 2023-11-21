@@ -3,9 +3,29 @@ from tqdm import tqdm
 from time import time
 from pathlib import Path
 from argparse import ArgumentParser
-from src.ml.ball_detection.yolo_ball_detector import YoloBallDetector
-from src.ml.action_detection.yolo_action_detector import YoloActionDetector
-from src.ml.keypoint_detection.yolo_pose_estimator import YoloPoseEstimator
+
+from src.ml.yolo.players.segmentation import PlayerSegmentator
+from src.utilities.utils import CourtCoordinates
+from src.ml.yolo.ball.ball_detection import BallDetector
+from src.ml.yolo.players.detection import PlayerDetector
+from src.ml.yolo.vb_action.action_detection import ActionDetector
+# from src.ml.yolo.keypoint.pose_estimation import PoseEstimator
+
+court_coordinates = {
+    "main_zone": [
+        [410, 620],
+        [1500, 620],
+        [1830, 1040],
+        [80, 1040]
+    ],
+    "front_zone": [
+        [170, 715],
+        [1750, 715],
+        [1850, 850],
+        [80, 850]
+    ]
+}
+COURT = CourtCoordinates(points=court_coordinates)
 
 
 def config():
@@ -25,19 +45,16 @@ if __name__ == '__main__':
     video_path = args.video
     output_path = args.output
 
-    ball_detector = YoloBallDetector()
-    action_detector = YoloActionDetector()
-    if args.use_pose:
-        kp_detector = YoloPoseEstimator()
-    else:
-        kp_detector = None
+    ball_detector = BallDetector()
+    action_detector = ActionDetector()
+    player_detector = PlayerSegmentator()
 
     cap = cv2.VideoCapture(video_path)
     assert cap.isOpened(), 'file does not exist...'
 
-    w, h, fps = [int(cap.get(i)) for i in range(3, 6)]
+    w, h, fps, _, total_frames = [int(cap.get(i)) for i in range(3, 8)]
 
-    filename = Path(args.output_path) / (Path(video_path).stem + '.mp4')
+    filename = Path(output_path) / (Path(video_path).stem + '.mp4')
     codec = cv2.VideoWriter_fourcc(*'mp4v')
 
     output = cv2.VideoWriter(
@@ -54,15 +71,23 @@ if __name__ == '__main__':
         cap.set(1, fno)
         status, frame = cap.read()
         t1 = time()
-        balls = ball_detector.detect(frame)
+        ball = ball_detector.detect(frame)
         actions = action_detector.detect(frame)
-        if args.use_pose:
-            poses = kp_detector.detect(frame)
-        t2 = time()
-        pbar.set_description(f"processed in {t2 - t1: .4f} seconds.")
+        players = player_detector.detect_all(frame)
+        players = player_detector.filter(players, by_bbox_size=False, by_zone=True)
 
-        frame = ball_detector.draw(frame, balls)
+        if ball is not None:
+            frame = ball_detector.draw(frame, [ball])
         frame = action_detector.draw(frame, actions)
-        if args.use_pose:
-            frame = kp_detector.draw(frame, poses)
+        frame = player_detector.draw(frame, players, use_marker=True)
+        if fno > 1000:
+            break
         output.write(frame)
+        t2 = time()
+        pbar.set_description(f"{t2 - t1: .4f} seconds. {fno}/{total_frames}")
+
+    cap.release()
+    output.release()
+    cv2.destroyAllWindows()
+
+    print(f'video output saved in {filename.as_posix()}')

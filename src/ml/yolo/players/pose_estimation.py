@@ -2,12 +2,12 @@ from typing import List
 from numpy.typing import NDArray
 from ultralytics import YOLO
 
-from src.utilities.utils import BoundingBox, KeyPointBox
+from src.utilities.utils import BoundingBox, KeyPointBox, Meta
 
 weights = 'yolov8n-pose.pt'
 
 
-class YoloPoseEstimator:
+class PoseEstimator:
     def __init__(self):
         self.model = YOLO(weights)
 
@@ -17,12 +17,15 @@ class YoloPoseEstimator:
         kps = results[0].keypoints.xy.cpu().detach().numpy().astype(int)
         keypoints = []
         for kp, conf in zip(kps, confs):
-            kp = KeyPointBox(keypoints=kp, conf=conf, name="person")
+            kp = KeyPointBox(keypoints=kp, conf=conf, name="player")
             keypoints.append(kp)
         return keypoints
 
     @staticmethod
-    def draw(frame: NDArray, kps: List[KeyPointBox]):
+    def draw(frame: NDArray, kps: List[KeyPointBox], use_marker=False, color=Meta.orange):
         for kp in kps:
-            frame = kp.plot(frame, align_numbers=False)
+            if use_marker:
+                frame = kp.draw_marker(frame, color=color)
+            else:
+                frame = kp.draw_ellipse(frame, color=color)
         return frame

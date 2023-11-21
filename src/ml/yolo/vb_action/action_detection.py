@@ -9,12 +9,12 @@ from src.utilities.utils import BoundingBox, Meta
 weights = "/home/masoud/Desktop/projects/volleyball_analytics/src/yolov8/runs/detect/train/weights/best.pt"
 
 
-class YoloActionDetector:
+class ActionDetector:
     def __init__(self):
         self.model = YOLO(weights)
 
     def detect(self, frame: NDArray) -> List[BoundingBox]:
-        results = self.model(frame, verbose=False)
+        results = self.model(frame, verbose=False, classes=[1, 2, 3, 4])
         confs = results[0].boxes.conf.cpu().detach().numpy().tolist()
         boxes = results[0].boxes.xyxy.cpu().detach().numpy().tolist()
         classes = results[0].boxes.cls.cpu().detach().numpy().astype(int).tolist()
@@ -22,8 +22,6 @@ class YoloActionDetector:
         detections = []
 
         for box, conf, cl in zip(boxes, confs, classes):
-            if cl in (0, 5):  # No ball and serve needed.
-                continue
             name = names[cl]
             b = BoundingBox(box, name=name, conf=float(conf))
             detections.append(b)

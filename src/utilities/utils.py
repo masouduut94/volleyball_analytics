@@ -18,6 +18,28 @@ class Meta:
     aqua = (21, 242, 253)
 
 
+class CourtCoordinates:
+    def __init__(self, points: dict):
+        main_zone = points['main_zone']
+        front_zone = points['front_zone']
+        self.main_zone = np.array(
+            [main_zone],
+            dtype=np.int32
+        )
+        self.front_zone = np.array(
+            [front_zone],
+            dtype=np.int32
+        )
+
+    def is_inside_main_zone(self, point: tuple):
+        result = cv2.pointPolygonTest(self.main_zone, point, False)
+        return result > 0
+
+    def is_inside_front_zone(self, point: tuple):
+        result = cv2.pointPolygonTest(self.front_zone, point, False)
+        return result > 0
+
+
 class BoundingBox:
     """
     Author:
@@ -71,7 +93,7 @@ class BoundingBox:
 
     @property
     def detected(self):
-        return True if all((self.x1 < self.x2,  self.y1 < self.y2)) else False
+        return True if all((self.x1 < self.x2, self.y1 < self.y2)) else False
 
     @property
     def xyxy_dict(self):
@@ -84,7 +106,12 @@ class BoundingBox:
 
     @property
     def xywh(self):
-        return
+        return {
+            'x1': self.x1,
+            'y1': self.y1,
+            'w': self.width,
+            'h': self.height
+        }
 
     def __repr__(self):
         con = "Contour" if self.contour_type else "no Contour"
@@ -119,9 +146,9 @@ class BoundingBox:
         Returns:
 
         """
-        center_x = self.x1 + self.width // 2
-        center_y = self.y1 + self.height // 2
-        return np.array([center_x, center_y])
+        center_x = self.x1 + int(self.width / 2)
+        center_y = self.y1 + int(self.height / 2)
+        return center_x, center_y
 
     def distance(self, coordination: np.ndarray):
         """
@@ -134,7 +161,7 @@ class BoundingBox:
 
         """
 
-        return np.round(np.linalg.norm(self.center - coordination), 3)
+        return np.round(np.linalg.norm(np.array(self.center) - coordination), 3)
 
     def intersection(self, bbox):
         if isinstance(bbox, list):
@@ -250,7 +277,7 @@ class BoundingBox:
         img = frame.copy()
         if not self.contour_type:
             if not color:
-                if self.name == "person":
+                if self.name == "players":
                     color = (255, 0, 0)
                 elif self.name == 'ball':
                     color = (0, 255, 0)
@@ -267,6 +294,41 @@ class BoundingBox:
         else:
             color = (255, 0, 0) if not color else color
             img = cv2.drawContours(img, [self.contour.astype(int)], 0, color, 2)
+        return img
+
+    def draw_ellipse(self, img: NDArray, color: tuple = Meta.blue) -> NDArray:
+        if not self.detected:
+            return img
+        img = cv2.ellipse(
+            img,
+            center=self.down_center,
+            axes=(int(self.width-10), int(0.25 * self.width-10)),
+            angle=0.0,
+            startAngle=-45,
+            endAngle=235,
+            color=color,
+            thickness=2,
+            lineType=cv2.LINE_4
+        )
+        return img
+
+    def draw_marker(self, img: np.ndarray, color: tuple = Meta.green) -> np.ndarray:
+        if not self.detected:
+            return img
+        x = self.top_center[0]
+        y = self.top_center[1]
+        y_top = y - 10
+        x_left = x - 10
+        x_right = x + 10
+
+        left = [x_left, y_top]
+        right = [x_right, y_top]
+        contour = np.array([left, [x, y], right], dtype=np.int32)  # Maybe float32
+        img = cv2.fillPoly(img, [contour], color)
+        # cv2.circle(img, left, 10, color, -2)
+        # cv2.circle(img, right, 10, color, -2)
+        # cv2.circle(img, self.top_center, 10, color, -2)
+
         return img
 
     def is_inside(self, center):
@@ -302,7 +364,7 @@ class BoundingBox:
 class KeyPointBox:
     def __init__(self, keypoints: NDArray, conf: float = 0, name: str = None):
         """
-        Single person keypoints from single detection. A frame will have a list of these objects.
+        Single players keypoints from single yolo. A frame will have a list of these objects.
         Args:
             keypoints:
             name:
@@ -321,18 +383,20 @@ class KeyPointBox:
         self.box = self.get_bbox()
 
     def get_bbox(self):
-        Xs = self.keypoints[:, 0]
-        Xs = Xs[Xs != 0]
-        Ys = self.keypoints[:, 1]
-        Ys = Ys[Ys != 0]
+        height_margin = 10
+        width_margin = 10
+        xs = self.keypoints[:, 0]
+        xs = xs[xs != 0]
+        ys = self.keypoints[:, 1]
+        ys = ys[ys != 0]
 
-        if not len(Xs) or not len(Ys):
+        if not len(xs) or not len(ys):
             return BoundingBox([0, 0, 0, 0], name=self.name, conf=self.conf)
 
-        min_x = np.min(Xs)
-        min_y = np.min(Ys)
-        max_x = np.max(Xs)
-        max_y = np.max(Ys)
+        min_x = np.min(xs) - width_margin if (np.min(xs) - width_margin) > 0 else np.min(xs)
+        min_y = np.min(ys) - height_margin if (np.min(xs) - height_margin) > 0 else np.min(xs)
+        max_x = np.max(xs) + width_margin
+        max_y = np.max(ys) + height_margin
 
         return BoundingBox([min_x, min_y, max_x, max_y], name=self.name, conf=self.conf)
 
@@ -420,6 +484,34 @@ class KeyPointBox:
         """
         return kp[0] != 0 or kp[1] != 0
 
+    @property
+    def is_facing_to_camera(self):
+        lw = self.left_wrist
+        rw = self.right_wrist
+
+        le = self.left_elbow
+        re = self.right_elbow
+
+        ls = self.left_shoulder
+        rs = self.right_shoulder
+
+        la = self.left_ankle
+        ra = self.right_ankle
+
+        lk = self.left_knee
+        rk = self.right_knee
+
+        if self.is_kp_detected(lw) and self.is_kp_detected(rw):
+            return lw[0] > rw[0]
+        elif self.is_kp_detected(le) and self.is_kp_detected(re):
+            return le[0] > re[0]
+        elif self.is_kp_detected(lk) and self.is_kp_detected(rk):
+            return lk[0] > rk[0]
+        elif self.is_kp_detected(ls) and self.is_kp_detected(rs):
+            return ls[0] > rs[0]
+        elif self.is_kp_detected(la) and self.is_kp_detected(ra):
+            return la[0] > ra[0]
+
     def plot(self, img: NDArray) -> NDArray:
         for color, pairs in self.pose_pairs.items():
             for pair in pairs:
@@ -438,32 +530,13 @@ class KeyPointBox:
         return img
 
     def draw_ellipse(self, img: NDArray, color: tuple = Meta.blue) -> NDArray:
-        down_center = self.get_bbox().down_center
-        width = self.get_bbox().width
-        img = cv2.ellipse(
-            img,
-            center=down_center,
-            axes=(int(width), int(0.35 * width)),
-            angle=0.0,
-            startAngle=-45,
-            endAngle=235,
-            color=color,
-            thickness=2,
-            lineType=cv2.LINE_4
-        )
-        return img
+        return self.box.draw_ellipse(img=img, color=color)
 
     def draw_marker(self, img: np.ndarray, color: tuple = Meta.green) -> np.ndarray:
-        center = self.get_bbox().center
-        width = self.get_bbox().width
-        left = center[0] - 10, center[1] - 10
-        right = center[0] + 10, center[1] + 10
-        countour = np.array([left, right, center], dtype=np.float32)
-        img = cv2.drawContours(img, [countour], 0, color, -1)
-
-        return img
+        return self.box.draw_marker(img=img, color=color)
 
     def json(self):
+        # TODO: Needs integration with self.is_kp_detected...
         js = {
             'nose': self.nose,
             'left_eye': self.left_eye,

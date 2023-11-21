@@ -2,21 +2,37 @@ from typing import List
 
 import cv2
 import numpy as np
-import torch
 from tqdm import tqdm
 from time import time
 from pathlib import Path
 import norfair
-from norfair import Detection, Paths, Tracker, Video, OptimizedKalmanFilterFactory
+from norfair import Detection, Tracker, OptimizedKalmanFilterFactory
 from argparse import ArgumentParser
-from src.ml.ball_detection.yolo_ball_detector import YoloBallDetector
-from src.ml.action_detection.yolo_action_detector import YoloActionDetector
-from src.ml.keypoint_detection.yolo_pose_estimator import YoloPoseEstimator
-from src.utilities.utils import BoundingBox, KeyPointBox, Meta
+from src.ml.yolo.ball.ball_detection import BallDetector
+from src.ml.yolo.vb_action.action_detection import ActionDetector
+from src.ml.yolo.players.pose_estimation import PoseEstimator
+from src.utilities.utils import BoundingBox, KeyPointBox, Meta, CourtCoordinates
 
 DISTANCE_THRESHOLD_BBOX: float = 0.7
 DISTANCE_THRESHOLD_CENTROID: int = 30
 MAX_DISTANCE: int = 10000
+
+court_coordinates = {
+    "main_zone": [
+        [410, 620],
+        [1500, 620],
+        [1830, 1040],
+        [80, 1040]
+    ],
+    "front_zone": [
+        [170, 715],
+        [1750, 715],
+        [1850, 850],
+        [80, 850]
+    ]
+}
+
+COURT = CourtCoordinates(points=court_coordinates)
 
 
 def embedding_distance(matched_not_init_trackers, unmatched_trackers):
@@ -42,9 +58,8 @@ def embedding_distance(matched_not_init_trackers, unmatched_trackers):
     return 1
 
 
-def yolo_detections_to_norfair_detections(
-        yolo_detections: List[BoundingBox | KeyPointBox], track_points: str = "centroid"  # bbox or centroid
-) -> List[Detection]:
+def convert_to_norfair_detection(
+        yolo_detections: List[BoundingBox | KeyPointBox], track_points: str = "centroid") -> List[Detection]:
     """convert detections_as_xywh to norfair detections"""
     norfair_detections: List[Detection] = []
 
@@ -127,9 +142,9 @@ if __name__ == '__main__':
             reid_hit_counter_max=500,
         )
 
-    ball_detector = YoloBallDetector()
-    action_detector = YoloActionDetector()
-    kp_detector = YoloPoseEstimator()
+    ball_detector = BallDetector()
+    action_detector = ActionDetector()
+    kp_detector = PoseEstimator()
 
     cap = cv2.VideoCapture(video_path)
     assert cap.isOpened(), 'file does not exist...'
@@ -156,10 +171,10 @@ if __name__ == '__main__':
         else DISTANCE_THRESHOLD_CENTROID
     )
 
-    tracker = Tracker(
-        distance_function=distance_function,
-        distance_threshold=distance_threshold,
-    )
+    # tracker = Tracker(
+    #     distance_function=distance_function,
+    #     distance_threshold=distance_threshold,
+    # )
 
     print("Total frames: ", total_frames)
     for fno in range(0, total_frames):
@@ -175,15 +190,17 @@ if __name__ == '__main__':
         t2 = time()
         pbar.set_description(f"{t2 - t1: .4f} seconds. {fno}/{total_frames}")
 
-        player_detections = yolo_detections_to_norfair_detections(poses, track_points=args.track_points)
+        player_detections = convert_to_norfair_detection(poses, track_points=args.track_points)
         tracked_players = tracker.update(detections=player_detections)
         if ball is not None:
             frame = ball_detector.draw(frame, [ball])
         frame = action_detector.draw(frame, actions)
-        if args.track_points == "centroid":
-            norfair.draw_points(frame, player_detections)
-            norfair.draw_tracked_objects(frame, tracked_players)
-        elif args.track_points == "bbox":
-            norfair.draw_boxes(frame, player_detections)
-            norfair.draw_boxes(frame, tracked_players)
+        # if args.track_points == "centroid":
+        #     norfair.draw_points(frame, player_detections)
+        #     norfair.draw_tracked_objects(frame, tracked_players)
+        # elif args.track_points == "bbox":
+        # norfair.draw_boxes(frame, player_detections)
+        norfair.draw_boxes(frame, tracked_players)
         output.write(frame)
+
+    print(f'video output saved in {filename.as_posix()}')
