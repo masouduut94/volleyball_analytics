@@ -5,7 +5,7 @@ from numpy.typing import ArrayLike, NDArray
 from ultralytics import YOLO
 
 from src.ml.abstract.yolo_detector import YoloDetector
-from src.utilities.utils import BoundingBox, Meta
+from src.utilities.utils import BoundingBox, Meta, KeyPointBox
 
 weights = "/home/masoud/Desktop/projects/volleyball_analytics/src/yolov8/runs/detect/train/weights/best.pt"
 
@@ -29,4 +29,8 @@ class ActionDetector(YoloDetector):
         return detections
 
     # TODO: Insert Spike-Set-Reception-Block -> to objects titles ...
-
+    @staticmethod
+    def draw(frame: NDArray, items: List[BoundingBox | KeyPointBox], use_title: str = None,
+             use_marker: bool = False, use_bbox: bool = True, use_ellipse: bool = False,
+             color: tuple = Meta.green):
+        pass

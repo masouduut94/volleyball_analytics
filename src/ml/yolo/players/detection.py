@@ -42,7 +42,8 @@ class PlayerDetector(YoloDetector):
         detections.sort(key=lambda x: (x.conf, x.area), reverse=True)
         return detections
 
-    def filter(self, bboxes: List[BoundingBox], keep: int = None, by_bbox_size: bool = True, by_zone: bool = True):
+    def filter(self, bboxes: List[BoundingBox], keep: int = None, by_bbox_size: bool = True,
+               by_zone: bool = True):
         """
         filter the bounding boxes of people based on the size of bounding box,
         whether their steps are in the court.

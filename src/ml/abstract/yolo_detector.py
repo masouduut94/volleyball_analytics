@@ -13,16 +13,14 @@ class YoloDetector(ABC):
         pass
 
     @staticmethod
-    def draw(frame: NDArray, items: List[BoundingBox | KeyPointBox], title=None,
-             use_marker=False, use_bbox=True, use_ellipse=False, color=Meta.green):
+    def draw(frame: NDArray, items: List[BoundingBox | KeyPointBox], use_title: bool = False,
+             use_marker: bool = False, use_bbox: bool = True, use_ellipse: bool = False,
+             color: tuple = Meta.green):
         for bb in items:
             if use_marker:
                 frame = bb.draw_marker(frame, color)
             if use_ellipse:
                 frame = bb.draw_ellipse(frame, color)
             if use_bbox:
-                if title is not None:
-                    frame = bb.plot(frame, color=color, title=title)
-                else:
-                    frame = bb.plot(frame, color=color)
+                frame = bb.plot(frame, color=color, title=bb.name if use_title else '')
         return frame
