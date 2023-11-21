@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
     ball_detector = BallDetector()
     action_detector = ActionDetector()
-    player_detector = PlayerSegmentator()
+    player_detector = PlayerDetector()
 
     cap = cv2.VideoCapture(video_path)
     assert cap.isOpened(), 'file does not exist...'
@@ -74,12 +74,12 @@ if __name__ == '__main__':
         ball = ball_detector.detect(frame)
         actions = action_detector.detect(frame)
         players = player_detector.detect_all(frame)
-        players = player_detector.filter(players, by_bbox_size=False, by_zone=True)
+        players = player_detector.filter(players, by_bbox_size=True, by_zone=True)
 
         if ball is not None:
             frame = ball_detector.draw(frame, [ball])
         frame = action_detector.draw(frame, actions)
-        frame = player_detector.draw(frame, players, use_marker=True)
+        frame = player_detector.draw(frame, players, use_marker=True, use_bbox=False)
         if fno > 1000:
             break
         output.write(frame)

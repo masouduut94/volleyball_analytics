@@ -4,16 +4,30 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from ultralytics import YOLO
 
+from src.ml.abstract.yolo_detector import YoloDetector
 from src.utilities.utils import BoundingBox, Meta, CourtCoordinates
 
 weights = 'yolov8n.pt'
 
 
-class PlayerDetector:
+class PlayerDetector(YoloDetector):
     def __init__(self, court_dict: dict = None):
         self.name = 'player'
         self.model = YOLO(weights)
         self.court = CourtCoordinates(court_dict) if court_dict is not None else None
+
+    def detect_one(self, frame: NDArray):
+        results = self.model(frame, verbose=False, classes=0)
+        confs = results[0].boxes.conf.cpu().detach().numpy().tolist()
+        boxes = results[0].boxes.xyxy.cpu().detach().numpy().tolist()
+
+        detections: List[BoundingBox] = []
+        for box, conf in zip(boxes, confs):
+            # TODO: make it suitable for multi-class yolo.
+            b = BoundingBox(box, name=self.name, conf=float(conf))
+            detections.append(b)
+        detections.sort(key=lambda x: (x.conf, x.area), reverse=True)
+        return detections[0] if len(detections) else None
 
     def detect_all(self, frame: NDArray) -> list[BoundingBox]:
         results = self.model(frame, verbose=False, classes=0)
@@ -57,13 +71,13 @@ class PlayerDetector:
         # https://stackoverflow.com/questions/14161331/creating-your-own-contour-in-opencv-using-python
         return bboxes[:keep] if keep is not None else bboxes
 
-    @staticmethod
-    def draw(frame: NDArray, bboxes: List[BoundingBox], use_marker=False, color=Meta.green, use_bbox=True):
-        for bb in bboxes:
-            if use_marker:
-                frame = bb.draw_marker(frame, color)
-            else:
-                frame = bb.draw_ellipse(frame, color)
-            if use_bbox:
-                frame = bb.plot(frame, color)
-        return frame
+    # @staticmethod
+    # def draw(frame: NDArray, bboxes: List[BoundingBox], use_marker=False, color=Meta.green, use_bbox=True):
+    #     for bb in bboxes:
+    #         if use_marker:
+    #             frame = bb.draw_marker(frame, color)
+    #         else:
+    #             frame = bb.draw_ellipse(frame, color)
+    #         if use_bbox:
+    #             frame = bb.plot(frame, color)
+    #     return frame
