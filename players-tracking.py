@@ -184,7 +184,7 @@ if __name__ == '__main__':
         t1 = time()
         cv2.putText(frame, f"FNO# {fno}", (50, 50),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, Meta.white, 2)
-        ball = ball_detector.detect(frame)
+        ball = ball_detector.detect_one(frame)
         actions = action_detector.detect(frame)
         poses = kp_detector.detect(frame)
         t2 = time()

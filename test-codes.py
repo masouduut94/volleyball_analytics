@@ -71,7 +71,7 @@ if __name__ == '__main__':
         cap.set(1, fno)
         status, frame = cap.read()
         t1 = time()
-        ball = ball_detector.detect(frame)
+        ball = ball_detector.detect_one(frame)
         actions = action_detector.detect(frame)
         players = player_detector.detect_all(frame)
         players = player_detector.filter(players, by_bbox_size=True, by_zone=True)

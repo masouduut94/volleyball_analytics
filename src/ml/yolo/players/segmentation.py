@@ -1,12 +1,15 @@
+from abc import ABC
 from typing import List
 from ultralytics import YOLO
 from numpy.typing import ArrayLike, NDArray
+
+from src.ml.abstract.yolo_detector import YoloDetector
 from src.utilities.utils import BoundingBox, Meta, CourtCoordinates
 
 weights = 'yolov8n-seg.pt'
 
 
-class PlayerSegmentator:
+class PlayerSegmentator(YoloDetector, ABC):
     def __init__(self, court_dict: dict = None):
         self.name = 'player'
         self.model = YOLO(weights)

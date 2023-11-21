@@ -29,8 +29,4 @@ class ActionDetector(YoloDetector):
         return detections
 
     # TODO: Insert Spike-Set-Reception-Block -> to objects titles ...
-    @staticmethod
-    def draw(frame: NDArray, bboxes: List[BoundingBox]) -> NDArray:
-        for bbox in bboxes:
-            frame = bbox.plot(frame, color=Meta.red)
-        return frame
+
