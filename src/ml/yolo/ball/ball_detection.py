@@ -1,12 +1,9 @@
 from typing import List
-
-import numpy as np
-from numpy.typing import ArrayLike, NDArray
 from ultralytics import YOLO
-
+from numpy.typing import NDArray
 from src.utilities.utils import BoundingBox, Meta
 
-weights = '/home/masoud/Desktop/projects/volleyball_analytics/runs/segment/train/weights/best.pt'
+weights = '/home/masoud/Desktop/projects/volleyball_analytics/weights/ball_segment/model2/weights/best.pt'
 
 
 class BallDetector:
@@ -40,3 +37,14 @@ class BallDetector:
         detections.sort(key=lambda x: (x.conf, x.area), reverse=True)
         return detections
 
+    @staticmethod
+    def draw(frame: NDArray, bboxes: List[BoundingBox], use_ellipse: bool = False, use_marker=False, color=Meta.green,
+             use_bbox=True, use_title: bool = True):
+        for bb in bboxes:
+            if use_marker:
+                frame = bb.draw_marker(frame, color)
+            if use_ellipse:
+                frame = bb.draw_ellipse(frame, color)
+            if use_bbox:
+                frame = bb.plot(frame, color, title=bb.name if use_title else '')
+        return frame

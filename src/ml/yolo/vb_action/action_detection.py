@@ -4,13 +4,12 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from ultralytics import YOLO
 
-from src.ml.abstract.yolo_detector import YoloDetector
 from src.utilities.utils import BoundingBox, Meta, KeyPointBox
 
-weights = "/home/masoud/Desktop/projects/volleyball_analytics/src/yolov8/runs/detect/train/weights/best.pt"
+weights = "/home/masoud/Desktop/projects/volleyball_analytics/weights/vb_actions_6_class/weights/best.pt"
 
 
-class ActionDetector(YoloDetector):
+class ActionDetector:
     def __init__(self):
         self.model = YOLO(weights)
 
@@ -28,9 +27,16 @@ class ActionDetector(YoloDetector):
             detections.append(b)
         return detections
 
-    # TODO: Insert Spike-Set-Reception-Block -> to objects titles ...
     @staticmethod
-    def draw(frame: NDArray, items: List[BoundingBox | KeyPointBox], use_title: str = None,
-             use_marker: bool = False, use_bbox: bool = True, use_ellipse: bool = False,
-             color: tuple = Meta.green):
-        pass
+    def draw(frame: NDArray, items: List[BoundingBox | KeyPointBox]):
+        for bb in items:
+            match bb.name:
+                case 'spike':
+                    frame = bb.plot(frame, color=Meta.orange, title=bb.name)
+                case 'set':
+                    frame = bb.plot(frame, color=Meta.yellow, title=bb.name)
+                case 'receive':
+                    frame = bb.plot(frame, color=Meta.green, title=bb.name)
+                case 'block':
+                    frame = bb.plot(frame, color=Meta.purple, title=bb.name)
+        return frame

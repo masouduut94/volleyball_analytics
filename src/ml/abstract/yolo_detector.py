@@ -15,7 +15,7 @@ class YoloDetector(ABC):
     @staticmethod
     def draw(frame: NDArray, items: List[BoundingBox | KeyPointBox], use_title: bool = False,
              use_marker: bool = False, use_bbox: bool = True, use_ellipse: bool = False,
-             color: tuple = Meta.green):
+             color: tuple = Meta.green) -> NDArray:
         for bb in items:
             if use_marker:
                 frame = bb.draw_marker(frame, color)

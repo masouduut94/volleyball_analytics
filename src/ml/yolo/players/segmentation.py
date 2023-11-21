@@ -1,15 +1,13 @@
-from abc import ABC
 from typing import List
 from ultralytics import YOLO
 from numpy.typing import ArrayLike, NDArray
 
-from src.ml.abstract.yolo_detector import YoloDetector
 from src.utilities.utils import BoundingBox, Meta, CourtCoordinates
 
 weights = 'yolov8n-seg.pt'
 
 
-class PlayerSegmentator(YoloDetector, ABC):
+class PlayerSegmentator:
     def __init__(self, court_dict: dict = None):
         self.name = 'player'
         self.model = YOLO(weights)
@@ -58,10 +56,13 @@ class PlayerSegmentator(YoloDetector, ABC):
         return bboxes[:keep] if keep is not None else bboxes
 
     @staticmethod
-    def draw(frame: NDArray, bboxes: List[BoundingBox], use_marker=False, color=Meta.green):
+    def draw(frame: NDArray, bboxes: List[BoundingBox], use_ellipse: bool = False, use_marker=False, color=Meta.green,
+             use_bbox=True, use_title: bool = True):
         for bb in bboxes:
             if use_marker:
                 frame = bb.draw_marker(frame, color)
-            else:
+            if use_ellipse:
                 frame = bb.draw_ellipse(frame, color)
+            if use_bbox:
+                frame = bb.plot(frame, color, title=bb.name if use_title else '')
         return frame
