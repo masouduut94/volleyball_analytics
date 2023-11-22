@@ -4,14 +4,16 @@ from ultralytics import YOLO
 
 from src.utilities.utils import BoundingBox, KeyPointBox, Meta
 
-weights = 'yolov8n-pose.pt'
+# weights = 'yolov8n-pose.pt'
+__all__ = ['PoseEstimator']
 
 
 class PoseEstimator:
-    def __init__(self):
-        self.model = YOLO(weights)
+    def __init__(self, cfg: dict):
+        self.model = YOLO(cfg['weight'])
+        self.labels = cfg['labels']
 
-    def detect(self, frame: NDArray) -> List[KeyPointBox]:
+    def detect_all(self, frame: NDArray) -> List[KeyPointBox]:
         results = self.model(frame, verbose=False)
         confs = results[0].boxes.conf.cpu().detach().numpy().tolist()
         kps = results[0].keypoints.xy.cpu().detach().numpy().astype(int)

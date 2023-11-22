@@ -8,13 +8,16 @@ from ultralytics import YOLO
 from src.ml.abstract.yolo_detector import YoloDetector
 from src.utilities.utils import BoundingBox, Meta, CourtCoordinates
 
-weights = 'yolov8n.pt'
+# weights = 'yolov8n.pt'
+
+__all__ = ['PlayerDetector']
 
 
 class PlayerDetector:
-    def __init__(self, court_dict: dict = None):
+    def __init__(self, cfg, court_dict: dict = None):
         self.name = 'player'
-        self.model = YOLO(weights)
+        self.model = YOLO(cfg['weight'])
+        self.labels = cfg['labels']
         self.court = CourtCoordinates(court_dict) if court_dict is not None else None
 
     def detect_all(self, frame: NDArray) -> list[BoundingBox]:

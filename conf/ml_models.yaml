@@ -1,21 +1,21 @@
 yolo:
   player_segmentation:
-    weights: "/home/masoud/Desktop/projects/volleyball_analytics/weights/yolov8n-seg.pt"
+    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/yolov8n-seg.pt"
     labels: {0: 'person'}
   player_detection:
-    weights: "/home/masoud/Desktop/projects/volleyball_analytics/weights/yolov8n.pt"
+    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/yolov8n.pt"
     labels: {0: 'person'}
   pose_estimation:
-    weights: "/home/masoud/Desktop/projects/volleyball_analytics/weights/yolov8n-pose.pt"
+    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/yolov8n-pose.pt"
     labels: {0: 'person'}
   ball_detection:
-    weights: "/home/masoud/Desktop/projects/volleyball_analytics/weights/ball_segment/model2/weights/best.pt"
+    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/ball_segment/model2/weights/best.pt"
     labels: {0: "ball"}
   action_detection:
-    weights: "/home/masoud/Desktop/projects/volleyball_analytics/weights/vb_actions_6_class/weights/best.pt"
+    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/vb_actions_6_class/weights/best.pt"
     labels: {1: 'block', 2: "receive", 3: 'set', 4: 'spike'}
 
 video_mae:
   game_status:
-    weights: ""
+    weight: ""
     labels: {0: 'service', 1: 'in-game', 2: 'no-game'}

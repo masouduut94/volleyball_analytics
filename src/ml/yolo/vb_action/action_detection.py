@@ -6,23 +6,24 @@ from ultralytics import YOLO
 
 from src.utilities.utils import BoundingBox, Meta, KeyPointBox
 
-weights = "/home/masoud/Desktop/projects/volleyball_analytics/weights/vb_actions_6_class/weights/best.pt"
+# weights = "/home/masoud/Desktop/projects/volleyball_analytics/weights/vb_actions_6_class/weights/best.pt"
 
 
 class ActionDetector:
-    def __init__(self):
-        self.model = YOLO(weights)
+    def __init__(self, cfg):
+        self.model = YOLO(cfg['weight'])
+        self.labels = cfg['labels']
 
     def detect_all(self, frame: NDArray) -> List[BoundingBox]:
-        results = self.model(frame, verbose=False, classes=[1, 2, 3, 4])
+        results = self.model(frame, verbose=False, classes=list(self.labels.keys()))
         confs = results[0].boxes.conf.cpu().detach().numpy().tolist()
         boxes = results[0].boxes.xyxy.cpu().detach().numpy().tolist()
         classes = results[0].boxes.cls.cpu().detach().numpy().astype(int).tolist()
-        names = results[0].names
+        # names = results[0].names
         detections = []
 
         for box, conf, cl in zip(boxes, confs, classes):
-            name = names[cl]
+            name = self.labels[cl]
             b = BoundingBox(box, name=name, conf=float(conf))
             detections.append(b)
         return detections

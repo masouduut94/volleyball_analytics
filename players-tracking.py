@@ -186,7 +186,7 @@ if __name__ == '__main__':
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, Meta.white, 2)
         ball = ball_detector.detect_one(frame)
         actions = action_detector.detect(frame)
-        poses = kp_detector.detect(frame)
+        poses = kp_detector.detect_all(frame)
         t2 = time()
         pbar.set_description(f"{t2 - t1: .4f} seconds. {fno}/{total_frames}")
 

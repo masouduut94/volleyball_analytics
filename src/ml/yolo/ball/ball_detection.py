@@ -2,13 +2,15 @@ from typing import List
 from ultralytics import YOLO
 from numpy.typing import NDArray
 from src.utilities.utils import BoundingBox, Meta
+# weights = '/home/masoud/Desktop/projects/volleyball_analytics/weights/ball_segment/model2/weights/best.pt'
 
-weights = '/home/masoud/Desktop/projects/volleyball_analytics/weights/ball_segment/model2/weights/best.pt'
+__all__ = ['BallDetector']
 
 
 class BallDetector:
-    def __init__(self):
-        self.model = YOLO(weights)
+    def __init__(self, cfg: dict):
+        self.model = YOLO(cfg['weight'])
+        self.labels = cfg['labels']
 
     def detect_one(self, frame: NDArray) -> BoundingBox | None:
         results = self.model(frame, verbose=False, imgsz=640)

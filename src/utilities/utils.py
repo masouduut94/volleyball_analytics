@@ -5,6 +5,15 @@ from typing import List, Tuple
 from numpy.typing import NDArray
 
 
+class Struct:
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            if isinstance(value, dict):
+                self.__dict__[key] = Struct(**value)
+            else:
+                self.__dict__[key] = value
+
+
 class Meta:
     white = (255, 255, 255)
     black = (0, 0, 0)
@@ -184,7 +193,7 @@ class BoundingBox:
         Returns:
 
         """
-        bbox = self.create_new(box)
+        bbox = self.create(box)
         intersection = self.intersection(bbox)
 
         iou = intersection / float(self.area + bbox.area - intersection)
