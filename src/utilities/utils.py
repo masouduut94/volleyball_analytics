@@ -1,17 +1,34 @@
+from pathlib import Path
+
 import cv2
 import numpy as np
 import math
 from typing import List, Tuple
 from numpy.typing import NDArray
+from tqdm import tqdm
 
 
-class Struct:
-    def __init__(self, **kwargs):
-        for key, value in kwargs.items():
-            if isinstance(value, dict):
-                self.__dict__[key] = Struct(**value)
-            else:
-                self.__dict__[key] = value
+def video_write(input: str, output_path: str, yolo_model, config):
+    action_detector = yolo_model(cfg=config)
+    cap = cv2.VideoCapture(input)
+    assert cap.isOpened()
+
+    w, h, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    output_file = Path(output_path) / (Path(input).stem + '_output.mp4')
+    writer = cv2.VideoWriter(output_file.as_posix(), fourcc, fps, (w, h))
+
+    for fno in tqdm(list(range(n_frames))):
+        cap.set(1, fno)
+        status, frame = cap.read()
+        bboxes = action_detector.detect_all(frame)
+        frame = action_detector.draw(frame, bboxes)
+        writer.write(frame)
+
+    cap.release()
+    writer.release()
+    cv2.destroyAllWindows()
+    print(f'saved results in {output_file}')
 
 
 class Meta:

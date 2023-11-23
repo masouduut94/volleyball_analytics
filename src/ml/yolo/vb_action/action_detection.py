@@ -1,10 +1,14 @@
+from pathlib import Path
 from typing import List
 
+import cv2
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+from tqdm import tqdm
 from ultralytics import YOLO
 
 from src.utilities.utils import BoundingBox, Meta, KeyPointBox
+
 
 # weights = "/home/masoud/Desktop/projects/volleyball_analytics/weights/vb_actions_6_class/weights/best.pt"
 
@@ -41,3 +45,33 @@ class ActionDetector:
                 case 'block':
                     frame = bb.plot(frame, color=Meta.purple, title=bb.name)
         return frame
+
+
+if __name__ == '__main__':
+    video = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/test/videos/11_short.mp4'
+    output = '/home/masoud/Desktop/projects/volleyball_analytics/runs/inference/det'
+    cfg = {
+        'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/vb_actions_4_classes/weights/best.pt',
+        "labels": {0: 'spike', 1: 'block', 2: 'receive', 3: 'set'}
+    }
+
+    action_detector = ActionDetector(cfg=cfg)
+    cap = cv2.VideoCapture(video)
+    assert cap.isOpened()
+
+    w, h, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    output_file = Path(output) / (Path(video).stem + '_output.mp4')
+    writer = cv2.VideoWriter(output_file.as_posix(), fourcc, fps, (w, h))
+
+    for fno in tqdm(list(range(n_frames))):
+        cap.set(1, fno)
+        status, frame = cap.read()
+        bboxes = action_detector.detect_all(frame)
+        frame = action_detector.draw(frame, bboxes)
+        writer.write(frame)
+
+    cap.release()
+    writer.release()
+    cv2.destroyAllWindows()
+    print(f'saved results in {output_file}')
