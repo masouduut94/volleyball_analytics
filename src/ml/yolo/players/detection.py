@@ -1,12 +1,15 @@
-from abc import ABC
+# from abc import ABC
 from typing import List
 
-import numpy as np
+# import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from ultralytics import YOLO
 
 from src.ml.abstract.yolo_detector import YoloDetector
 from src.utilities.utils import BoundingBox, Meta, CourtCoordinates
+from pathlib import Path
+import cv2
+from tqdm import tqdm
 
 # weights = 'yolov8n.pt'
 
@@ -21,7 +24,7 @@ class PlayerDetector:
         self.court = CourtCoordinates(court_dict) if court_dict is not None else None
 
     def detect_all(self, frame: NDArray) -> list[BoundingBox]:
-        results = self.model(frame, verbose=False, classes=0)
+        results = self.model(frame, classes=0, device=[0])
         confs = results[0].boxes.conf.cpu().detach().numpy().tolist()
         boxes = results[0].boxes.xyxy.cpu().detach().numpy().tolist()
 
@@ -74,3 +77,33 @@ class PlayerDetector:
             if use_bbox:
                 frame = bb.plot(frame, color, title=bb.name if use_title else '')
         return frame
+
+
+if __name__ == '__main__':
+    video = 'C:/Users/masoud/Desktop/Projects/volleyball_analytics/data/raw/videos/test/10.mp4'
+    output = 'C:/Users/masoud/Desktop/Projects/volleyball_analytics/run/inference'
+    cfg = {
+        'weight': './yolov8n.pt',
+        "labels": {0: 'ball'}
+    }
+
+    player_detector = PlayerDetector(cfg=cfg)
+    cap = cv2.VideoCapture(video)
+    assert cap.isOpened()
+
+    w, h, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    output_file = Path(video) / (Path(video).stem + 'ball_detection_output.mp4')
+    writer = cv2.VideoWriter(output_file.as_posix(), fourcc, fps, (w, h))
+
+    for fno in tqdm(list(range(n_frames))):
+        cap.set(1, fno)
+        status, frame = cap.read()
+        bboxes = player_detector.detect_all(frame)
+        frame = player_detector.draw(frame, bboxes)
+        writer.write(frame)
+
+    cap.release()
+    writer.release()
+    cv2.destroyAllWindows()
+    print(f'saved results in {output_file}')

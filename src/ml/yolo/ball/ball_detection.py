@@ -6,6 +6,7 @@ from tqdm import tqdm
 from ultralytics import YOLO
 from numpy.typing import NDArray
 from src.utilities.utils import BoundingBox, Meta
+
 # weights = '/home/masoud/Desktop/projects/volleyball_analytics/weights/ball_segment/model2/weights/best.pt'
 
 __all__ = ['BallDetector']
@@ -57,8 +58,8 @@ class BallDetector:
 
 
 if __name__ == '__main__':
-    video = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/test/videos/11_short.mp4'
-    output = '/home/masoud/Desktop/projects/volleyball_analytics/runs/inference/det'
+    video = 'C:/Users/masoud/Desktop/Projects/volleyball_analytics/data/raw/videos/test4'
+    output = 'C:/Users/masoud/Desktop/Projects/volleyball_analytics/run/inference'
     cfg = {
         'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/ball_segment/model2/weights/best.pt',
         "labels": {0: 'ball'}

@@ -328,7 +328,7 @@ class BoundingBox:
         img = cv2.ellipse(
             img,
             center=self.down_center,
-            axes=(int(self.width-10), int(0.25 * self.width-10)),
+            axes=(int((self.width-10)), int(0.35 * (self.width-10))),
             angle=0.0,
             startAngle=-45,
             endAngle=235,
