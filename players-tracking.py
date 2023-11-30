@@ -6,7 +6,6 @@ from tqdm import tqdm
 from time import time
 from pathlib import Path
 import norfair
-import norfair
 from norfair import Detection, Tracker, OptimizedKalmanFilterFactory
 from argparse import ArgumentParser
 from src.ml.yolo.ball.ball_detection import BallDetector
