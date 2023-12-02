@@ -1,11 +1,10 @@
-import json
-
 import yaml
+import json
 from os.path import isfile
-
-from ball import BallDetector
 from numpy.typing import NDArray
 from yaml.loader import SafeLoader
+
+from ball import BallDetector
 from vb_action import ActionDetector
 from players import PlayerSegmentator, PlayerDetector, PoseEstimator
 
