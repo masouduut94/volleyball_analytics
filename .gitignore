@@ -9,6 +9,7 @@
 *.jpeg
 *.ipynb_checkpoints
 *.pyc
+*.xml
 
 # tensorflow - pytorch model weights
 *.pt
