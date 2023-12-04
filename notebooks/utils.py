@@ -36,6 +36,7 @@ class Bbox:
         img = cv2.rectangle(img, self.pt1, self.pt2, color, 2)
         return img
 
+
 class Segment:
     def __init__(self, polygon: List[float | int], label: int):
         self.polygon = polygon

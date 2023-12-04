@@ -7,6 +7,7 @@ from copy import deepcopy
 from natsort import natsorted
 import xml.etree.ElementTree as ET
 from src.utilities.utils import BoundingBox
+from notebooks.utils import Bbox, Segment, ImageAnnot
 from src.ml.yolo.vb_action.action_detection import ActionDetector
 
 
@@ -42,6 +43,13 @@ class CVATDataset:
         tree = ET.ElementTree(self.annotations)
         ET.indent(tree, space="\t", level=0)
         tree.write(filename)
+
+
+class YoloDataset:
+    def __init__(self):
+        pass
+
+    def add_image
 
 
 if __name__ == '__main__':
