@@ -9,6 +9,8 @@ from pathlib import Path, PosixPath
 from copy import deepcopy
 from natsort import natsorted
 import xml.etree.ElementTree as ET
+
+from src.ml.yolo.ball import BallDetector
 from src.utilities.utils import BoundingBox
 from notebooks.utils import Bbox, Segment, ImageAnnot
 from src.ml.yolo.vb_action.action_detection import ActionDetector
@@ -54,7 +56,7 @@ class YoloDataset:
         self.names2labels, self.labels2names = self._init_labels(self.names)
         self.data_dir = 'data'
         self.obj_train_data_dir = 'obj_train_data'
-        self.img_dir = join(self.data_dir, 'obj_train_data')
+        self.img_dir = join(self.data_dir, self.obj_train_data_dir)
         os.makedirs(self.img_dir, exist_ok=True)
         self.img_annots: List[ImageAnnot] = []
 
@@ -126,44 +128,14 @@ class YoloDataset:
         with open(train_txt_dir, 'w') as output:
             output.write(train_txt)
 
+        for img_annot in self.img_annots:
+            with open(join(train_data_dir, img_annot.img_path.stem + '.txt'), 'w') as annotation:
+                text = img_annot.get_yolo_format()
+                annotation.write(text)
+
 
 if __name__ == '__main__':
-    # cfg = {
-    #     'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/vb_actions_6_class/model1/weights/best.pt',
-    #     "labels": {
-    #         # 0: 'ball',
-    #         1: 'block',
-    #         2: 'receive',
-    #         3: 'set',
-    #         4: 'spike',
-    #         5: 'serve'
-    #     }
-    # }
-    # detector = ActionDetector(cfg)
-    #
-    # image_dir = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/4_classes/serve'
-    # images = natsorted(list(Path(image_dir).glob('*.png')))
-    # meta_file = '/home/masoud/Desktop/projects/volleyball_analytics/notebooks/meta.xml'
-    # output_path = '/home/masoud/Desktop/projects/volleyball_analytics/runs'
-    # os.makedirs(output_path, exist_ok=True)
-    # cvat_fmt = CVATDataset(meta_file)
-    # parent = Path(image_dir).stem
-    #
-    # pbar = tqdm(images)
-    # count = 0
-    # for img_path in images:
-    #     img = cv2.imread(img_path.as_posix())
-    #     h, w, _ = img.shape
-    #     bboxes = detector.detect_all(img)
-    #     img_tag = cvat_fmt.create_img(img_path.name, width=w, height=h)
-    #     if len(bboxes):
-    #         cvat_fmt.add_bboxes(img_tag=img_tag, yolo_bboxes=bboxes)
-    #         count += 1
-    #     pbar.update(1)
-    #     pbar.set_description(f"positives: {count}/{len(images)}")
-    # cvat_fmt.output(f'{output_path}/{parent}.xml')
-
-    cfg = {
+    action_cfg = {
         'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/vb_actions_6_class/model1/weights/best.pt',
         "labels": {
             0: 'ball',
@@ -174,21 +146,30 @@ if __name__ == '__main__':
             5: 'serve'
         }
     }
-    detector = ActionDetector(cfg)
+    ball_cfg = {
+        'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/ball_segment/model2/weights/best.pt',
+        "labels": {0: 'ball'}
+    }
 
-    image_dir = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/4_classes/serve'
+    action_detector = ActionDetector(action_cfg)
+    ball_detector = BallDetector(ball_cfg)
+
+    image_dir = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/4_classes/receive'
     images = natsorted(list(Path(image_dir).glob('*.png')))
     # meta_file = '/home/masoud/Desktop/projects/volleyball_analytics/notebooks/meta.xml'
-    output_path = '/home/masoud/Desktop/projects/volleyball_analytics/runs/yolo_package/serve'
+    output_path = '/home/masoud/Desktop/projects/volleyball_analytics/runs/yolo_package/receive'
     os.makedirs(output_path, exist_ok=True)
-    yolo_fmt = YoloDataset(list(cfg['labels'].values()))
+    yolo_fmt = YoloDataset(list(action_cfg['labels'].values()))
 
     pbar = tqdm(images)
     count = 0
     for img_path in images:
         img_annot = yolo_fmt.create_img(img_path)
         img = cv2.imread(img_path.as_posix())
-        bboxes = detector.detect_all(img)
+        bboxes = action_detector.detect_all(img)
+        balls: List[BoundingBox] = ball_detector.detect_all(img)
+        bboxes = [box for box in bboxes if box.name != 'ball']
+        bboxes.extend(balls)
         if len(bboxes):
             yolo_fmt.add_bboxes(img_annot=img_annot, yolo_bboxes=bboxes)
             count += 1
