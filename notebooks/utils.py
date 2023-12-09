@@ -23,7 +23,7 @@ class Bbox:
         self.width = abs(self.x2 - self.x1)
         self.height = abs(self.y2 - self.y1)
 
-    def to_yolo(self, img_width: int, img_height: int) -> List[float]:
+    def to_yolo(self, img_width: int, img_height: int) -> str:
         l = self.label
         x_cen = (self.x1 + self.width/2) / img_width
         y_cen = (self.y1 + self.height/2) / img_height
@@ -46,7 +46,7 @@ class Segment:
     def chunk(self, arr: List) -> List[ArrayLike]:
         return [np.array(arr[i:i + 2]).reshape((-1,1,2)).astype(np.int32) for i in range(0, len(arr), 2)]
 
-    def segment_to_yolo(self, img_w, img_h):
+    def to_yolo_segment(self, img_w, img_h):
         text = f"{self.label} "
         for i, p in enumerate(self.polygon):
             if i % 2 == 0: # x points / img_w
@@ -74,35 +74,43 @@ class Segment:
 class ImageAnnot:
     # Fixme: Adapt the framework for training bbox annotated project. right now it is decent for segmentation project.
     # Decouple Segment with Bbox.
-    def __init__(self, img_path: str | PosixPath):
-        self.img_path = Path(img_path)
-        assert self.img_path.is_file()
+    def __init__(self, img_path: str | Path):
+        self.img_path = Path(img_path) if not isinstance(img_path, Path) else img_path
+        assert self.img_path.is_file(), f"{str(img_path)} file does not exist..."
         self.name = self.img_path.name
-        self.segments = []
-        self.img_w, self.img_h = self.get_img_size()
+        self.items = []
+        self.img_w, self.img_h = self._get_img_size()
     
-    def get_img_size(self):
+    def _get_img_size(self):
         img = cv2.imread(self.img_path.as_posix())
         h, w, _ = img.shape
         return w, h
         
-    def add_segment(self, segment: Segment) -> None:
-        self.segments.append(segment)
+    def add_item(self, item: Segment | Bbox) -> None:
+        self.items.append(item)
 
-    def get_yolo_format(self, only_bboxes=True):
+    def get_yolo_format(self, bbox_task_format=True):
         temp = ""
-        for i, item in enumerate(self.segments):
-            if not only_bboxes:
-                segment_txt = item.segment_to_yolo(self.img_w, self.img_h)
-                temp += segment_txt
-            else:
-                temp += item.get_bbox().to_yolo(self.img_w, self.img_h)
-            if i != len(self.segments) - 1:
-                temp += '\n'
+
+        if bbox_task_format:
+            for i, item in enumerate(self.items):
+                if isinstance(item, Segment):
+                    temp += item.get_bbox().to_yolo(self.img_w, self.img_h)
+                else:
+                    temp += item.to_yolo(self.img_w, self.img_h)
+                if i != len(self.items) - 1:
+                    temp += '\n'
+        else:
+            for i, item in enumerate(self.items):
+                if isinstance(item, Segment):
+                    temp += item.to_yolo_segment(self.img_w, self.img_h)
+                    if i != len(self.items) - 1:
+                        temp += '\n'
+
         return temp
 
     def save_labels(self, save_path: str = "base_dir", train: bool = True, only_bboxes: bool = True):
-        output = self.get_yolo_format(only_bboxes=only_bboxes)
+        output = self.get_yolo_format(bbox_task_format=only_bboxes)
         file_name = self.img_path.stem
         
         if train:
@@ -126,6 +134,6 @@ class ImageAnnot:
     def img_show(self, color: tuple = (0, 255, 0)):
         img = cv2.imread(self.img_path.as_posix())
         img = cv2.cvtColor(img, 4)
-        for segment in self.segments:
+        for segment in self.items:
             img = segment.draw(img, color=color, draw_bbox=True)
         return img
