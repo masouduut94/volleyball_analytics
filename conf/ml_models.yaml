@@ -12,8 +12,11 @@ yolo:
     weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/ball_segment/model2/weights/best.pt"
     labels: {0: "ball"}
   action_detection:
-    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/vb_actions_6_class/weights/best.pt"
-    labels: {1: 'block', 2: "receive", 3: 'set', 4: 'spike'}
+     weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/action_detection/5_class/weights/best.pt"
+     labels: {0: 'ball', 1: 'block', 2: "receive", 3: 'set', 4: 'spike'}
+#    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/action_detection/6_class/model1/weights/best.pt"
+#    labels: {1: 'block', 2: "receive", 3: 'set', 4: 'spike'}
+
 
 video_mae:
   game_status:
