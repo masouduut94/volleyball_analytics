@@ -2,7 +2,6 @@ from transformers import VideoMAEFeatureExtractor, VideoMAEForVideoClassificatio
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 import pytorchvideo.data
 import os
-import imageio
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sn
@@ -11,46 +10,19 @@ import torch
 import pathlib
 import numpy as np
 
-"""
-Data details:
-
-    Train Videos: 19 videos
-    Test Videos: 5 videos
-
-    Serve: 1532
-    No-Serve: 6904
-
-    Batch-Size: 1
-
-
-"""
-
 from pytorchvideo.transforms import (
-    ApplyTransformToKey,
-    Normalize,
-    RandomShortSideScale,
-    RemoveKey,
-    ShortSideScale,
-    create_video_transform,
-    UniformTemporalSubsample
-)
+    ApplyTransformToKey, UniformTemporalSubsample, Normalize)
 
-from torchvision.transforms import (
-    Compose,
-    Lambda,
-    RandomHorizontalFlip,
-    Resize,
-    RandomAutocontrast
-)
+from torchvision.transforms import (Compose, Lambda, Resize, RandomHorizontalFlip, RandomAutocontrast)
 from transformers import TrainingArguments, Trainer
 
 model_ckpt = "MCG-NJU/videomae-base-finetuned-kinetics"
-batch_size = 4
-dataset_root_path = pathlib.Path("./fake_data/")
+batch_size = 8
+dataset_root_path = pathlib.Path("/home/masoud/Desktop/projects/volleyball_analytics/data/processed/game-status")
 
 video_count_train = len(list(dataset_root_path.glob("train/*/*.mp4")))
 video_count_val = len(list(dataset_root_path.glob("test/*/*.mp4")))
-video_count_test = len(list(dataset_root_path.glob("test/*/*.mp4")))
+# video_count_test = len(list(dataset_root_path.glob("test/*/*.mp4")))
 video_total = video_count_train + video_count_val
 print(f"Total videos: {video_total}")
 
@@ -58,8 +30,8 @@ all_video_file_paths = (
         list(dataset_root_path.glob("train/*/*.mp4"))
         + list(dataset_root_path.glob("test/*/*.mp4"))
 )
-
-class_labels = sorted({str(path).split("/")[2] for path in all_video_file_paths})
+# all_video_file_paths[0].parent.stem
+class_labels = sorted({path.parent.stem for path in all_video_file_paths})
 label2id = {label: i for i, label in enumerate(class_labels)}
 id2label = {i: label for label, i in label2id.items()}
 
@@ -94,6 +66,7 @@ train_transform = Compose(
                     Lambda(lambda x: x / 255.0),
                     Normalize(mean, std),
                     Resize(resize_to),
+                    # RandomHorizontalFlip(p=0.5),
                 ]
             ),
         ),
@@ -139,7 +112,7 @@ test_dataset = pytorchvideo.data.Ucf101(
     transform=val_transform,
 )
 
-new_model_name = "2256_s_5130_n_with_fp"
+new_model_name = "services-650"
 num_epochs = 6
 
 args = TrainingArguments(
@@ -163,13 +136,13 @@ def compute_metrics(pred):
     """Computes accuracy on a batch of predictions."""
     labels = pred.label_ids
     preds = pred.predictions.argmax(-1)
-    precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average='binary')
+    precision, recall, f1, _ = precision_recall_fscore_support(labels, preds)
     acc = accuracy_score(labels, preds)
 
     predictions = np.argmax(pred.predictions, axis=1)
 
     # confution matrix
-    labels = ['no-serve', 'serve']
+    labels = class_labels
     cm = confusion_matrix(pred.label_ids, predictions)
     df_cfm = pd.DataFrame(cm, index=labels, columns=labels)
     plt.figure(figsize=(10, 7))
@@ -178,9 +151,9 @@ def compute_metrics(pred):
 
     return {
         'accuracy': acc,
-        'f1': f1,
-        'precision': precision,
-        'recall': recall
+        'f1': f1.tolist(),
+        'precision': precision.tolist(),
+        'recall': recall.tolist()
     }
 
 
@@ -191,7 +164,7 @@ def collate_fn(examples):
         [example["video"].permute(1, 0, 2, 3) for example in examples]
     )
     labels = torch.tensor([example["label"] for example in examples])
-    return {"pixel_values": pixel_values, "shot_types": labels}
+    return {"pixel_values": pixel_values, "labels": labels}
 
 
 trainer = Trainer(

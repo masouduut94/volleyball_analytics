@@ -15,3 +15,5 @@ norfair~=2.2.0
 ipywidgets
 widgetsnbextension
 pandas-profiling
+transformers~=4.36.2
+natsort~=8.4.0
