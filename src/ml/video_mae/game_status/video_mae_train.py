@@ -73,14 +73,6 @@ train_transform = Compose(
     ]
 )
 
-# Training dataset.
-train_dataset = pytorchvideo.data.Ucf101(
-    data_path=os.path.join(dataset_root_path, "train"),
-    clip_sampler=pytorchvideo.data.make_clip_sampler("random", clip_duration),
-    decode_audio=False,
-    transform=train_transform,
-)
-
 # Validation and evaluation datasets' transformations.
 val_transform = Compose(
     [
@@ -98,13 +90,15 @@ val_transform = Compose(
     ]
 )
 
-# Validation and evaluation datasets.
-val_dataset = pytorchvideo.data.Ucf101(
-    data_path=os.path.join(dataset_root_path, "test"),
-    clip_sampler=pytorchvideo.data.make_clip_sampler("uniform", clip_duration),
+# Training dataset.
+train_dataset = pytorchvideo.data.Ucf101(
+    data_path=os.path.join(dataset_root_path, "train"),
+    clip_sampler=pytorchvideo.data.make_clip_sampler("random", clip_duration),
     decode_audio=False,
-    transform=val_transform,
+    transform=train_transform,
 )
+
+
 test_dataset = pytorchvideo.data.Ucf101(
     data_path=os.path.join(dataset_root_path, "test"),
     clip_sampler=pytorchvideo.data.make_clip_sampler("uniform", clip_duration),
@@ -112,6 +106,13 @@ test_dataset = pytorchvideo.data.Ucf101(
     transform=val_transform,
 )
 
+# Validation and evaluation datasets.
+# val_dataset = pytorchvideo.data.Ucf101(
+#     data_path=os.path.join(dataset_root_path, "test"),
+#     clip_sampler=pytorchvideo.data.make_clip_sampler("uniform", clip_duration),
+#     decode_audio=False,
+#     transform=val_transform,
+# )
 new_model_name = "services-650"
 num_epochs = 6
 
