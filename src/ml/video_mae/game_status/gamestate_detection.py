@@ -2,25 +2,25 @@ import cv2
 import numpy as np
 import torch
 import os
+from torchvision.transforms import Compose, Lambda, Resize
 from pytorchvideo.transforms import Normalize, UniformTemporalSubsample
-from torchvision.transforms import Compose, Lambda, Resize, CenterCrop
-from transformers import VideoMAEFeatureExtractor, VideoMAEForVideoClassification
+from transformers import VideoMAEImageProcessor, VideoMAEForVideoClassification
 
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 
-class ServeDetectionModel:
+class GameStateDetector:
     def __init__(self, ckpt):
         print("Initializing model and transforms...")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        PROCESSOR = VideoMAEFeatureExtractor.from_pretrained(ckpt)
+        self.feature_extractor = VideoMAEImageProcessor.from_pretrained(ckpt)
         self.model = VideoMAEForVideoClassification.from_pretrained(ckpt).to(self.device)
         self.labels = list(self.model.config.label2id.keys())
         # processor = VideoMAEFeatureExtractor.from_pretrained(ckpt)
         sample_size = self.model.config.num_frames
-        mean = PROCESSOR.image_mean
+        mean = self.feature_extractor.image_mean
         resize_to = 224
-        std = PROCESSOR.image_std
+        std = self.feature_extractor.image_std
 
         self.transforms = Compose(
             [
@@ -30,7 +30,6 @@ class ServeDetectionModel:
                 Resize((resize_to, resize_to)),
             ]
         )
-        self.model = self.model
 
     def predict(self, frames):
         video_tensor = torch.tensor(np.array(frames).astype(frames[0].dtype))

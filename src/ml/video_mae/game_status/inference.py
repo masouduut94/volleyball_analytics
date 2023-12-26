@@ -1,17 +1,17 @@
-from pretrained import ServeDetectionModel
 import cv2
+import time
 import numpy as np
 import pandas as pd
-import time
 from os import makedirs
 from tqdm import tqdm
 from os.path import join
 from pathlib import Path
+from gamestate_detection import GameStateDetector
 
 FPS = 30
 
 
-def slice_video(serve_detection_model: ServeDetectionModel, video, output_path, buffer_size=30):
+def slice_video(serve_detection_model: GameStateDetector, video, output_path, buffer_size=30):
     cap = cv2.VideoCapture(video)
     assert cap.isOpened(), f'the video file is not opening {video}'
     makedirs(output_path, exist_ok=True)
@@ -71,42 +71,57 @@ def slice_video(serve_detection_model: ServeDetectionModel, video, output_path, 
         writer.release()
 
 
-def annotate_service(serve_detection_model: ServeDetectionModel, video, output_path, buffer_size=30):
-    cap = cv2.VideoCapture(video)
-    assert cap.isOpened(), f'the video file is not opening {video}'
+def annotate_service(serve_detection_model: GameStateDetector, video_path, output_path, buffer_size=30):
+    video_path = Path(video_path)
+    cap = cv2.VideoCapture(video_path.as_posix())
+    assert video_path.is_file(), f'file {video_path.as_posix()} not found...'
+    assert cap.isOpened(), f'the video file is not opening {video_path}'
     makedirs(output_path, exist_ok=True)
 
     status = True
     buffer = []
     w, h, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
 
-    pbar = tqdm(total=n_frames, desc='writing frames')
-    rally_counter = 0
+    pbar = tqdm(total=n_frames, desc=f'writing 0/{n_frames}')
 
     codec = cv2.VideoWriter_fourcc(*'mp4v')
     w, h, fps = [int(cap.get(i)) for i in range(3, 6)]
-    filename = join(output_path, Path(video).stem + f'_visualization.mp4')
+    filename = join(output_path, Path(video_path).stem + f'_visualization.mp4')
     writer = cv2.VideoWriter(filename, codec, fps, (w, h))
 
     while status:
         status, frame = cap.read()
+        fno = int(cap.get(1))
         if not status:
             break
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        pbar.set_description(f'processing {fno}/{n_frames}')
         pbar.update(1)
-        frame_id = int(cap.get(1))
         buffer.append(frame)
 
         if len(buffer) != buffer_size:
             continue
+        else:
+            label = serve_detection_model.predict(buffer)
+            match label:
+                case 'service':
+                    color = (0, 255, 0)
+                case 'no-play':
+                    color = (0, 0, 255)
+                case 'play':
+                    color = (255, 255, 0)
+                case _:
+                    color = (0, 0, 0)
 
-        label = serve_detection_model.predict(buffer)
-        for f in buffer:
-            f = cv2.putText(
-                f, label, (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                1, (0, 255, 0), 2
-            )
-            writer.write(f)
+            for f in buffer:
+                f = cv2.putText(
+                    f, label, (w//2, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                    1.5, color, 2
+                )
+                f = cv2.putText(
+                    f, f"Frame # {fno}/{n_frames}", (w - 200, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6, (255, 0, 0), 2)
+                writer.write(f)
         buffer.clear()
 
     pbar.close()
@@ -114,9 +129,9 @@ def annotate_service(serve_detection_model: ServeDetectionModel, video, output_p
 
 
 if __name__ == '__main__':
-    ckpt = "/mnt/disk1/projects/table_tennis/masoud/TT/rally_detection/video_mae/serve_detection_flipped_ckpt/checkpoint-3066"
-    model = ServeDetectionModel(ckpt=ckpt)
-    video_path = '/mnt/disk1/projects/table_tennis/masoud/TT/videos/test_videos/rally5.mp4'
-    output_path = '/mnt/disk1/projects/table_tennis/masoud/TT/rally_detection/video_mae/sliced_videos'
+    ckpt = "/home/masoud/Desktop/projects/volleyball_analytics/weights/game-status/services-650/checkpoint-3744"
+    model = GameStateDetector(ckpt=ckpt)
+    video = '/media/HDD/datasets/VOLLEYBALL/RAW-VIDEOS/train/22m.mp4'
+    output_path = '/home/masoud/Desktop/projects/volleyball_analytics/runs/inference/game_state/output'
 
-    annotate_service(model, video_path, output_path, buffer_size=20)
+    annotate_service(model, video, output_path, buffer_size=30)
