@@ -57,8 +57,9 @@ def collate_fn(examples):
 if __name__ == '__main__':
     batch_size = 8
     model_ckpt = "MCG-NJU/videomae-base-finetuned-kinetics"
-    dataset_root_path = Path("/home/masoud/Desktop/projects/volleyball_analytics/data/processed/game-status")
+    data_path = '/home/masoud/Desktop/projects/volleyball_analytics/data/processed/game-status-2-classes'
 
+    dataset_root_path = Path(data_path)
     train_files = list(dataset_root_path.glob("train/*/*.mp4"))
     test_files = list(dataset_root_path.glob("test/*/*.mp4"))
     # val_files = list(dataset_root_path.glob("test/*/*.mp4"))

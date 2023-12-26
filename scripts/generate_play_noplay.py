@@ -1,13 +1,13 @@
 import cv2
+import random
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
 from os import makedirs
 from pathlib import Path
-import xml.etree.ElementTree as ET
-from tqdm import tqdm
-import random
 from natsort import natsorted
 import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
+import xml.etree.ElementTree as ET
 
 plt.rcParams['figure.figsize'] = [15, 10]
 

@@ -1,18 +1,17 @@
 import os
-from os.path import join
-from shutil import copy2
-
 import cv2
 from tqdm import tqdm
 from typing import List
-from pathlib import Path, PosixPath
+from pathlib import Path
+from os.path import join
+from shutil import copy2
 from copy import deepcopy
 from natsort import natsorted
 import xml.etree.ElementTree as ET
 
 from src.ml.yolo.ball import BallDetector
 from src.utilities.utils import BoundingBox
-from notebooks.utils import Bbox, Segment, ImageAnnot
+from notebooks.utils import Bbox, ImageAnnot
 from src.ml.yolo.vb_action.action_detection import ActionDetector
 
 

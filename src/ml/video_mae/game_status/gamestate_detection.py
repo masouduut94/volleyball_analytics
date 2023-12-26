@@ -1,7 +1,7 @@
-import cv2
-import numpy as np
-import torch
 import os
+import cv2
+import torch
+import numpy as np
 from torchvision.transforms import Compose, Lambda, Resize
 from pytorchvideo.transforms import Normalize, UniformTemporalSubsample
 from transformers import VideoMAEImageProcessor, VideoMAEForVideoClassification

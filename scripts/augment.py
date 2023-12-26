@@ -1,19 +1,17 @@
+import cv2
+from tqdm import tqdm
 from pathlib import Path
 from os.path import join
-# from os import makedirs
 from natsort import natsorted
-import cv2
-# import numpy as np
-# import albumentations as A
-from tqdm import tqdm
 
-data_path = '/home/masoud/Desktop/projects/volleyball_analytics/data/processed/game-status/train'
+data_path = '/home/masoud/Desktop/projects/volleyball_analytics/data/processed/game-status-2-classes/train'
 
 all_videos = natsorted(list(Path(data_path).rglob('*.mp4')), key=lambda x: x.parent.stem)
 progress_bar = tqdm(all_videos)
 
 for video_path in all_videos:
     progress_bar.set_description(f'progressing {video_path.parent.stem} path')
+    progress_bar.update(1)
     name = video_path.stem + '__LR_flipped.mp4'
     save_path = video_path.parent.as_posix()
 
@@ -32,6 +30,9 @@ for video_path in all_videos:
         # transformed = np.fliplr(frame)
         transformed = frame[:, ::-1]
         writer.write(transformed)
+    writer.release()
+    cap.release()
+progress_bar.close()
 
 
 
