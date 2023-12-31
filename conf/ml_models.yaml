@@ -19,6 +19,8 @@ yolo:
 
 
 video_mae:
-  game_status:
-    weight: ""
-    labels: {0: 'service', 1: 'in-game', 2: 'no-game'}
+  game_state_3:
+    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/game-state/3-states/checkpoint-5424"
+  game_state_2:
+    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/game-state/two-states/checkpoint-5604"
+

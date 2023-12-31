@@ -1,9 +1,9 @@
 import os
 import torch
-from pathlib import Path
 import numpy as np
 import pandas as pd
 import seaborn as sn
+from pathlib import Path
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
@@ -57,7 +57,7 @@ def collate_fn(examples):
 if __name__ == '__main__':
     batch_size = 8
     model_ckpt = "MCG-NJU/videomae-base-finetuned-kinetics"
-    data_path = '/home/masoud/Desktop/projects/volleyball_analytics/data/processed/game-status-2-classes'
+    data_path = '/home/masoud/Desktop/projects/volleyball_analytics/data/processed/game-status'
 
     dataset_root_path = Path(data_path)
     train_files = list(dataset_root_path.glob("train/*/*.mp4"))
@@ -146,8 +146,8 @@ if __name__ == '__main__':
         transform=val_transform,
     )
 
-    new_model_name = "services-650"
-    num_epochs = 6
+    new_model_name = "triple"
+    num_epochs = 3
 
     args = TrainingArguments(
         new_model_name,
@@ -163,6 +163,8 @@ if __name__ == '__main__':
         metric_for_best_model="accuracy",
         push_to_hub=False,
         max_steps=(train_dataset.num_videos // batch_size) * num_epochs,
+        fp16=True,
+        # optim="adamw_bnb_8bit"
     )
 
     trainer = Trainer(

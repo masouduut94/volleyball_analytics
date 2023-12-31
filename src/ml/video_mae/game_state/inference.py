@@ -1,6 +1,7 @@
 import cv2
-from os import makedirs
+from time import time
 from tqdm import tqdm
+from os import makedirs
 from os.path import join
 from pathlib import Path
 from gamestate_detection import GameStateDetector
@@ -77,6 +78,7 @@ def annotate_service(serve_detection_model: GameStateDetector, video_path, outpu
 
     status = True
     buffer = []
+    buffer2 = []
     w, h, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
 
     pbar = tqdm(total=n_frames, desc=f'writing 0/{n_frames}')
@@ -85,21 +87,26 @@ def annotate_service(serve_detection_model: GameStateDetector, video_path, outpu
     w, h, fps = [int(cap.get(i)) for i in range(3, 6)]
     filename = join(output_path, Path(video_path).stem + f'_visualization.mp4')
     writer = cv2.VideoWriter(filename, codec, fps, (w, h))
-
+    t2 = 0
+    t1 = 0
     while status:
         status, frame = cap.read()
         fno = int(cap.get(1))
         if not status:
             break
         # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        pbar.set_description(f'processing {fno}/{n_frames}')
         pbar.update(1)
         buffer.append(frame)
+        buffer2.append(fno)
 
         if len(buffer) != buffer_size:
             continue
         else:
+            t1 = time()
             label = serve_detection_model.predict(buffer)
+            t2 = time()
+            pbar.set_description(f'processing {fno}/{n_frames} | p-time: {abs(t2 - t1): .3f}')
+
             match label:
                 case 'service':
                     color = (0, 255, 0)
@@ -108,9 +115,9 @@ def annotate_service(serve_detection_model: GameStateDetector, video_path, outpu
                 case 'play':
                     color = (255, 255, 0)
                 case _:
-                    color = (0, 0, 0)
+                    color = (255, 255, 255)
 
-            for f in buffer:
+            for f, fno in zip(buffer, buffer2):
                 f = cv2.putText(
                     f, label, (w//2, 50), cv2.FONT_HERSHEY_SIMPLEX,
                     1.5, color, 2
@@ -120,15 +127,21 @@ def annotate_service(serve_detection_model: GameStateDetector, video_path, outpu
                     0.6, (255, 0, 0), 2)
                 writer.write(f)
         buffer.clear()
+        buffer2.clear()
 
-    pbar.close()
     writer.release()
+    cap.release()
+    pbar.close()
 
 
 if __name__ == '__main__':
-    ckpt = "/home/masoud/Desktop/projects/volleyball_analytics/weights/game-status/services-650/checkpoint-3744"
-    model = GameStateDetector(ckpt=ckpt)
-    video = '/media/HDD/datasets/VOLLEYBALL/RAW-VIDEOS/train/22m.mp4'
-    output_path = '/home/masoud/Desktop/projects/volleyball_analytics/runs/inference/game_state/output'
+    # ckpt = "/home/masoud/Desktop/projects/volleyball_analytics/weights/game-status/services-650/checkpoint-3744"
+    cfg = {
+        'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/game-state/3-states/checkpoint-5424',
+    }
+    # ckpt = '/home/masoud/Desktop/projects/volleyball_analytics/weights/game-state/3-states/checkpoint-5424'
+    model = GameStateDetector(cfg=cfg)
+    video = '/media/HDD/datasets/VOLLEYBALL/RAW-VIDEOS/train/22.mp4'
+    output_path = '/home/masoud/Desktop/projects/volleyball_analytics/runs/inference/game_state/output/triple_new_fp16'
 
     annotate_service(model, video, output_path, buffer_size=30)
