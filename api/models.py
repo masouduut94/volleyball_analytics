@@ -35,11 +35,12 @@ class Team(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
+        return new
 
     @classmethod
     def update(cls, id, kwargs):
         session = Session()
-        item = session.get(id)
+        item = cls.get(id)
         for k, v in kwargs.items():
             item[k] = v
         session.add(item)
@@ -50,7 +51,7 @@ class Team(Base):
     @classmethod
     def delete(cls, id):
         session = Session()
-        item = session.get(cls, id)
+        item = cls.get(id)
         session.delete(item)
         session.commit()
 
@@ -84,11 +85,12 @@ class Nation(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
+        return new
 
     @classmethod
     def update(cls, id, kwargs):
         session = Session()
-        item = session.get(id)
+        item = cls.get(id)
         for k, v in kwargs.items():
             item[k] = v
         session.add(item)
@@ -99,7 +101,7 @@ class Nation(Base):
     @classmethod
     def delete(cls, id):
         session = Session()
-        item = session.get(cls, id)
+        item = cls.get(id)
         session.delete(item)
         session.commit()
 
@@ -140,11 +142,12 @@ class Player(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
+        return new
 
     @classmethod
     def update(cls, id, kwargs):
         session = Session()
-        item = session.get(id)
+        item = cls.get(id)
         for k, v in kwargs.items():
             item[k] = v
         session.add(item)
@@ -155,7 +158,7 @@ class Player(Base):
     @classmethod
     def delete(cls, id):
         session = Session()
-        item = session.get(cls, id)
+        item = cls.get(id)
         session.delete(item)
         session.commit()
 
@@ -191,11 +194,12 @@ class Source(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
+        return new
 
     @classmethod
     def update(cls, id, kwargs):
         session = Session()
-        item = session.get(id)
+        item = cls.get(id)
         for k, v in kwargs.items():
             item[k] = v
         session.add(item)
@@ -206,7 +210,7 @@ class Source(Base):
     @classmethod
     def delete(cls, id):
         session = Session()
-        item = session.get(cls, id)
+        item = cls.get(id)
         session.delete(item)
         session.commit()
 
@@ -243,11 +247,12 @@ class Match(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
+        return new
 
     @classmethod
     def update(cls, id, kwargs):
         session = Session()
-        item = session.get(id)
+        item = cls.get(id)
         for k, v in kwargs.items():
             item[k] = v
         session.add(item)
@@ -258,7 +263,7 @@ class Match(Base):
     @classmethod
     def delete(cls, id):
         session = Session()
-        item = session.get(cls, id)
+        item = cls.get(id)
         session.delete(item)
         session.commit()
 
@@ -269,7 +274,7 @@ class Video(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
     created: Mapped[datetime] = Column(DateTime, default=datetime.now)
     updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
-    source_id = Column(Integer, ForeignKey("video.id", ondelete="CASCADE"))
+    source_id: Mapped[int] = Column(Integer, ForeignKey("video.id", ondelete="CASCADE"))
     # main_video = relationship("video", backref="video", lazy='dynamic', cascade="all, delete")
     path: Mapped[str] = Column(String(200), nullable=False)
 
@@ -291,11 +296,12 @@ class Video(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
+        return new
 
     @classmethod
     def update(cls, id, kwargs):
         session = Session()
-        item = session.get(id)
+        item = cls.get(id)
         for k, v in kwargs.items():
             item[k] = v
         session.add(item)
@@ -306,7 +312,7 @@ class Video(Base):
     @classmethod
     def delete(cls, id):
         session = Session()
-        item = session.get(cls, id)
+        item = cls.get(id)
         session.delete(item)
         session.commit()
 
@@ -329,7 +335,7 @@ class Rally(Base):
     ball_positions: Mapped[dict] = Column(JSON)
     team1_players_positions: Mapped[dict] = Column(JSON)
     team2_players_positions: Mapped[dict] = Column(JSON)
-    result: Mapped[dict] = Column(Integer)
+    result: Mapped[int] = Column(Integer)
 
     source_video: Mapped["Match"] = relationship(back_populates='rallies', cascade="all, delete")
 
@@ -351,13 +357,12 @@ class Rally(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
-        session.flush()
         return new
 
     @classmethod
     def update(cls, id, kwargs):
         session = Session()
-        item = session.get(id)
+        item = cls.get(id)
         for k, v in kwargs.items():
             item[k] = v
         session.add(item)
@@ -365,18 +370,23 @@ class Rally(Base):
         session.flush()
         session.close()
 
-
     @classmethod
     def delete(cls, id):
         session = Session()
-        item = session.get(cls, id)
+        item = cls.get(id)
         session.delete(item)
         session.commit()
-        session.flush()
-        session.close()
 
 
 if __name__ == '__main__':
     # engine.connect()
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
+
+    team1 = Team.save({'name': 'canada'})
+    team2 = Team.save({'name': 'united states of america'})
+
+    nation1 = Nation.save({'name': team1.name, 'display_name': "CAN"})
+    nation2 = Nation.save({'name': team2.name, 'display_name': "USA"})
+
+    player1 =
