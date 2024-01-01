@@ -1,0 +1,70 @@
+
+# Videos
+- video-id
+- video-name
+- video-path
+- sliced-video (bool)
+
+# Rallies
+- rally-id
+- main-video-id
+- sliced-video-id => after slicing
+- start frame
+- end frame
+- sets {set-id} => list of all sets in a rally.
+- spikes {spike-id} => list of all spikes in a rally.
+- ball-positions
+- result-type => error (net-error, antenna error, position-error, spike-landing, spike-out, touched-block-then-out)
+
+# Teams
+
+# Tournament
+
+# Athletes
+
+# Positions
+
+
+
+
+
+
+
+# Sets
+- set-id
+- player-id
+- video-id
+- position-id => what is the start position of the setter. 1-6
+- frame-number => which frame it is detected ...
+- set-bbox
+- type
+- target-position
+- setter-key-points
+
+# Spikes
+- spike-id
+- video-id
+- frame-number
+- position-id => position of the spiker.
+- spike-from => ball-bbox when spiking
+- spike-to => ball bbox when landing on court.
+- speed
+- is-blocked
+
+# Receives
+- receive-id
+- video-id
+- frame-number
+- is-successful
+
+# Serves
+- serve-id
+- video-id
+- frame-number
+- service-type
+- is-it-ace
+- target-position
+- ball-trajectory {balls-id}
+
+
+
