@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import List
 from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy import Column, Integer, String, DateTime, Text, JSON, Boolean, ForeignKey
-from data_classes import TeamData, NationData, VideoData, SourceData, RallyData, PlayerData, MatchData
-from database import Base, Session, engine
+from .data_classes import TeamData, NationData, SourceData, MatchData
+from .database import Base, Session, engine
 
 
 class Team(Base):

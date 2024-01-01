@@ -3,7 +3,7 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 import yaml
 
-db_file = open("../conf/db_conf.yaml").read()
+db_file = open("/home/masoud/Desktop/projects/volleyball_analytics/conf/db_conf.yaml").read()
 cfg = yaml.load(db_file, Loader=yaml.SafeLoader)
 # db_type = 'mysql'
 db_type = 'postgres'

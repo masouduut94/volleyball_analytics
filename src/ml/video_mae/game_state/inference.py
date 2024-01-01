@@ -1,9 +1,13 @@
 import cv2
 from time import time
+
+import yaml
 from tqdm import tqdm
 from os import makedirs
 from os.path import join
 from pathlib import Path
+
+from api.models import Source
 from gamestate_detection import GameStateDetector
 
 FPS = 30
@@ -119,7 +123,7 @@ def annotate_service(serve_detection_model: GameStateDetector, video_path, outpu
 
             for f, fno in zip(buffer, buffer2):
                 f = cv2.putText(
-                    f, label, (w//2, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                    f, label, (w // 2, 50), cv2.FONT_HERSHEY_SIMPLEX,
                     1.5, color, 2
                 )
                 f = cv2.putText(
@@ -136,12 +140,86 @@ def annotate_service(serve_detection_model: GameStateDetector, video_path, outpu
 
 if __name__ == '__main__':
     # ckpt = "/home/masoud/Desktop/projects/volleyball_analytics/weights/game-status/services-650/checkpoint-3744"
-    cfg = {
-        'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/game-state/3-states/checkpoint-5424',
-    }
-    # ckpt = '/home/masoud/Desktop/projects/volleyball_analytics/weights/game-state/3-states/checkpoint-5424'
-    model = GameStateDetector(cfg=cfg)
-    video = '/media/HDD/datasets/VOLLEYBALL/RAW-VIDEOS/train/22.mp4'
-    output_path = '/home/masoud/Desktop/projects/volleyball_analytics/runs/inference/game_state/output/triple_new_fp16'
+    config = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
+    cfg = yaml.load(open(config), Loader=yaml.SafeLoader)
+    model = GameStateDetector(cfg=cfg['video_mae']['game_state_3'])
+    src = Source.get(1)
+    video = src.path
 
-    annotate_service(model, video, output_path, buffer_size=30)
+    cap = cv2.VideoCapture(video)
+    assert cap.isOpened(), "file is not accessible..."
+
+    width, height, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
+
+    frame_buffer_1_sec = []
+    state_buffer = []
+    previous_state = 'no-play'
+
+    for fno in range(n_frames):
+        cap.set(1, fno)
+        status, frame = cap.get(fno)
+        frame_buffer_1_sec.append(frame)
+        if len(frame_buffer_1_sec) == 30:
+            current_state = model.predict(frame_buffer_1_sec)
+            match current_state:
+                case 'service':
+                    if previous_state == 'no-play' or previous_state == current_state:
+                        state_buffer.extend(frame_buffer_1_sec)
+                        frame_buffer_1_sec.clear()
+                    elif previous_state == 'play':
+                        store_wrong_annotation(frame_buffer_1_sec)
+                        frame_buffer_1_sec.clear()
+                case 'play':
+                    if previous_state == 'service':
+                        store_service_video()  # store the service in db;
+                        # keep buffering
+                        state_buffer.extend(frame_buffer_1_sec)
+                        frame_buffer_1_sec.clear()
+                    elif previous_state == current_state:
+                        state_buffer.extend(frame_buffer_1_sec)
+                        frame_buffer_1_sec.clear()
+                    elif previous_state == 'no-play':
+                        #
+                        state_buffer.extend(frame_buffer_1_sec)
+                        frame_buffer_1_sec.clear()
+                case 'no-play':
+                    if previous_state == 'service':
+                        store_service_video()
+                        store_state_video()  # store the whole game video from service to end of the game.
+                        frame_buffer_1_sec.clear()
+                    elif previous_state == current_state:
+                        if no_play_flag == 2:
+                            store_state_video()
+                            state_buffer.clear()
+                        else:
+                            no_play_flag += 1
+                        frame_buffer_1_sec.clear()
+                    else:
+                        store_state_video()
+                        state_buffer.clear()
+                        frame_buffer_1_sec.clear()
+        else:
+            continue
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
