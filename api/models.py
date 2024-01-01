@@ -1,8 +1,9 @@
 from datetime import datetime
+from pathlib import Path
 from typing import List
 from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy import Column, Integer, String, DateTime, Text, JSON, Boolean, ForeignKey
-
+from data_classes import TeamData, NationData, VideoData, SourceData, RallyData, PlayerData, MatchData
 from database import Base, Session, engine
 
 
@@ -35,6 +36,7 @@ class Team(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
+        session.refresh(new)
         return new
 
     @classmethod
@@ -85,6 +87,7 @@ class Nation(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
+        session.refresh(new)
         return new
 
     @classmethod
@@ -142,6 +145,7 @@ class Player(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
+        session.refresh(new)
         return new
 
     @classmethod
@@ -194,6 +198,7 @@ class Source(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
+        session.refresh(new)
         return new
 
     @classmethod
@@ -247,6 +252,7 @@ class Match(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
+        session.refresh(new)
         return new
 
     @classmethod
@@ -296,6 +302,7 @@ class Video(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
+        session.refresh(new)
         return new
 
     @classmethod
@@ -357,6 +364,7 @@ class Rally(Base):
         new = cls(**kwargs)
         session.add(new)
         session.commit()
+        session.refresh(new)
         return new
 
     @classmethod
@@ -383,10 +391,28 @@ if __name__ == '__main__':
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
-    team1 = Team.save({'name': 'canada'})
-    team2 = Team.save({'name': 'united states of america'})
+    # Seeding initial data
 
-    nation1 = Nation.save({'name': team1.name, 'display_name': "CAN"})
-    nation2 = Nation.save({'name': team2.name, 'display_name': "USA"})
+    # Inserting teams
+    t1 = TeamData(name='canada')
+    t2 = TeamData(name='usa')
 
-    player1 =
+    team1 = Team.save(t1.to_dict())
+    team2 = Team.save(t2.to_dict())
+
+    # Inserting nations
+    n1 = NationData(name='canada', display_name='CAN')
+    n2 = NationData(name='usa', display_name='USA')
+
+    nation1 = Nation.save(n1.to_dict())
+    nation2 = Nation.save(n2.to_dict())
+
+    # Inserting matches...
+    m1 = MatchData(team1_id=team1.id, team2_id=team2.id)
+    match1 = Match.save(m1.to_dict())
+
+    # Inserting video sources...
+    video_path = Path('/media/HDD/datasets/VOLLEYBALL/RAW-VIDEOS/train/22.mp4')
+    s1 = SourceData(name=video_path.stem, match_id=match1.id, path=video_path.as_posix())
+    src = Source.save(s1.to_dict())
+
