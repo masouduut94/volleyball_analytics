@@ -5,16 +5,21 @@ import yaml
 
 db_file = open("../conf/db_conf.yaml").read()
 cfg = yaml.load(db_file, Loader=yaml.SafeLoader)
-user = cfg["postgres"]["user"]
-pwd = cfg["postgres"]["password"]
-host = cfg["postgres"]["host"]
-db = cfg["postgres"]["db"]
-port = cfg["postgres"]["port"]
+db_type = 'mysql'
+# db_type = 'postgres'
+
+user = cfg[db_type]["user"]
+pwd = cfg[db_type]["password"]
+host = cfg[db_type]["host"]
+db = cfg[db_type]["db"]
+port = cfg[db_type]["port"]
+dialect = cfg[db_type]["dialect"]
+driver = cfg[db_type]["driver"]
 
 
-SQLALCHEMY_DATABASE_URL = f'postgresql+psycopg2://{user}:{pwd}@{host}/{db}'
+SQLALCHEMY_DB_URL = f'{dialect}+{driver}://{user}:{pwd}@{host}:{port}/{db}'
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+engine = create_engine(SQLALCHEMY_DB_URL)
 engine.connect()  # Check if it is connected
 
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)

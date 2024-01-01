@@ -12,7 +12,7 @@ class Team(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
     created: Mapped[datetime] = Column(DateTime, default=datetime.now)
     updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
-    name: Mapped[str] = Column(String, nullable=False)
+    name: Mapped[str] = Column(String(200), nullable=False)
 
     def __repr__(self):
         return f'<Team: {self.name} - id: {self.id}>'
@@ -60,8 +60,8 @@ class Nation(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
     created: Mapped[datetime] = Column(DateTime, default=datetime.now)
     updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
-    name: Mapped[str] = Column(String, max_length=100)
-    display_name: Mapped[str] = Column(String, max_length=100)
+    name: Mapped[str] = Column(String(200))
+    display_name: Mapped[str] = Column(String(200))
 
     def __repr__(self):
         return f"<Nation: {self.name}>"
@@ -105,13 +105,13 @@ class Nation(Base):
 
 
 class Player(Base):
-    __tablename__ = 'athlete'
+    __tablename__ = 'player'
 
     id: Mapped[int] = Column(Integer, primary_key=True)
     created: Mapped[datetime] = Column(DateTime, default=datetime.now)
     updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
-    first_name: Mapped[str] = Column(String, max_length=200)
-    last_name: Mapped[str] = Column(String, max_length=200)
+    first_name: Mapped[str] = Column(String(200))
+    last_name: Mapped[str] = Column(String(200))
     gender: Mapped[bool] = Column(Boolean)
     age: Mapped[int] = Column(Integer)
     height: Mapped[int] = Column(Integer)
@@ -120,7 +120,7 @@ class Player(Base):
     club: Mapped[int] = Column(Integer, ForeignKey("team.id", ondelete="CASCADE"))
 
     def __repr__(self):
-        return f'<Athlete: id: {self.id} - name: {self.first_name} {self.last_name} - nation: {self.national_team}>'
+        return f'<Athlete: id: {self.id} - name: {self.first_name} {self.last_name} - nation: {self.nation}>'
 
     @classmethod
     def get(cls, id):
@@ -166,7 +166,7 @@ class Source(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
     created: Mapped[datetime] = Column(DateTime, default=datetime.now)
     updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
-    name: Mapped[str] = Column(String)
+    name: Mapped[str] = Column(String(200))
     match_id: Mapped["Match"] = Column(Integer, ForeignKey("match.id", ondelete="CASCADE"))
     path: Mapped[str] = Column(Text, nullable=False)
 
@@ -271,7 +271,7 @@ class Video(Base):
     updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     source_id = Column(Integer, ForeignKey("video.id", ondelete="CASCADE"))
     # main_video = relationship("video", backref="video", lazy='dynamic', cascade="all, delete")
-    path: Mapped[str] = Column(String, max_length=200, nullable=False)
+    path: Mapped[str] = Column(String(200), nullable=False)
 
     @classmethod
     def get(cls, id):
