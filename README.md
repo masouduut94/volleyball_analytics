@@ -19,28 +19,36 @@ Sports Data Analytics.
 
 3. Integrated the project with DB.
 
+
 # Todo:
 
+## Video Analysis
+- [ ] Setter sets distribution.
+- [ ] Ball trajectories for:
+- - [ ] sets
+- - [ ] receives
+- - [ ] serves
+- [ ] receives distribution for setters.
+- [ ] spike zones and distributions.
+- [ ] blocks and sets and how they are related with successful spikes.
+- [ ] umpire/referee gesture recognition for score detection.
+- [ ] Objects Visualizations
+- [ ] Find bounce points.
+
+
 ## ML:
-
-- Use batch prediction to speed up the workflow.
-- Try Intel OpenVino...
-- Add KPIs to the workflow
--
-    - Setter ball distribution
--
-    - Spiker final ball touch on ground.
--
-    - Successful Receives.
--
-    - Receives ball distribution.
--
-    - Visualization of the KPIs.
-
+- [ ] Try Intel OpenVino...
+- [ ] Add object detection results to the DB.
+- [ ] Use batch prediction for 30 frames.
+- [ ] Add ball detection and its results to DB.
 ## BackEnd:
 
-- Add video splitting to the workflow.
-- Add flask/fastAPI to the workflow.
-- Add RabbitMQ for jobs scheduling in the backend.
+- Integrate video clipping:
+- - [x] Add AI-based video-clipper.
+- - [ ] Fix the issue with 'service' after a `play`.
+- - [ ] add DB integration for video storage.
+- - [ ] Add RabbitMQ for job scheduling.
+- - [ ] Integrate it with flask for backend processes.
+- - [ ] Integrate FastAPI for API calls.
 
 
