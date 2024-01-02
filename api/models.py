@@ -386,6 +386,57 @@ class Rally(Base):
         session.commit()
 
 
+class Service(Base):
+    __tablename__ = 'service'
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
+    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
+    rally_id: Mapped[int] = Column(Integer, ForeignKey("rally.id", ondelete="CASCADE"))
+    ball_positions: Mapped[dict] = Column(JSON)
+    start_frame: Mapped[int]
+    end_frame: Mapped[int]
+    video_path: Mapped[str]
+
+    @classmethod
+    def get(cls, id):
+        session = Session()
+        result = session.get(cls, id)
+        return result
+
+    @classmethod
+    def get_all(cls):
+        session = Session()
+        result = session.query(cls).all()
+        return result
+
+    @classmethod
+    def save(cls, kwargs):
+        session = Session()
+        new = cls(**kwargs)
+        session.add(new)
+        session.commit()
+        session.refresh(new)
+        return new
+
+    @classmethod
+    def update(cls, id, kwargs):
+        session = Session()
+        item = cls.get(id)
+        for k, v in kwargs.items():
+            item[k] = v
+        session.add(item)
+        session.commit()
+        session.flush()
+        session.close()
+
+    @classmethod
+    def delete(cls, id):
+        session = Session()
+        item = cls.get(id)
+        session.delete(item)
+        session.commit()
+
+
 if __name__ == '__main__':
     # engine.connect()
     Base.metadata.drop_all(engine)

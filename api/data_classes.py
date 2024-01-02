@@ -71,6 +71,16 @@ class RallyData:
     result: int
 
 
+@dataclass_json
+@dataclass
+class ServiceData:
+    rally_id: int
+    ball_positions: dict
+    start_frame: int
+    end_frame: int
+    video_path: str
+
+
 if __name__ == '__main__':
     team = TeamData(name='brazil')
     d = team.to_dict()

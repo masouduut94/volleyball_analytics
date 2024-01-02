@@ -1,3 +1,5 @@
+from uuid import uuid1
+
 import cv2
 from time import time
 
@@ -6,8 +8,9 @@ from tqdm import tqdm
 from os import makedirs
 from os.path import join
 from pathlib import Path
-
-from api.models import Source
+from tqdm import tqdm
+from api.models import Source, Service, Rally
+# from api.data_classes import SourceData, ServiceData
 from gamestate_detection import GameStateDetector
 
 FPS = 30
@@ -138,6 +141,72 @@ def annotate_service(serve_detection_model: GameStateDetector, video_path, outpu
     pbar.close()
 
 
+class Manager:
+    def __init__(self, fps, width, height, buffer_size):
+        self.buffer_size = buffer_size
+        self.states = ['no-play', 'no-play', 'no-play']
+        self.long_term_buffer = []
+        self.short_term_buffer = []
+        self.codec = cv2.VideoWriter_fourcc(*'mp4v')
+        self.width = width
+        self.height = height
+        self.fps = fps
+
+    def is_full(self):
+        return len(self.short_term_buffer) == self.buffer_size
+
+    def set_current_state(self, curr_state):
+        prev = self.states[-1]
+        prev_prev = self.states[-2]
+        self.states[-3] = prev_prev
+        self.states[-2] = prev
+        self.states[-1] = curr_state
+
+    def keep(self, frames):
+        self.long_term_buffer.extend(frames)
+        self.reset_short_term()
+
+    def append(self, frame):
+        self.short_term_buffer.append(frame)
+
+    def get_current_frames(self):
+        return self.short_term_buffer
+
+    def get_all_frames(self):
+        return self.long_term_buffer
+
+    def reset_short_term(self):
+        self.short_term_buffer.clear()
+
+    def reset_long_term(self):
+        self.long_term_buffer.clear()
+
+    def write_video(self, path):
+        random = str(uuid1())[:8]
+        name = Path(path) / f'{random}.mp4'
+        writer = cv2.VideoWriter(
+            name.as_posix(), self.codec, self.fps, (self.width, self.height)
+        )
+        for f in self.long_term_buffer:
+            writer.write(f)
+        writer.release()
+
+    @property
+    def current(self):
+        return self.states[-1]
+
+    @property
+    def prev(self):
+        return self.states[-2]
+
+    @property
+    def prev_prev(self):
+        return self.states[-3]
+
+    def reset(self):
+        self.states = ['no-play', 'no-play', 'no-play']
+
+
 if __name__ == '__main__':
     # ckpt = "/home/masoud/Desktop/projects/volleyball_analytics/weights/game-status/services-650/checkpoint-3744"
     config = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
@@ -149,77 +218,81 @@ if __name__ == '__main__':
     cap = cv2.VideoCapture(video)
     assert cap.isOpened(), "file is not accessible..."
 
+    rally_save_path = '/media/HDD/DATA/volleyball/rallies'
+    service_save_path = '/media/HDD/DATA/volleyball/serves'
+    mistake_path = '/media/HDD/DATA/volleyball/wrong_annotation'
+
     width, height, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
 
-    frame_buffer_1_sec = []
-    state_buffer = []
     previous_state = 'no-play'
-
-    for fno in range(n_frames):
+    current_state = None
+    no_play_flag = 0
+    state_manager = Manager(fps, width, height, 30)
+    pbar = tqdm(list(range(n_frames)))
+    for fno in pbar:
+        pbar.update(1)
         cap.set(1, fno)
-        status, frame = cap.get(fno)
-        frame_buffer_1_sec.append(frame)
-        if len(frame_buffer_1_sec) == 30:
-            current_state = model.predict(frame_buffer_1_sec)
-            match current_state:
+        status, frame = cap.read()
+        state_manager.append(frame)
+
+        if state_manager.is_full():
+            current_frames = state_manager.get_current_frames()
+            current_state = model.predict(current_frames)
+            state_manager.set_current_state(current_state)
+            pbar.set_description(f"state: {current_state}")
+            current = state_manager.current
+            prev = state_manager.prev
+            prev_prev = state_manager.prev_prev
+
+            match current:
                 case 'service':
-                    if previous_state == 'no-play' or previous_state == current_state:
-                        state_buffer.extend(frame_buffer_1_sec)
-                        frame_buffer_1_sec.clear()
-                    elif previous_state == 'play':
-                        store_wrong_annotation(frame_buffer_1_sec)
-                        frame_buffer_1_sec.clear()
+                    if prev == 'no-play' or prev == 'service':
+                        state_manager.keep(current_frames)
+                        state_manager.reset_short_term()
+                    elif prev == 'play':
+                        # In the middle of `play`, we never get `service` unless the model is wrong.
+                        # we save the video to investigate the case.
+                        state_manager.keep(current_frames)
+                        state_manager.write_video(mistake_path)
+                        print("Mistake .....")
+                        state_manager.reset_short_term()
+                        state_manager.reset_long_term()
+                        # Reset states, keep the current frames, but removing previous frames.
+                        state_manager.keep(current_frames)
                 case 'play':
-                    if previous_state == 'service':
-                        store_service_video()  # store the service in db;
-                        # keep buffering
-                        state_buffer.extend(frame_buffer_1_sec)
-                        frame_buffer_1_sec.clear()
-                    elif previous_state == current_state:
-                        state_buffer.extend(frame_buffer_1_sec)
-                        frame_buffer_1_sec.clear()
-                    elif previous_state == 'no-play':
-                        #
-                        state_buffer.extend(frame_buffer_1_sec)
-                        frame_buffer_1_sec.clear()
+                    if prev == 'service':
+                        # Save the state buffer as the service video and keep buffering the rest ...
+                        state_manager.keep(current_frames)
+                        state_manager.write_video(service_save_path)
+                        print(f"Caught a service... saved in {service_save_path}")
+
+                        state_manager.reset_short_term()
+                    elif prev == 'play':
+                        state_manager.keep(current_frames)
+                        state_manager.reset_short_term()
+                    elif prev == 'no-play':
+                        # TODO: Check this part, not making problems.
+                        state_manager.keep(current_frames)
+                        state_manager.reset_short_term()
                 case 'no-play':
-                    if previous_state == 'service':
-                        store_service_video()
-                        store_state_video()  # store the whole game video from service to end of the game.
-                        frame_buffer_1_sec.clear()
-                    elif previous_state == current_state:
-                        if no_play_flag == 2:
-                            store_state_video()
-                            state_buffer.clear()
+                    # Only 2 consecutive "no-play" means the end of rally...
+                    if prev == 'service' or prev == 'play':
+                        # if we haven't got 2 cons
+                        state_manager.keep(current_frames)
+                        # store the whole game video from service to end of the game.
+                    elif prev == 'no-play':
+                        # This is when we have 2 states of 'no-plays', so let's store the video.
+                        # if the state before prev is 'service', save it as a service, if `play`,
+                        # store it as a `rally`, otherwise keep skipping the video.
+                        if prev_prev == 'play':
+                            state_manager.write_video(rally_save_path)
+                            print(f"Caught a RALLY ... saved in {rally_save_path}")
+
+                        elif prev_prev == 'service':
+                            state_manager.write_video(service_save_path)
+                            print(f"Caught a SERVICE ... saved in {service_save_path}")
                         else:
-                            no_play_flag += 1
-                        frame_buffer_1_sec.clear()
-                    else:
-                        store_state_video()
-                        state_buffer.clear()
-                        frame_buffer_1_sec.clear()
+                            state_manager.reset_long_term()
+                    state_manager.reset_short_term()
         else:
             continue
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
