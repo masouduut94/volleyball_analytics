@@ -1,6 +1,4 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker
 import yaml
 
 db_file = open("/home/masoud/Desktop/projects/volleyball_analytics/conf/db_conf.yaml").read()
@@ -22,7 +20,6 @@ SQLALCHEMY_DB_URL = f'{dialect}+{driver}://{user}:{pwd}@{host}:{port}/{db}'
 engine = create_engine(SQLALCHEMY_DB_URL)
 engine.connect()  # Check if it is connected
 
-Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+
 
 # if psycopg-2 didn't work: sudo apt install libpq-dev gcc

@@ -1,10 +1,70 @@
-from datetime import datetime
-from pathlib import Path
 from typing import List
+from pathlib import Path
+from datetime import datetime
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy.ext.declarative import declared_attr
+# from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, DateTime, Text, JSON, Boolean, ForeignKey
-from .data_classes import TeamData, NationData, SourceData, MatchData
-from .database import Base, Session, engine
+
+from api.database import engine
+from api.data_classes import TeamData, NationData, SourceData, MatchData
+
+Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+class ModelMixin(object):
+    id = Column(Integer, primary_key=True)
+    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
+    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
+
+    @declared_attr
+    def __tablename__(cls):
+        return cls.__name__.lower()
+
+    @classmethod
+    def get(cls, id):
+        session = Session()
+        result = session.get(cls, id)
+        return result
+
+    @classmethod
+    def get_all(cls):
+        session = Session()
+        result = session.query(cls).all()
+        return result
+
+    @classmethod
+    def save(cls, kwargs):
+        session = Session()
+        new = cls(**kwargs)
+        session.add(new)
+        session.commit()
+        session.refresh(new)
+        return new
+
+    @classmethod
+    def update(cls, id, kwargs):
+        session = Session()
+        item = cls.get(id)
+        for k, v in kwargs.items():
+            item[k] = v
+        session.add(item)
+        session.commit()
+        session.flush()
+        session.close()
+
+    @classmethod
+    def delete(cls, id):
+        session = Session()
+        item = cls.get(id)
+        session.delete(item)
+        session.commit()
+        session.close()
+
+
+Base = declarative_base(cls=ModelMixin)
 
 
 class Team(Base):
@@ -18,45 +78,6 @@ class Team(Base):
     def __repr__(self):
         return f'<Team: {self.name} - id: {self.id}>'
 
-    @classmethod
-    def get(cls, id):
-        session = Session()
-        result = session.get(cls, id)
-        return result
-
-    @classmethod
-    def get_all(cls):
-        session = Session()
-        result = session.query(cls).all()
-        return result
-
-    @classmethod
-    def save(cls, kwargs):
-        session = Session()
-        new = cls(**kwargs)
-        session.add(new)
-        session.commit()
-        session.refresh(new)
-        return new
-
-    @classmethod
-    def update(cls, id, kwargs):
-        session = Session()
-        item = cls.get(id)
-        for k, v in kwargs.items():
-            item[k] = v
-        session.add(item)
-        session.commit()
-        session.flush()
-        session.close()
-
-    @classmethod
-    def delete(cls, id):
-        session = Session()
-        item = cls.get(id)
-        session.delete(item)
-        session.commit()
-
 
 class Nation(Base):
     __tablename__ = 'nation'
@@ -68,45 +89,6 @@ class Nation(Base):
 
     def __repr__(self):
         return f"<Nation: {self.name}>"
-
-    @classmethod
-    def get(cls, id):
-        session = Session()
-        result = session.get(cls, id)
-        return result
-
-    @classmethod
-    def get_all(cls):
-        session = Session()
-        result = session.query(cls).all()
-        return result
-
-    @classmethod
-    def save(cls, kwargs):
-        session = Session()
-        new = cls(**kwargs)
-        session.add(new)
-        session.commit()
-        session.refresh(new)
-        return new
-
-    @classmethod
-    def update(cls, id, kwargs):
-        session = Session()
-        item = cls.get(id)
-        for k, v in kwargs.items():
-            item[k] = v
-        session.add(item)
-        session.commit()
-        session.flush()
-        session.close()
-
-    @classmethod
-    def delete(cls, id):
-        session = Session()
-        item = cls.get(id)
-        session.delete(item)
-        session.commit()
 
 
 class Player(Base):
@@ -125,46 +107,7 @@ class Player(Base):
     club: Mapped[int] = Column(Integer, ForeignKey("team.id", ondelete="CASCADE"))
 
     def __repr__(self):
-        return f'<Athlete: id: {self.id} - name: {self.first_name} {self.last_name} - nation: {self.nation}>'
-
-    @classmethod
-    def get(cls, id):
-        session = Session()
-        result = session.get(cls, id)
-        return result
-
-    @classmethod
-    def get_all(cls):
-        session = Session()
-        result = session.query(cls).all()
-        return result
-
-    @classmethod
-    def save(cls, kwargs):
-        session = Session()
-        new = cls(**kwargs)
-        session.add(new)
-        session.commit()
-        session.refresh(new)
-        return new
-
-    @classmethod
-    def update(cls, id, kwargs):
-        session = Session()
-        item = cls.get(id)
-        for k, v in kwargs.items():
-            item[k] = v
-        session.add(item)
-        session.commit()
-        session.flush()
-        session.close()
-
-    @classmethod
-    def delete(cls, id):
-        session = Session()
-        item = cls.get(id)
-        session.delete(item)
-        session.commit()
+        return f'<Player: id: {self.id} - name: {self.first_name} {self.last_name} - nation: {self.nation}>'
 
 
 class Source(Base):
@@ -179,45 +122,6 @@ class Source(Base):
 
     def __repr__(self):
         return f'<Video: id: {self.id} - name: {self.first_name} {self.last_name} - path: {self.national_team}>'
-
-    @classmethod
-    def get(cls, id):
-        session = Session()
-        result = session.get(cls, id)
-        return result
-
-    @classmethod
-    def get_all(cls):
-        session = Session()
-        result = session.query(cls).all()
-        return result
-
-    @classmethod
-    def save(cls, kwargs):
-        session = Session()
-        new = cls(**kwargs)
-        session.add(new)
-        session.commit()
-        session.refresh(new)
-        return new
-
-    @classmethod
-    def update(cls, id, kwargs):
-        session = Session()
-        item = cls.get(id)
-        for k, v in kwargs.items():
-            item[k] = v
-        session.add(item)
-        session.commit()
-        session.flush()
-        session.close()
-
-    @classmethod
-    def delete(cls, id):
-        session = Session()
-        item = cls.get(id)
-        session.delete(item)
-        session.commit()
 
 
 class Match(Base):
@@ -234,45 +138,6 @@ class Match(Base):
 
     # rallies = relationship("Rally", backref='rally', lazy='dynamic', cascade="all, delete")
 
-    @classmethod
-    def get(cls, id):
-        session = Session()
-        result = session.get(cls, id)
-        return result
-
-    @classmethod
-    def get_all(cls):
-        session = Session()
-        result = session.query(cls).all()
-        return result
-
-    @classmethod
-    def save(cls, kwargs):
-        session = Session()
-        new = cls(**kwargs)
-        session.add(new)
-        session.commit()
-        session.refresh(new)
-        return new
-
-    @classmethod
-    def update(cls, id, kwargs):
-        session = Session()
-        item = cls.get(id)
-        for k, v in kwargs.items():
-            item[k] = v
-        session.add(item)
-        session.commit()
-        session.flush()
-        session.close()
-
-    @classmethod
-    def delete(cls, id):
-        session = Session()
-        item = cls.get(id)
-        session.delete(item)
-        session.commit()
-
 
 class Video(Base):
     __tablename__ = "video"
@@ -283,45 +148,6 @@ class Video(Base):
     source_id: Mapped[int] = Column(Integer, ForeignKey("video.id", ondelete="CASCADE"))
     # main_video = relationship("video", backref="video", lazy='dynamic', cascade="all, delete")
     path: Mapped[str] = Column(String(200), nullable=False)
-
-    @classmethod
-    def get(cls, id):
-        session = Session()
-        result = session.get(cls, id)
-        return result
-
-    @classmethod
-    def get_all(cls):
-        session = Session()
-        result = session.query(cls).all()
-        return result
-
-    @classmethod
-    def save(cls, kwargs):
-        session = Session()
-        new = cls(**kwargs)
-        session.add(new)
-        session.commit()
-        session.refresh(new)
-        return new
-
-    @classmethod
-    def update(cls, id, kwargs):
-        session = Session()
-        item = cls.get(id)
-        for k, v in kwargs.items():
-            item[k] = v
-        session.add(item)
-        session.commit()
-        session.flush()
-        session.close()
-
-    @classmethod
-    def delete(cls, id):
-        session = Session()
-        item = cls.get(id)
-        session.delete(item)
-        session.commit()
 
 
 class Rally(Base):
@@ -346,45 +172,6 @@ class Rally(Base):
 
     source_video: Mapped["Match"] = relationship(back_populates='rallies', cascade="all, delete")
 
-    @classmethod
-    def get(cls, id):
-        session = Session()
-        result = session.get(cls, id)
-        return result
-
-    @classmethod
-    def get_all(cls):
-        session = Session()
-        result = session.query(cls).all()
-        return result
-
-    @classmethod
-    def save(cls, kwargs):
-        session = Session()
-        new = cls(**kwargs)
-        session.add(new)
-        session.commit()
-        session.refresh(new)
-        return new
-
-    @classmethod
-    def update(cls, id, kwargs):
-        session = Session()
-        item = cls.get(id)
-        for k, v in kwargs.items():
-            item[k] = v
-        session.add(item)
-        session.commit()
-        session.flush()
-        session.close()
-
-    @classmethod
-    def delete(cls, id):
-        session = Session()
-        item = cls.get(id)
-        session.delete(item)
-        session.commit()
-
 
 class Service(Base):
     __tablename__ = 'service'
@@ -396,45 +183,6 @@ class Service(Base):
     start_frame: Mapped[int]
     end_frame: Mapped[int]
     video_path: Mapped[str]
-
-    @classmethod
-    def get(cls, id):
-        session = Session()
-        result = session.get(cls, id)
-        return result
-
-    @classmethod
-    def get_all(cls):
-        session = Session()
-        result = session.query(cls).all()
-        return result
-
-    @classmethod
-    def save(cls, kwargs):
-        session = Session()
-        new = cls(**kwargs)
-        session.add(new)
-        session.commit()
-        session.refresh(new)
-        return new
-
-    @classmethod
-    def update(cls, id, kwargs):
-        session = Session()
-        item = cls.get(id)
-        for k, v in kwargs.items():
-            item[k] = v
-        session.add(item)
-        session.commit()
-        session.flush()
-        session.close()
-
-    @classmethod
-    def delete(cls, id):
-        session = Session()
-        item = cls.get(id)
-        session.delete(item)
-        session.commit()
 
 
 if __name__ == '__main__':
@@ -466,4 +214,3 @@ if __name__ == '__main__':
     video_path = Path('/media/HDD/datasets/VOLLEYBALL/RAW-VIDEOS/train/22.mp4')
     s1 = SourceData(name=video_path.stem, match_id=match1.id, path=video_path.as_posix())
     src = Source.save(s1.to_dict())
-
