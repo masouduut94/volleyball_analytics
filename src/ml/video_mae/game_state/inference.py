@@ -1,7 +1,5 @@
-from uuid import uuid1
 import cv2
 import yaml
-from pathlib import Path
 from tqdm import tqdm
 from api.models import Source, Service, Rally
 # from api.data_classes import SourceData, ServiceData
@@ -9,7 +7,6 @@ from gamestate_detection import GameStateDetector
 from src.ml.video_mae.game_state.utils import Manager
 
 if __name__ == '__main__':
-    # ckpt = "/home/masoud/Desktop/projects/volleyball_analytics/weights/game-status/services-650/checkpoint-3744"
     config = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
     cfg = yaml.load(open(config), Loader=yaml.SafeLoader)
     model = GameStateDetector(cfg=cfg['video_mae']['game_state_3'])
