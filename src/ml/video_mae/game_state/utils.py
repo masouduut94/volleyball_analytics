@@ -1,13 +1,13 @@
-from os import makedirs
-from os.path import join
-from time import time
-from uuid import uuid1
-
 import cv2
+from time import time
 from tqdm import tqdm
+from uuid import uuid1
+from os import makedirs
+from pathlib import Path
+from os.path import join
+
 
 from gamestate_detection import GameStateDetector
-from pathlib import Path
 
 
 class Manager:

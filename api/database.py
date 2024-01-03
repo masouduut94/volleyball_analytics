@@ -1,7 +1,6 @@
-from datetime import datetime
-
-from sqlalchemy import create_engine, Column, Integer, DateTime
 import yaml
+from datetime import datetime
+from sqlalchemy import create_engine, Column, Integer, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker, Mapped, declared_attr
 
 db_file = open("/home/masoud/Desktop/projects/volleyball_analytics/conf/db_conf.yaml").read()
