@@ -45,10 +45,12 @@ Sports Data Analytics.
 
 - Integrate video clipping:
 - - [x] Add AI-based video-clipper.
-- - [ ] Fix the issue with 'service' after a `play`.
 - - [ ] add DB integration for video storage.
 - - [ ] Add RabbitMQ for job scheduling.
 - - [ ] Integrate it with flask for backend processes.
 - - [ ] Integrate FastAPI for API calls.
+
+## Issues
+- - [ ] Fix the issue with clipping the videos where 'service' comes after a `play`.
 
 
