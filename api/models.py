@@ -1,89 +1,22 @@
+from datetime import datetime
 from typing import List
 from pathlib import Path
-from datetime import datetime
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import Mapped, relationship
-from sqlalchemy.ext.declarative import declared_attr
-# from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime, Text, JSON, Boolean, ForeignKey
+from sqlalchemy.orm import Mapped, relationship, backref
+from sqlalchemy import Column, Integer, String, Text, JSON, Boolean, ForeignKey, DateTime
 
-from api.database import engine
-from api.data_classes import TeamData, NationData, SourceData, MatchData
-
-Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-class ModelMixin(object):
-    id = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
-
-    @declared_attr
-    def __tablename__(cls):
-        return cls.__name__.lower()
-
-    @classmethod
-    def get(cls, id):
-        session = Session()
-        result = session.get(cls, id)
-        return result
-
-    @classmethod
-    def get_all(cls):
-        session = Session()
-        result = session.query(cls).all()
-        return result
-
-    @classmethod
-    def save(cls, kwargs):
-        session = Session()
-        new = cls(**kwargs)
-        session.add(new)
-        session.commit()
-        session.refresh(new)
-        return new
-
-    @classmethod
-    def update(cls, id, kwargs):
-        session = Session()
-        item = cls.get(id)
-        for k, v in kwargs.items():
-            item[k] = v
-        session.add(item)
-        session.commit()
-        session.flush()
-        session.close()
-
-    @classmethod
-    def delete(cls, id):
-        session = Session()
-        item = cls.get(id)
-        session.delete(item)
-        session.commit()
-        session.close()
-
-
-Base = declarative_base(cls=ModelMixin)
+from api.data_classes import TeamData, NationData, SourceData, MatchData, SeriesData
+from api.database import engine, Base
 
 
 class Team(Base):
-    __tablename__ = "team"
-
-    id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     name: Mapped[str] = Column(String(200), nullable=False)
+    is_national_team: Mapped[bool] = Column(Boolean, default=True)
 
     def __repr__(self):
         return f'<Team: {self.name} - id: {self.id}>'
 
 
 class Nation(Base):
-    __tablename__ = 'nation'
-    id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     name: Mapped[str] = Column(String(200))
     display_name: Mapped[str] = Column(String(200))
 
@@ -92,11 +25,6 @@ class Nation(Base):
 
 
 class Player(Base):
-    __tablename__ = 'player'
-
-    id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     first_name: Mapped[str] = Column(String(200))
     last_name: Mapped[str] = Column(String(200))
     gender: Mapped[bool] = Column(Boolean)
@@ -111,51 +39,44 @@ class Player(Base):
 
 
 class Source(Base):
-    __tablename__ = "source"
-
-    id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     name: Mapped[str] = Column(String(200))
-    match_id: Mapped["Match"] = Column(Integer, ForeignKey("match.id", ondelete="CASCADE"))
     path: Mapped[str] = Column(Text, nullable=False)
 
     def __repr__(self):
         return f'<Video: id: {self.id} - name: {self.first_name} {self.last_name} - path: {self.national_team}>'
 
 
-class Match(Base):
-    __tablename__ = 'match'
-
-    id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
+class Series(Base):
     # series_id: Mapped["Video"] = Column(Integer, ForeignKey("video.id"))
+    host: Mapped[str] = Column(String(100))
+    start_date: Mapped[datetime] = Column(DateTime, default=datetime.now)
+    end_date: Mapped[datetime] = Column(DateTime)
+
+    matches: Mapped[List["Match"]] = relationship(backref='series', lazy='dynamic')
+
+
+class Match(Base):
+    # series_id: Mapped["Video"] = Column(Integer, ForeignKey("video.id"))
+    series_id: Mapped[int] = Column(Integer, ForeignKey('series.id', ondelete="CASCADE"))
+    source_id: Mapped[int] = Column(Integer, ForeignKey("source.id", ondelete="CASCADE"))
+
     team1_id: Mapped[int] = Column(Integer)
     team2_id: Mapped[int] = Column(Integer)
 
-    rallies: Mapped[List["Rally"]] = relationship(back_populates='source_video', cascade="all, delete")
+    rallies: Mapped[List["Rally"]] = relationship(back_populates='source_video')
+    source: Mapped['Source'] = relationship(backref=backref("match", lazy='dynamic'))
 
-    # rallies = relationship("Rally", backref='rally', lazy='dynamic', cascade="all, delete")
+    def get_series(self):
+        s = Series.get(self.series_id)
+        return s
 
 
 class Video(Base):
-    __tablename__ = "video"
-
-    id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     source_id: Mapped[int] = Column(Integer, ForeignKey("video.id", ondelete="CASCADE"))
-    # main_video = relationship("video", backref="video", lazy='dynamic', cascade="all, delete")
     path: Mapped[str] = Column(String(200), nullable=False)
 
 
 class Rally(Base):
-    __tablename__ = 'rally'
-
-    id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     video_id: Mapped[int] = Column(Integer, ForeignKey("video.id", ondelete="CASCADE"))
     match_id: Mapped[int] = Column(Integer, ForeignKey("match.id", ondelete="CASCADE"))
     start_frame: Mapped[int] = Column(Integer)
@@ -170,14 +91,10 @@ class Rally(Base):
     team2_players_positions: Mapped[dict] = Column(JSON)
     result: Mapped[int] = Column(Integer)
 
-    source_video: Mapped["Match"] = relationship(back_populates='rallies', cascade="all, delete")
+    source_video: Mapped["Match"] = relationship(back_populates='rallies')
 
 
 class Service(Base):
-    __tablename__ = 'service'
-    id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     rally_id: Mapped[int] = Column(Integer, ForeignKey("rally.id", ondelete="CASCADE"))
     ball_positions: Mapped[dict] = Column(JSON)
     start_frame: Mapped[int]
@@ -186,7 +103,6 @@ class Service(Base):
 
 
 if __name__ == '__main__':
-    # engine.connect()
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
@@ -206,11 +122,14 @@ if __name__ == '__main__':
     nation1 = Nation.save(n1.to_dict())
     nation2 = Nation.save(n2.to_dict())
 
+    video_path = Path('/media/HDD/datasets/VOLLEYBALL/RAW-VIDEOS/train/22.mp4')
+    s1 = SourceData(name=video_path.stem, path=video_path.as_posix())
+    src = Source.save(s1.to_dict())
+
+    se1 = SeriesData(host='brazil', start_date=datetime.now(), end_date=datetime.now())
+    se = Series.save(se1.to_dict())
     # Inserting matches...
-    m1 = MatchData(team1_id=team1.id, team2_id=team2.id)
+    m1 = MatchData(team1_id=team1.id, team2_id=team2.id, series_id=se.id, source_id=src.id)
     match1 = Match.save(m1.to_dict())
 
     # Inserting video sources...
-    video_path = Path('/media/HDD/datasets/VOLLEYBALL/RAW-VIDEOS/train/22.mp4')
-    s1 = SourceData(name=video_path.stem, match_id=match1.id, path=video_path.as_posix())
-    src = Source.save(s1.to_dict())

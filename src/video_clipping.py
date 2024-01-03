@@ -1,8 +1,7 @@
 import cv2
 import yaml
 from tqdm import tqdm
-from api.models import Source, Service, Rally
-# from api.data_classes import SourceData, ServiceData
+from api.models import Source
 from src.ml.video_mae.game_state.utils import Manager
 from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 
@@ -15,6 +14,12 @@ if __name__ == '__main__':
 
     cap = cv2.VideoCapture(video)
     assert cap.isOpened(), "file is not accessible..."
+
+    """ 
+    Save path = base_dir + series + match_id + rallies 
+    base_dir = /media/HDD/DATA/volleyball/
+    
+    """
 
     rally_save_path = '/media/HDD/DATA/volleyball/rallies'
     service_save_path = '/media/HDD/DATA/volleyball/serves'

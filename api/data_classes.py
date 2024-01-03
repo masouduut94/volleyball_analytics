@@ -34,7 +34,6 @@ class PlayerData:
 @dataclass
 class SourceData:
     name: str
-    match_id: int
     path: str
 
 
@@ -43,13 +42,14 @@ class SourceData:
 class MatchData:
     team1_id: int
     team2_id: int
+    source_id: int
+    series_id: int
 
 
 @dataclass_json
 @dataclass
 class VideoData:
     source_id: int
-    # main_video = relationship("video", backref="video", lazy='dynamic', cascade="all, delete")
     path: str
 
 
@@ -79,6 +79,14 @@ class ServiceData:
     start_frame: int
     end_frame: int
     video_path: str
+
+
+@dataclass_json
+@dataclass
+class SeriesData:
+    host: str
+    start_date: datetime
+    end_date: datetime
 
 
 if __name__ == '__main__':
