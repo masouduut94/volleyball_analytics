@@ -1,5 +1,5 @@
 import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 
 
@@ -22,18 +22,20 @@ class PlayerData:
     first_name: str
     last_name: str
     gender: bool
-    age: int
-    height: int
-    weight: int
-    nation: int
-    club: int
+    height: int = field(default=None)
+    weight: int = field(default=None)
+    nation: int = field(default=None)
+    club: int = field(default=None)
+    age: int = field(default=None)
 
 
 @dataclass_json
 @dataclass
-class SourceData:
-    name: str
+class VideoData:
+    match_id: int
     path: str
+    camera_type: int = field(default=0)
+    type: str = field(default='main')
 
 
 @dataclass_json
@@ -41,51 +43,50 @@ class SourceData:
 class MatchData:
     team1_id: int
     team2_id: int
-    source_id: int
     series_id: int
-
-
-@dataclass_json
-@dataclass
-class VideoData:
-    source_id: int
-    path: str
+    video_id: int = field(default=None)
 
 
 @dataclass_json
 @dataclass
 class RallyData:
-    video_id: int
     match_id: int
-    start_frame: int
-    end_frame: int
-    sets: dict
-    spikes: dict
-    blocks: dict
-    receives: dict
-    serve: dict
-    ball_positions: dict
-    team1_players_positions: dict
-    team2_players_positions: dict
-    result: int
+    sets: dict = field(default=None)
+    spikes: dict = field(default=None)
+    blocks: dict = field(default=None)
+    receives: dict = field(default=None)
+    serve: dict = field(default=None)
+    ball_positions: dict = field(default=None)
+    team1_players_positions: dict = field(default=None)
+    team2_players_positions: dict = field(default=None)
+    result: int = field(default=None)
+    start_frame: int = field(default=None)
+    end_frame: int = field(default=None)
+    video_id: int = field(default=None)
 
 
 @dataclass_json
 @dataclass
 class ServiceData:
-    rally_id: int
-    ball_positions: dict
-    start_frame: int
-    end_frame: int
-    video_path: str
+    rally_id: int = field(default=None)
+    start_frame: int = field(default=None)
+    end_frame: int = field(default=None)
+    video_id: int = field(default=None)
+    ball_positions: dict = field(default=None)
 
 
 @dataclass_json
 @dataclass
 class SeriesData:
-    host: str
-    start_date: datetime
-    end_date: datetime
+    start_date: datetime = field(default=datetime.datetime.now())
+    end_date: datetime = field(default=datetime.datetime.now())
+    host: str = field(default=None)
+
+
+@dataclass_json
+@dataclass
+class CameraData:
+    angle_name: str
 
 
 if __name__ == '__main__':

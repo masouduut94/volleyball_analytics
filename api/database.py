@@ -24,7 +24,7 @@ Session = sessionmaker(autocommit=False, autoflush=True, bind=engine)
 
 
 class ModelMixin(object):
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = Column(Integer, primary_key=True)
     created: Mapped[datetime] = Column(DateTime, default=datetime.now)
     updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
 
@@ -36,12 +36,19 @@ class ModelMixin(object):
     def get(cls, id):
         session = Session()
         result = session.get(cls, id)
+        session.close()
         return result
 
     @classmethod
     def get_all(cls):
         session = Session()
         result = session.query(cls).all()
+        session.close()
+        return result
+
+    def query(self):
+        session = Session()
+        result = session.query(self)
         return result
 
     @classmethod
@@ -51,6 +58,7 @@ class ModelMixin(object):
         session.add(new)
         session.commit()
         session.refresh(new)
+        session.close()
         return new
 
     @classmethod
@@ -58,7 +66,7 @@ class ModelMixin(object):
         session = Session()
         item = cls.get(id)
         for k, v in kwargs.items():
-            item[k] = v
+            setattr(item, k, v)
         session.add(item)
         session.commit()
         session.flush()

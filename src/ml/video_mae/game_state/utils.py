@@ -6,20 +6,43 @@ from os import makedirs
 from pathlib import Path
 from os.path import join
 
-
-from gamestate_detection import GameStateDetector
+from api.data_classes import ServiceData, RallyData, VideoData
+from api.models import Video, Rally, Service
+from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 
 
 class Manager:
-    def __init__(self, fps: int, width: int, height: int, buffer_size: int):
+    def __init__(self, base_dir: str, match_id: int, series_id: int, fps: int, width: int, height: int,
+                 buffer_size: int):
+        self.base_dir = base_dir
+        self.match_id = match_id
+        self.series_id = series_id
+
+        self.rally_dir = f'{self.base_dir}/{self.series_id}/{self.match_id}/rallies/'
+        self.service_dir = f'{self.base_dir}/{self.series_id}/{self.match_id}/services/'
+        makedirs(self.rally_dir, exist_ok=True)
+        makedirs(self.service_dir, exist_ok=True)
+
         self.buffer_size = buffer_size
         self.states = ['no-play', 'no-play', 'no-play']
-        self.long_term_buffer = []
+        # Buffers
         self.short_term_buffer = []
+        self.short_fno_buffer = []
+        self.long_term_buffer = []
+        self.long_fno_buffer = []
+        self.service_frames = []
+
+        self.service_last_frame = None
+
+        self.service_fnos = []
+
         self.codec = cv2.VideoWriter_fourcc(*'mp4v')
         self.width = width
         self.height = height
         self.fps = fps
+
+        self.serve_counter = 0
+        self.rally_counter = 0
 
     def is_full(self):
         return len(self.short_term_buffer) == self.buffer_size
@@ -31,34 +54,81 @@ class Manager:
         self.states[-2] = prev
         self.states[-1] = curr_state
 
-    def keep(self, frames):
+    def keep(self, frames, fnos, set_serve_last_frame=False):
         self.long_term_buffer.extend(frames)
+        self.long_fno_buffer.extend(fnos)
+        if set_serve_last_frame:
+            self.service_last_frame = len(self.long_fno_buffer) - 1  # last frame number of
         self.reset_short_term()
 
-    def append(self, frame):
+    def append_frame(self, frame, fno):
         self.short_term_buffer.append(frame)
+        self.short_fno_buffer.append(fno)
 
-    def get_current_frames(self):
-        return self.short_term_buffer
-
-    def get_all_frames(self):
-        return self.long_term_buffer
+    def get_current_frames_and_fnos(self):
+        return self.short_term_buffer, self.short_fno_buffer
 
     def reset_short_term(self):
         self.short_term_buffer.clear()
+        self.short_fno_buffer.clear()
 
     def reset_long_term(self):
         self.long_term_buffer.clear()
+        self.long_fno_buffer.clear()
+        self.service_last_frame = None
 
-    def write_video(self, path):
-        random = str(uuid1())[:8]
-        name = Path(path) / f'{random}.mp4'
+    def output_video(self):
+        # 1. Saving the videos
+        service_filename = Path(self.service_dir) / f'serve_{self.serve_counter}.mp4'
         writer = cv2.VideoWriter(
-            name.as_posix(), self.codec, self.fps, (self.width, self.height)
+            service_filename.as_posix(), self.codec, self.fps, (self.width, self.height)
+        )
+        serve_frames = self.long_term_buffer[:self.service_last_frame]
+        for f in serve_frames:
+            writer.write(f)
+        writer.release()
+
+        rally_filename = Path(self.rally_dir) / f'rally_{self.rally_counter}.mp4'
+        writer = cv2.VideoWriter(
+            rally_filename.as_posix(), self.codec, self.fps, (self.width, self.height)
         )
         for f in self.long_term_buffer:
             writer.write(f)
         writer.release()
+        # 1.1 updating the counters.
+        self.serve_counter += 1
+        self.rally_counter += 1
+        # 2. Inserting into DB.
+        # 2.1 Get start_frame, last_frame ...
+        serve_1st_frame = self.long_fno_buffer[0]
+        # TODO: If service last frame is none, there must be some mistake with model output...
+        serve_last_frame = self.long_fno_buffer[self.service_last_frame]
+        rally_1st_frame = self.long_fno_buffer[0]
+        rally_last_frame = self.long_fno_buffer[-1]
+        # 2.2 create video data for rally and service ...
+        rally_video_data = VideoData(match_id=self.match_id, path=rally_filename.as_posix(), camera_type=1,
+                                     type='rally')
+        rally_video_db = Video.save(rally_video_data.to_dict())
+        serve_video_data = VideoData(match_id=self.match_id, path=service_filename.as_posix(), camera_type=1,
+                                     type='serve')
+        serve_video_db = Video.save(serve_video_data.to_dict())
+
+        rally_data = RallyData(
+            match_id=self.match_id,
+            start_frame=rally_1st_frame,
+            end_frame=rally_last_frame,
+            video_id=rally_video_db.id
+        )
+        rally = Rally.save(rally_data.to_dict())
+        print("rally is saved ...")
+        service_data = ServiceData(
+            rally_id=rally.id,
+            start_frame=serve_1st_frame,
+            end_frame=serve_last_frame,
+            video_id=serve_video_db.id
+        )
+        Service.save(service_data.to_dict())
+        self.service_last_frame = None
 
     @property
     def current(self):

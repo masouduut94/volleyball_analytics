@@ -4,7 +4,7 @@ from pathlib import Path
 from sqlalchemy.orm import Mapped, relationship, backref
 from sqlalchemy import Column, Integer, String, Text, JSON, Boolean, ForeignKey, DateTime
 
-from api.data_classes import TeamData, NationData, SourceData, MatchData, SeriesData
+from api.data_classes import TeamData, NationData, VideoData, MatchData, SeriesData, CameraData
 from api.database import engine, Base
 
 
@@ -38,14 +38,6 @@ class Player(Base):
         return f'<Player: id: {self.id} - name: {self.first_name} {self.last_name} - nation: {self.nation}>'
 
 
-class Source(Base):
-    name: Mapped[str] = Column(String(200))
-    path: Mapped[str] = Column(Text, nullable=False)
-
-    def __repr__(self):
-        return f'<Video: id: {self.id} - name: {self.first_name} {self.last_name} - path: {self.national_team}>'
-
-
 class Series(Base):
     # series_id: Mapped["Video"] = Column(Integer, ForeignKey("video.id"))
     host: Mapped[str] = Column(String(100))
@@ -55,25 +47,39 @@ class Series(Base):
     matches: Mapped[List["Match"]] = relationship(backref='series', lazy='dynamic')
 
 
+class Camera(Base):
+    angle_name: Mapped[str] = Column(String(100))
+
+
 class Match(Base):
     # series_id: Mapped["Video"] = Column(Integer, ForeignKey("video.id"))
     series_id: Mapped[int] = Column(Integer, ForeignKey('series.id', ondelete="CASCADE"))
-    source_id: Mapped[int] = Column(Integer, ForeignKey("source.id", ondelete="CASCADE"))
+    video_id: Mapped[int] = Column(Integer, ForeignKey("video.id", ondelete="CASCADE"))
 
     team1_id: Mapped[int] = Column(Integer)
     team2_id: Mapped[int] = Column(Integer)
 
-    rallies: Mapped[List["Rally"]] = relationship(back_populates='source_video')
-    source: Mapped['Source'] = relationship(backref=backref("match", lazy='dynamic'))
+    rallies: Mapped[List["Rally"]] = relationship(back_populates='match')
 
     def get_series(self):
         s = Series.get(self.series_id)
         return s
 
+    def get_rally_videos(self):
+        pass
+
+    def get_main_video(self):
+        return Video.get(id=self.video_id)
+
 
 class Video(Base):
-    source_id: Mapped[int] = Column(Integer, ForeignKey("video.id", ondelete="CASCADE"))
+    match_id: Mapped[int] = Column(Integer, ForeignKey('match.id', ondelete="CASCADE"))
+    camera_type: Mapped[int] = Column(Integer, ForeignKey('camera.id'))
     path: Mapped[str] = Column(String(200), nullable=False)
+    type: Mapped[str] = Column(String(50), nullable=False)  # 3 types: main, rally, serve
+
+    def get_videos_by_type(self, video_type='main'):
+        return self.query().filter(self.type == video_type).one()
 
 
 class Rally(Base):
@@ -91,15 +97,19 @@ class Rally(Base):
     team2_players_positions: Mapped[dict] = Column(JSON)
     result: Mapped[int] = Column(Integer)
 
-    source_video: Mapped["Match"] = relationship(back_populates='rallies')
+    match: Mapped["Match"] = relationship(back_populates='rallies')
 
 
 class Service(Base):
     rally_id: Mapped[int] = Column(Integer, ForeignKey("rally.id", ondelete="CASCADE"))
     ball_positions: Mapped[dict] = Column(JSON)
+    service_man: Mapped[str] = Column(String(200))  # It has to be player id...
+    service_position: Mapped[dict] = Column(JSON)
+    service_landing_position: Mapped[dict] = Column(JSON)
+    service_landing_zone: Mapped[dict] = Column(JSON)
     start_frame: Mapped[int]
     end_frame: Mapped[int]
-    video_path: Mapped[str]
+    video_id: Mapped[int]
 
 
 if __name__ == '__main__':
@@ -122,14 +132,21 @@ if __name__ == '__main__':
     nation1 = Nation.save(n1.to_dict())
     nation2 = Nation.save(n2.to_dict())
 
-    video_path = Path('/media/HDD/datasets/VOLLEYBALL/RAW-VIDEOS/train/22.mp4')
-    s1 = SourceData(name=video_path.stem, path=video_path.as_posix())
-    src = Source.save(s1.to_dict())
+    c1 = CameraData(angle_name='behind_1')
+    camera = Camera.save(c1.to_dict())
 
     se1 = SeriesData(host='brazil', start_date=datetime.now(), end_date=datetime.now())
     se = Series.save(se1.to_dict())
-    # Inserting matches...
-    m1 = MatchData(team1_id=team1.id, team2_id=team2.id, series_id=se.id, source_id=src.id)
+
+    m1 = MatchData(team1_id=team1.id, team2_id=team2.id, series_id=se.id, video_id=None)
     match1 = Match.save(m1.to_dict())
+
+    video_path = Path('/media/masoud/HDD-8TB/datasets/VOLLEYBALL/RAW-VIDEOS/train/22.mp4')
+    v1 = VideoData(match1.id, path=video_path.as_posix(), camera_type=camera.id, type='main')
+    video = Video.save(v1.to_dict())
+
+    Match.update(match1.id, {"video_id": video.id})
+    # Inserting matches...
+
 
     # Inserting video sources...

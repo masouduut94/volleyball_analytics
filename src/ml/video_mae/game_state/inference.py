@@ -1,7 +1,7 @@
 import cv2
 import yaml
 from tqdm import tqdm
-from api.models import Source, Service, Rally
+from api.models import Service, Rally, Video
 # from api.data_classes import SourceData, ServiceData
 from gamestate_detection import GameStateDetector
 from src.ml.video_mae.game_state.utils import Manager
@@ -10,7 +10,7 @@ if __name__ == '__main__':
     config = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
     cfg = yaml.load(open(config), Loader=yaml.SafeLoader)
     model = GameStateDetector(cfg=cfg['video_mae']['game_state_3'])
-    src = Source.get(1)
+    src = Video.get(1)
     video = src.path
 
     cap = cv2.VideoCapture(video)
@@ -31,10 +31,10 @@ if __name__ == '__main__':
         pbar.update(1)
         cap.set(1, fno)
         status, frame = cap.read()
-        state_manager.append(frame)
+        state_manager.append_frame(frame)
 
         if state_manager.is_full():
-            current_frames = state_manager.get_current_frames()
+            current_frames = state_manager.get_current_frames_and_fnos()
             current_state = model.predict(current_frames)
             state_manager.set_current_state(current_state)
             pbar.set_description(f"state: {current_state}")
