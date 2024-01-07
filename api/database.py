@@ -1,6 +1,6 @@
 import yaml
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, DateTime
+from sqlalchemy import create_engine, Column, Integer, DateTime, inspect
 from sqlalchemy.orm import declarative_base, sessionmaker, Mapped, declared_attr
 
 db_file = open("/home/masoud/Desktop/projects/volleyball_analytics/conf/db_conf.yaml").read()
@@ -31,6 +31,16 @@ class ModelMixin(object):
     @declared_attr
     def __tablename__(cls):
         return cls.__name__.lower()
+
+    def __repr__(self):
+        attrs = {
+            c.key: c.value for c in inspect(self).attrs
+        }
+        id_value = attrs.pop('id')
+        t = ''
+        for key, value in attrs.items():
+            t += f"{key}: {value} | "
+        return f'<{self.__class__.__name__} | id: {id_value} | {t}'
 
     @classmethod
     def get(cls, id):

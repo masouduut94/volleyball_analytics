@@ -9,6 +9,7 @@ if __name__ == '__main__':
     match_id = 1
     # team1_id = 1
     # team2_id = 2
+    base_dir = "/media/masoud/HDD-8TB/DATA/volleyball/"
 
     config = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
     cfg = yaml.load(open(config), Loader=yaml.SafeLoader)
@@ -24,32 +25,21 @@ if __name__ == '__main__':
     cap = cv2.VideoCapture(video_path)
     assert cap.isOpened(), "file is not accessible..."
 
-    """
-    Save path = base_dir + series + match_id + rallies
-    rallies_save_path = /media/HDD/DATA/volleyball/<series_id>/<match_id>/rallies/<rally_id>
-    services_save_path = /media/HDD/DATA/volleyball/<series_id>/<match_id>/services/<service_id>
-    
-    Before saving a service, we need to create and assign a <rally_id>...
-    Figure out how to create a rally_id, and service_id in a loop.
-    
-    1 - create a Rally object before loop. and whenever we finished saving Rally video, we create next one.
-    1 - - to save Rally, we need video_id. we can save video before creating an actual video. we just need the id.
-    2 - we need to accumulate the start/end frame along with the frames that are updated in the Manager.
-    2 - - maybe use a structure that saves list of frames along with start frame and end frame.
-
-    """
-    base_dir = "/media/masoud/HDD-8TB/DATA/volleyball/"
-
-    # rally_save_path = '/media/HDD/DATA/volleyball/rallies'
-    # service_save_path = '/media/HDD/DATA/volleyball/serves'
-    mistake_path = '/media/masoud/HDD-8TB/volleyball/wrong_annotation'
+    # mistake_path = '/media/masoud/HDD-8TB/volleyball/wrong_annotation'
     width, height, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
 
     previous_state = 'no-play'
     current_state = None
     no_play_flag = 0
-    state_manager = Manager(base_dir=base_dir, match_id=match_id, series_id=series_id, fps=30, width=width,
-                            height=height, buffer_size=30)
+    state_manager = Manager(
+        base_dir=base_dir,
+        match_id=match_id,
+        series_id=series_id,
+        fps=30,
+        width=width,
+        height=height,
+        buffer_size=30
+    )
     pbar = tqdm(list(range(n_frames)))
     rally = None
 
@@ -71,53 +61,50 @@ if __name__ == '__main__':
             match current:
                 case 'service':
                     if prev == 'no-play' or prev == 'service':
-                        state_manager.keep(current_frames, current_fnos)
-                        state_manager.reset_short_term()
+                        state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
+                        # state_manager.reset_short_term()
                     elif prev == 'play':
+
                         # In the middle of `play`, we never get `service` unless the model is wrong.
                         # we save the video to investigate the case.
-                        state_manager.keep(current_frames, current_fnos)
+                        state_manager.keep(current_frames, current_fnos, [current]*len(current_frames))
                         # state_manager.write_video(mistake_path)
                         print("Mistake .....")
-                        state_manager.reset_short_term()
-                        state_manager.reset_long_term()
+                        state_manager.reset_long_buffer()
                         # Reset states, keep the current frames, but removing previous frames.
-                        state_manager.keep(current_frames, current_fnos)
                 case 'play':
                     if prev == 'service':
                         # Save the state buffer as the service video and keep buffering the rest ...
-                        state_manager.keep(current_frames, current_fnos, set_serve_last_frame=True)
-                        # state_manager.write_video()
-                        # Service
-                        # s1 = ServiceData()
-
-                        state_manager.reset_short_term()
+                        state_manager.keep(current_frames, current_fnos, [current] * len(current_frames),
+                                           set_serve_last_frame=True)
+                        # state_manager.reset_short_term()
                     elif prev == 'play':
-                        state_manager.keep(current_frames, current_fnos)
+                        state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
                     elif prev == 'no-play':
                         # TODO: Check this part, not making problems.
-                        state_manager.keep(current_frames, current_fnos)
+                        state_manager.keep(current_frames, current_fnos, [current]*len(current_frames))
                 case 'no-play':
                     # Only 2 consecutive "no-play" means the end of rally...
                     if prev == 'service' or prev == 'play':
                         # if we haven't got 2 cons
-                        state_manager.keep(current_frames, current_fnos)
+                        state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
                         # store the whole game video from service to end of the game.
                     elif prev == 'no-play':
                         # This is when we have 2 states of 'no-plays', so let's store the video.
                         # if the state before prev is 'service', save it as a service, if `play`,
                         # store it as a `rally`, otherwise keep skipping the video.
                         if prev_prev == 'play':
-                            state_manager.output_video()
+                            state_manager.db_store(draw_label=True)
 
                         elif prev_prev == 'service':
                             # It's either ACE, or SERVICE ERROR.
                             # TODO: We have to save it as a rally first, then insert the service...
-                            state_manager.keep(current_frames, current_fnos, set_serve_last_frame=True)
-                            state_manager.output_video()
-                            state_manager.reset_long_term()
+                            state_manager.keep(current_frames, current_fnos, [current] * len(current_frames),
+                                               set_serve_last_frame=True)
+                            state_manager.db_store(draw_label=True)
+                            state_manager.reset_long_buffer()
                         else:
-                            state_manager.reset_long_term()
-                    state_manager.reset_short_term()
+                            state_manager.reset_long_buffer()
+                    state_manager.reset_temp_buffer()
         else:
             continue

@@ -12,16 +12,10 @@ class Team(Base):
     name: Mapped[str] = Column(String(200), nullable=False)
     is_national_team: Mapped[bool] = Column(Boolean, default=True)
 
-    def __repr__(self):
-        return f'<Team: {self.name} - id: {self.id}>'
-
 
 class Nation(Base):
     name: Mapped[str] = Column(String(200))
     display_name: Mapped[str] = Column(String(200))
-
-    def __repr__(self):
-        return f"<Nation: {self.name}>"
 
 
 class Player(Base):
@@ -33,9 +27,6 @@ class Player(Base):
     weight: Mapped[int] = Column(Integer)
     nation: Mapped[int] = Column(Integer, ForeignKey("nation.id", ondelete="CASCADE"))
     club: Mapped[int] = Column(Integer, ForeignKey("team.id", ondelete="CASCADE"))
-
-    def __repr__(self):
-        return f'<Player: id: {self.id} - name: {self.first_name} {self.last_name} - nation: {self.nation}>'
 
 
 class Series(Base):
@@ -124,6 +115,8 @@ if __name__ == '__main__':
 
     team1 = Team.save(t1.to_dict())
     team2 = Team.save(t2.to_dict())
+    print(team1)
+    print(team2)
 
     # Inserting nations
     n1 = NationData(name='canada', display_name='CAN')

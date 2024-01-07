@@ -46,15 +46,15 @@ if __name__ == '__main__':
                 case 'service':
                     if prev == 'no-play' or prev == 'service':
                         state_manager.keep(current_frames)
-                        state_manager.reset_short_term()
+                        state_manager.reset_temp_buffer()
                     elif prev == 'play':
                         # In the middle of `play`, we never get `service` unless the model is wrong.
                         # we save the video to investigate the case.
                         state_manager.keep(current_frames)
                         state_manager.write_video(mistake_path)
                         print("Mistake .....")
-                        state_manager.reset_short_term()
-                        state_manager.reset_long_term()
+                        state_manager.reset_temp_buffer()
+                        state_manager.reset_long_buffer()
                         # Reset states, keep the current frames, but removing previous frames.
                         state_manager.keep(current_frames)
                 case 'play':
@@ -64,14 +64,14 @@ if __name__ == '__main__':
                         state_manager.write_video(service_save_path)
                         print(f"Caught a service... saved in {service_save_path}")
 
-                        state_manager.reset_short_term()
+                        state_manager.reset_temp_buffer()
                     elif prev == 'play':
                         state_manager.keep(current_frames)
-                        state_manager.reset_short_term()
+                        state_manager.reset_temp_buffer()
                     elif prev == 'no-play':
                         # TODO: Check this part, not making problems.
                         state_manager.keep(current_frames)
-                        state_manager.reset_short_term()
+                        state_manager.reset_temp_buffer()
                 case 'no-play':
                     # Only 2 consecutive "no-play" means the end of rally...
                     if prev == 'service' or prev == 'play':
@@ -90,7 +90,7 @@ if __name__ == '__main__':
                             state_manager.write_video(service_save_path)
                             print(f"Caught a SERVICE ... saved in {service_save_path}")
                         else:
-                            state_manager.reset_long_term()
-                    state_manager.reset_short_term()
+                            state_manager.reset_long_buffer()
+                    state_manager.reset_temp_buffer()
         else:
             continue

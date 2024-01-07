@@ -26,11 +26,12 @@ class Manager:
         self.buffer_size = buffer_size
         self.states = ['no-play', 'no-play', 'no-play']
         # Buffers
-        self.short_term_buffer = []
-        self.short_fno_buffer = []
-        self.long_term_buffer = []
-        self.long_fno_buffer = []
+        self.temp_buffer = []
+        self.temp_buffer_fno = []
+        self.long_buffer = []
+        self.long_buffer_fno = []
         self.service_frames = []
+        self.labels = []
 
         self.service_last_frame = None
 
@@ -45,7 +46,7 @@ class Manager:
         self.rally_counter = 0
 
     def is_full(self):
-        return len(self.short_term_buffer) == self.buffer_size
+        return len(self.temp_buffer) == self.buffer_size
 
     def set_current_state(self, curr_state):
         prev = self.states[-1]
@@ -54,81 +55,80 @@ class Manager:
         self.states[-2] = prev
         self.states[-1] = curr_state
 
-    def keep(self, frames, fnos, set_serve_last_frame=False):
-        self.long_term_buffer.extend(frames)
-        self.long_fno_buffer.extend(fnos)
+    def keep(self, frames, fnos, states, set_serve_last_frame=False):
+        self.long_buffer.extend(frames)
+        self.long_buffer_fno.extend(fnos)
+        self.labels.extend(states)
         if set_serve_last_frame:
-            self.service_last_frame = len(self.long_fno_buffer) - 1  # last frame number of
-        self.reset_short_term()
+            self.service_last_frame = len(self.long_buffer_fno) - 1
+        self.reset_temp_buffer()
 
     def append_frame(self, frame, fno):
-        self.short_term_buffer.append(frame)
-        self.short_fno_buffer.append(fno)
+        self.temp_buffer.append(frame)
+        self.temp_buffer_fno.append(fno)
 
     def get_current_frames_and_fnos(self):
-        return self.short_term_buffer, self.short_fno_buffer
+        return self.temp_buffer, self.temp_buffer_fno
 
-    def reset_short_term(self):
-        self.short_term_buffer.clear()
-        self.short_fno_buffer.clear()
+    def reset_temp_buffer(self):
+        self.temp_buffer.clear()
+        self.temp_buffer_fno.clear()
 
-    def reset_long_term(self):
-        self.long_term_buffer.clear()
-        self.long_fno_buffer.clear()
+    def reset_long_buffer(self):
+        self.long_buffer.clear()
+        self.long_buffer_fno.clear()
+        self.labels.clear()
         self.service_last_frame = None
 
-    def output_video(self):
-        # 1. Saving the videos
-        service_filename = Path(self.service_dir) / f'serve_{self.serve_counter}.mp4'
+    def db_store(self, draw_label: bool = False):
+        rally_name = Path(self.rally_dir) / f'rally_{self.rally_counter}.mp4'
         writer = cv2.VideoWriter(
-            service_filename.as_posix(), self.codec, self.fps, (self.width, self.height)
+            rally_name.as_posix(), self.codec, self.fps, (self.width, self.height)
         )
-        serve_frames = self.long_term_buffer[:self.service_last_frame]
-        for f in serve_frames:
-            writer.write(f)
+        if draw_label:
+            for label, frame, fno in zip(self.labels, self.long_buffer, self.long_buffer_fno):
+                match label:
+                    case "service":
+                        color = (0, 255, 0)
+                    case "play":
+                        color = (0, 255, 255)
+                    case _:
+                        color = (255, 0, 0)
+                frame = cv2.putText(frame, label, (100, 50), cv2.FONT_HERSHEY_PLAIN, 2, color, 2)
+                frame = cv2.putText(frame, str(fno), (self.width - 400, 50), cv2.FONT_HERSHEY_PLAIN, 2,
+                                    (255, 0, 0), 2)
+                writer.write(frame)
+        else:
+            for frame in self.long_buffer:
+                writer.write(frame)
         writer.release()
 
-        rally_filename = Path(self.rally_dir) / f'rally_{self.rally_counter}.mp4'
-        writer = cv2.VideoWriter(
-            rally_filename.as_posix(), self.codec, self.fps, (self.width, self.height)
-        )
-        for f in self.long_term_buffer:
-            writer.write(f)
-        writer.release()
-        # 1.1 updating the counters.
-        self.serve_counter += 1
-        self.rally_counter += 1
-        # 2. Inserting into DB.
-        # 2.1 Get start_frame, last_frame ...
-        serve_1st_frame = self.long_fno_buffer[0]
-        # TODO: If service last frame is none, there must be some mistake with model output...
-        serve_last_frame = self.long_fno_buffer[self.service_last_frame]
-        rally_1st_frame = self.long_fno_buffer[0]
-        rally_last_frame = self.long_fno_buffer[-1]
-        # 2.2 create video data for rally and service ...
-        rally_video_data = VideoData(match_id=self.match_id, path=rally_filename.as_posix(), camera_type=1,
-                                     type='rally')
-        rally_video_db = Video.save(rally_video_data.to_dict())
-        serve_video_data = VideoData(match_id=self.match_id, path=service_filename.as_posix(), camera_type=1,
-                                     type='serve')
-        serve_video_db = Video.save(serve_video_data.to_dict())
-
-        rally_data = RallyData(
-            match_id=self.match_id,
-            start_frame=rally_1st_frame,
-            end_frame=rally_last_frame,
-            video_id=rally_video_db.id
-        )
+        rally_1st_frame = self.long_buffer_fno[0]
+        rally_last_frame = self.long_buffer_fno[-1]
+        rally_vdata = VideoData(match_id=self.match_id, path=rally_name.as_posix(), camera_type=1, type='rally')
+        rally_video_db = Video.save(rally_vdata.to_dict())
+        rally_data = RallyData(match_id=self.match_id, start_frame=rally_1st_frame, end_frame=rally_last_frame,
+                               video_id=rally_video_db.id)
         rally = Rally.save(rally_data.to_dict())
-        print("rally is saved ...")
-        service_data = ServiceData(
-            rally_id=rally.id,
-            start_frame=serve_1st_frame,
-            end_frame=serve_last_frame,
-            video_id=serve_video_db.id
-        )
-        Service.save(service_data.to_dict())
-        self.service_last_frame = None
+        self.rally_counter += 1
+        self.serve_counter += 1
+        print(f"rally is saved in {rally_name.name}...\n")
+        # write service video and save it in DB...
+        if self.service_last_frame is not None:
+            serve_name = Path(self.service_dir) / f'serve_{self.serve_counter}.mp4'
+            writer = cv2.VideoWriter(serve_name.as_posix(), self.codec, self.fps, (self.width, self.height))
+            serve_1st_frame = self.long_buffer_fno[0]
+            serve_last_frame = self.long_buffer_fno[self.service_last_frame]
+            serve_frames = self.long_buffer[:self.service_last_frame]
+            for frame in serve_frames:
+                writer.write(frame)
+            writer.release()
+            serve_vdata = VideoData(match_id=self.match_id, path=serve_name.as_posix(), camera_type=1, type='serve')
+            serve_video_db = Video.save(serve_vdata.to_dict())
+            service_data = ServiceData(rally_id=rally.id, start_frame=serve_1st_frame, end_frame=serve_last_frame,
+                                       video_id=serve_video_db.id)
+            Service.save(service_data.to_dict())
+            print(f"serve is saved in {serve_name.name}...\n")
 
     @property
     def current(self):
