@@ -4,9 +4,9 @@ from time import time
 from pathlib import Path
 from argparse import ArgumentParser
 
-from src.ml.yolo.players.segmentation import PlayerSegmentator
+from src.ml.yolo.players.segmentation import PlayerSegmentor
 from src.utilities.utils import CourtCoordinates
-from src.ml.yolo.ball.ball_detection import BallDetector
+from src.ml.yolo.ball.ball_detection import BallSegmentor
 from src.ml.yolo.players.detection import PlayerDetector
 from src.ml.yolo.vb_action.action_detection import ActionDetector
 # from src.ml.yolo.keypoint.pose_estimation import PoseEstimator
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     video_path = args.video
     output_path = args.output
 
-    ball_detector = BallDetector()
+    ball_detector = BallSegmentor()
     action_detector = ActionDetector()
     player_detector = PlayerDetector()
 

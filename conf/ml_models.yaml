@@ -8,12 +8,16 @@ yolo:
   pose_estimation:
     weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/yolov8n-pose.pt"
     labels: {0: 'person'}
-  ball_detection:
+  ball_segmentation:
     weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/ball_segment/model2/weights/best.pt"
     labels: {0: "ball"}
-  action_detection:
+  action_detection5:
      weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/action_detection/5_class/weights/best.pt"
      labels: {0: 'ball', 1: 'block', 2: "receive", 3: 'set', 4: 'spike'}
+  action_detection6:
+    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/action_detection/6_class/model2/weights/best.pt"
+    labels: { 0: 'ball', 1: 'block', 2: "receive", 3: 'set', 4: 'spike', 5: 'serve'}
+
 #    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/action_detection/6_class/model1/weights/best.pt"
 #    labels: {1: 'block', 2: "receive", 3: 'set', 4: 'spike'}
 

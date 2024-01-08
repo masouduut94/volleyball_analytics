@@ -5,10 +5,10 @@ from numpy.typing import ArrayLike, NDArray
 from src.utilities.utils import BoundingBox, Meta, CourtCoordinates
 
 # weights = 'yolov8n-seg.pt'
-__all__ = ['PlayerSegmentator']
+__all__ = ['PlayerSegmentor']
 
 
-class PlayerSegmentator:
+class PlayerSegmentor:
     def __init__(self, cfg, court_dict: dict = None):
         self.name = 'player'
         self.model = YOLO(cfg['weight'])
@@ -31,11 +31,11 @@ class PlayerSegmentator:
     def filter(self, bboxes: List[BoundingBox], keep: int = None, by_bbox_size: bool = True, by_zone: bool = True):
         """
         filter the bounding boxes of people based on the size of bounding box,
-        whether their steps are in the court.
+        and also whether their steps are in the court or not.
         Args:
             by_zone:
             bboxes:
-            keep:
+            keep: how many people to keep. normally 12 person. (6 for one team, 6 for other team)
             by_bbox_size:
 
         Returns:

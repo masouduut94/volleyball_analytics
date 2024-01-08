@@ -8,7 +8,7 @@ from pathlib import Path
 import norfair
 from norfair import Detection, Tracker, OptimizedKalmanFilterFactory
 from argparse import ArgumentParser
-from src.ml.yolo.ball.ball_detection import BallDetector
+from src.ml.yolo.ball.ball_detection import BallSegmentor
 from src.ml.yolo.vb_action.action_detection import ActionDetector
 from src.ml.yolo.players.pose_estimation import PoseEstimator
 from src.utilities.utils import BoundingBox, KeyPointBox, Meta, CourtCoordinates
@@ -142,7 +142,7 @@ if __name__ == '__main__':
             reid_hit_counter_max=500,
         )
 
-    ball_detector = BallDetector()
+    ball_detector = BallSegmentor()
     action_detector = ActionDetector()
     kp_detector = PoseEstimator()
 

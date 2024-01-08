@@ -41,16 +41,26 @@ Sports Data Analytics.
 - [ ] Add object detection results to the DB.
 - [ ] Use batch prediction for 30 frames.
 - [ ] Add ball detection and its results to DB.
+
+
 ## BackEnd:
 
 - Integrate video clipping:
 - - [x] Add AI-based video-clipper.
-- - [ ] add DB integration for video storage.
+- - [x] add DB integration for video storage.
 - - [ ] Add RabbitMQ for job scheduling.
 - - [ ] Integrate it with flask for backend processes.
 - - [ ] Integrate FastAPI for API calls.
 
-## Issues
-- - [ ] Fix the issue with clipping the videos where 'service' comes after a `play`.
+# Readme file:
 
-
+- [ ] Add datasets ...
+- [ ] Add model weights ...
+- [ ] Add notes about how to generate videos.(description about notebooks)
+- [ ] Add gif from game-state detection model.
+- [ ] Add gif from volleyball objects detection model.
+- [ ] Add gif from volleyball ball segmentation model.
+- [ ] Add descriptions about accuracy/recall/ ... 
+- [ ] Add description about how to run each model and get a demo.
+- [ ] Add notes about how to improve.
+- [ ] Add notes about how to setup the postgres/mysql.

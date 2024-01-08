@@ -9,7 +9,7 @@ from copy import deepcopy
 from natsort import natsorted
 import xml.etree.ElementTree as ET
 
-from src.ml.yolo.ball import BallDetector
+from src.ml.yolo.ball import BallSegmentor
 from src.utilities.utils import BoundingBox
 from notebooks.utils import Bbox, ImageAnnot
 from src.ml.yolo.vb_action.action_detection import ActionDetector
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     }
 
     action_detector = ActionDetector(action_cfg)
-    ball_detector = BallDetector(ball_cfg)
+    ball_detector = BallSegmentor(ball_cfg)
 
     image_dir = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/4_classes/receive'
     images = natsorted(list(Path(image_dir).glob('*.png')))

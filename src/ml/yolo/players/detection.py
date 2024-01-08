@@ -21,6 +21,7 @@ class PlayerDetector:
         self.name = 'player'
         self.model = YOLO(cfg['weight'])
         self.labels = cfg['labels']
+        self.court = None
         self.court = CourtCoordinates(court_dict) if court_dict is not None else None
 
     def detect_all(self, frame: NDArray) -> list[BoundingBox]:

@@ -31,6 +31,10 @@ class ActionDetector:
         return detections
 
     @staticmethod
+    def extract_item(bboxes: List[BoundingBox], item: str) -> List[BoundingBox]:
+        return [bbox for bbox in bboxes if bbox.name == item]
+
+    @staticmethod
     def draw(frame: NDArray, items: List[BoundingBox | KeyPointBox]):
         for bb in items:
             match bb.name:
@@ -42,6 +46,10 @@ class ActionDetector:
                     frame = bb.plot(frame, color=Meta.green, title=bb.name)
                 case 'block':
                     frame = bb.plot(frame, color=Meta.purple, title=bb.name)
+                case 'serve':
+                    frame = bb.plot(frame, color=Meta.blue, title=bb.name)
+                case 'ball':
+                    frame = bb.plot(frame, color=Meta.red, title=bb.name)
         return frame
 
 

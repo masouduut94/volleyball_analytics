@@ -1,24 +1,31 @@
+from typing import List
+
 import yaml
 import json
 from os.path import isfile
 from numpy.typing import NDArray
 from yaml.loader import SafeLoader
 
-from ball import BallDetector
-from vb_action import ActionDetector
-from players import PlayerSegmentator, PlayerDetector, PoseEstimator
+from src.utilities.utils import BoundingBox
+from .ball import BallSegmentor
+from .vb_action import ActionDetector
+from .players import PlayerSegmentor, PlayerDetector, PoseEstimator
 
 
 class VolleyBallObjectDetector:
-    def __init__(self, ml_yaml, court_keypoints_json: str = None, use_player_detection=True):
+    def __init__(self, ml_yaml, court_keypoints_json: str = None, video_name: str = None, use_player_detection=True):
         self.config = self._parse_configs(ml_yaml)
-        court_dict = json.load(open(court_keypoints_json)) if court_keypoints_json is not None else None
+        court_dict = None
+        if court_keypoints_json is not None and video_name is not None:
+            court_dict = json.load(open(court_keypoints_json))[video_name]
+            # TODO: create a model to segment the court at first sight, or make us capable of annotating the court
+            #       keypoints on a GUI ...
         if use_player_detection:
             self.player_detector = PlayerDetector(self.config['yolo']['player_detection'], court_dict=court_dict)
         else:
-            self.player_detector = PlayerSegmentator(self.config['yolo']['player_segmentation'])
-        self.action_detector = ActionDetector(self.config['yolo']['action_detection'])
-        self.ball_detector = BallDetector(self.config['yolo']['ball_detection'])
+            self.player_detector = PlayerSegmentor(self.config['yolo']['player_segmentation'])
+        self.action_detector = ActionDetector(self.config['yolo']['action_detection6'])
+        self.ball_detector = BallSegmentor(self.config['yolo']['ball_segmentation'])
         self.pose_estimator = PoseEstimator(self.config['yolo']['pose_estimation'])
 
     @staticmethod
@@ -34,6 +41,9 @@ class VolleyBallObjectDetector:
     def detect_actions(self, image):
         return self.action_detector.detect_all(frame=image)
 
+    def extract_actions(self, bboxes: List[BoundingBox], item: str = 'ball'):
+        return self.action_detector.extract_item(bboxes=bboxes, item=item)
+
     def detect_players(self, image):
         return self.player_detector.detect_all(frame=image)
 
@@ -42,6 +52,10 @@ class VolleyBallObjectDetector:
 
     def segment_players(self, image):
         return self.player_detector.detect_all(frame=image)
+
+    def draw_bboxes(self, image, bboxes):
+        image = self.action_detector.draw(frame=image, items=bboxes)
+        return image
 
 
 if __name__ == '__main__':

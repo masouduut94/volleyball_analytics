@@ -1,3 +1,3 @@
-from .ball_detection import BallDetector
+from .ball_detection import BallSegmentor
 
-__all__ = ['BallDetector']
+__all__ = ['BallSegmentor']

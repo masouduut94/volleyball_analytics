@@ -9,10 +9,10 @@ from src.utilities.utils import BoundingBox, Meta
 
 # weights = '/home/masoud/Desktop/projects/volleyball_analytics/weights/ball_segment/model2/weights/best.pt'
 
-__all__ = ['BallDetector']
+__all__ = ['BallSegmentor']
 
 
-class BallDetector:
+class BallSegmentor:
     def __init__(self, cfg: dict):
         self.model = YOLO(cfg['weight'])
         self.labels = cfg['labels']
@@ -65,7 +65,7 @@ if __name__ == '__main__':
         "labels": {0: 'ball'}
     }
 
-    action_detector = BallDetector(cfg=cfg)
+    action_detector = BallSegmentor(cfg=cfg)
     cap = cv2.VideoCapture(video)
     assert cap.isOpened()
 
