@@ -15,7 +15,7 @@ class PlayerSegmentor:
         self.labels = cfg['labels']
         self.court = CourtCoordinates(court_dict) if court_dict is not None else None
 
-    def detect_all(self, frame: NDArray) -> list[BoundingBox]:
+    def segment_all(self, frame: NDArray) -> list[BoundingBox]:
         results = self.model(frame, verbose=False, classes=0)
         confs = results[0].boxes.conf.cpu().detach().numpy().tolist()
         boxes = results[0].boxes.xyxy.cpu().detach().numpy().tolist()

@@ -23,7 +23,7 @@ class VolleyBallObjectDetector:
         if use_player_detection:
             self.player_detector = PlayerDetector(self.config['yolo']['player_detection'], court_dict=court_dict)
         else:
-            self.player_detector = PlayerSegmentor(self.config['yolo']['player_segmentation'])
+            self.player_detector = PlayerSegmentor(self.config['yolo']['player_segmentation'], court_dict=court_dict)
         self.action_detector = ActionDetector(self.config['yolo']['action_detection6'])
         self.ball_detector = BallSegmentor(self.config['yolo']['ball_segmentation'])
         self.pose_estimator = PoseEstimator(self.config['yolo']['pose_estimation'])
@@ -35,23 +35,24 @@ class VolleyBallObjectDetector:
             cfg = yaml.load(cfg_file, Loader=SafeLoader)
         return cfg
 
-    def detect_ball(self, image: NDArray):
-        return self.ball_detector.detect_one(frame=image)
+    # TODO: FIXME: Make code adaptable to batch processing ...
+    def detect_balls(self, input: NDArray | List[NDArray]):
+        return self.ball_detector.detect_all(frame=input)
 
-    def detect_actions(self, image):
-        return self.action_detector.detect_all(frame=image)
+    def detect_actions(self, input: NDArray | List[NDArray]):
+        return self.action_detector.detect_all(frame=input)
 
-    def extract_actions(self, bboxes: List[BoundingBox], item: str = 'ball'):
+    def detect_keypoints(self, input: NDArray | List[NDArray]):
+        return self.pose_estimator.detect_all(frame=input)
+
+    def segment_players(self, input: NDArray | List[NDArray]):
+        return self.player_detector.segment_all(frame=input)
+
+    def extract_objects(self, bboxes: List[BoundingBox], item: str = 'ball'):
         return self.action_detector.extract_item(bboxes=bboxes, item=item)
 
-    def detect_players(self, image):
-        return self.player_detector.detect_all(frame=image)
-
-    def detect_keypoints(self, image):
-        return self.pose_estimator.detect_all(frame=image)
-
-    def segment_players(self, image):
-        return self.player_detector.detect_all(frame=image)
+    def exclude_objects(self, bboxes: List[BoundingBox], item: str = 'ball'):
+        return self.action_detector.exclude_objects(bboxes=bboxes, item=item)
 
     def draw_bboxes(self, image, bboxes):
         image = self.action_detector.draw(frame=image, items=bboxes)

@@ -35,21 +35,25 @@ class ActionDetector:
         return [bbox for bbox in bboxes if bbox.name == item]
 
     @staticmethod
+    def exclude_objects(bboxes: List[BoundingBox], item: str) -> List[BoundingBox]:
+        return [bbox for bbox in bboxes if bbox.name != item]
+
+    @staticmethod
     def draw(frame: NDArray, items: List[BoundingBox | KeyPointBox]):
         for bb in items:
             match bb.name:
                 case 'spike':
-                    frame = bb.plot(frame, color=Meta.orange, title=bb.name)
+                    frame = bb.plot(frame, color=Meta.bgr_orange, title=bb.name)
                 case 'set':
-                    frame = bb.plot(frame, color=Meta.yellow, title=bb.name)
+                    frame = bb.plot(frame, color=Meta.bgr_aqua, title=bb.name)
                 case 'receive':
                     frame = bb.plot(frame, color=Meta.green, title=bb.name)
                 case 'block':
-                    frame = bb.plot(frame, color=Meta.purple, title=bb.name)
+                    frame = bb.plot(frame, color=Meta.bgr_purple, title=bb.name)
                 case 'serve':
-                    frame = bb.plot(frame, color=Meta.blue, title=bb.name)
+                    frame = bb.plot(frame, color=Meta.bgr_brown, title=bb.name)
                 case 'ball':
-                    frame = bb.plot(frame, color=Meta.red, title=bb.name)
+                    frame = bb.plot(frame, color=Meta.bgr_red, title=bb.name)
         return frame
 
 

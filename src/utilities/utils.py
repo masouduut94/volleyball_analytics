@@ -21,7 +21,7 @@ def video_write(input: str, output_path: str, yolo_model, config):
     for fno in tqdm(list(range(n_frames))):
         cap.set(1, fno)
         status, frame = cap.read()
-        bboxes = action_detector.detect_all(frame)
+        bboxes = action_detector.segment_all(frame)
         frame = action_detector.draw(frame, bboxes)
         writer.write(frame)
 
@@ -34,14 +34,26 @@ def video_write(input: str, output_path: str, yolo_model, config):
 class Meta:
     white = (255, 255, 255)
     black = (0, 0, 0)
-    purple = (255, 0, 255)
-    blue = (0, 255, 0)
-    cyan = (0, 255, 255)
+    purple = (148, 0, 211)
+    magenta = (255, 0, 255)
+    blue = (0, 0, 255)
     green = (0, 255, 0)
-    yellow = (255, 255, 0)
-    orange = (255, 165, 0)
+    yellow = (255, 215, 0)
+    orange = (255, 140, 0)
+    brown = (205, 133, 63)
+    pink = (240, 128, 128)
     red = (255, 0, 0)
-    aqua = (21, 242, 253)
+    aqua = (0, 255, 255)
+    grey = (128, 128, 128)
+    
+    bgr_purple = (211, 0, 148)
+    bgr_blue = (255, 0, 0)
+    bgr_red = (0, 0, 255)
+    bgr_orange = (0, 140, 255)
+    bgr_yellow = (0, 215, 255)
+    bgr_pink = (128, 128, 240)
+    bgr_brown = (63, 133, 205)
+    bgr_aqua = (255, 255, 0)
 
 
 class CourtCoordinates:
@@ -328,7 +340,7 @@ class BoundingBox:
         img = cv2.ellipse(
             img,
             center=self.down_center,
-            axes=(int((self.width-10)), int(0.35 * (self.width-10))),
+            axes=(int((self.width - 10)), int(0.35 * (self.width - 10))),
             angle=0.0,
             startAngle=-45,
             endAngle=235,

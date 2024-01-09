@@ -24,8 +24,8 @@ class PlayerDetector:
         self.court = None
         self.court = CourtCoordinates(court_dict) if court_dict is not None else None
 
-    def detect_all(self, frame: NDArray) -> list[BoundingBox]:
-        results = self.model(frame, classes=0, device=[0])
+    def detect_all(self, input: NDArray | List[NDArray]) -> list[BoundingBox]:
+        results = self.model(input, classes=0, device=[0])
         confs = results[0].boxes.conf.cpu().detach().numpy().tolist()
         boxes = results[0].boxes.xyxy.cpu().detach().numpy().tolist()
 
@@ -81,11 +81,11 @@ class PlayerDetector:
 
 
 if __name__ == '__main__':
-    video = 'C:/Users/masoud/Desktop/Projects/volleyball_analytics/data/raw/videos/test/10.mp4'
-    output = 'C:/Users/masoud/Desktop/Projects/volleyball_analytics/run/inference'
+    video = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/11.mp4'
+    output = '/home/masoud/Desktop/projects/volleyball_analytics/runs/detect/onnx'
     cfg = {
-        'weight': './yolov8n.pt',
-        "labels": {0: 'ball'}
+        'weight': '/home/masoud/Desktop/projects/yolov8-tensorrt-test/weights/yolov8s.onnx',
+        "labels": {0: 'person'}
     }
 
     player_detector = PlayerDetector(cfg=cfg)
@@ -94,13 +94,14 @@ if __name__ == '__main__':
 
     w, h, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    output_file = Path(video) / (Path(video).stem + 'ball_detection_output.mp4')
+    output_file = Path(video) / (Path(video).stem + 'person_onnx_output.mp4')
     writer = cv2.VideoWriter(output_file.as_posix(), fourcc, fps, (w, h))
-
+    lst = []
     for fno in tqdm(list(range(n_frames))):
         cap.set(1, fno)
         status, frame = cap.read()
-        bboxes = player_detector.detect_all(frame)
+        frame = cv2.resize(frame, (640, 640))
+        bboxes = player_detector.detect_all(lst)
         frame = player_detector.draw(frame, bboxes)
         writer.write(frame)
 

@@ -18,6 +18,11 @@ yolo:
     weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/action_detection/6_class/model2/weights/best.pt"
     labels: { 0: 'ball', 1: 'block', 2: "receive", 3: 'set', 4: 'spike', 5: 'serve'}
 
+onnx:
+  player_detection:
+    weight: "/home/masoud/Desktop/projects/yolov8-tensorrt-test/weights/yolov8s.onnx"
+    labels: {0: 'person'}
+
 #    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/action_detection/6_class/model1/weights/best.pt"
 #    labels: {1: 'block', 2: "receive", 3: 'set', 4: 'spike'}
 
