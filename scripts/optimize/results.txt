@@ -1,0 +1,36 @@
+Testing inference speed for yolov8n
+
+CPU: Intel Corei9 13900K
+GPU: XLA8 RTX 3090 24 GB
+RAM: 64GB
+SSD: 980 EVO Samsung 2TB
+OS: Linux 2023.10
+
+=========================================================================================
+train parameters:
+half=Ture | optimizer="ADAMW" | cos_lr=True | lr0=0.001 | lrf=0.01 | workers=16 | imgsz=640 | batch=32
+=========================================================================================
+data path: /home/masoud/Desktop/projects/volleyball_analytics/data/inference_test/test
+image size: 1280X720
+image number: 30 frames
+
+process type: single image process
+parameters:
+device=0 | half=False | max_det=100 | agnostic_nms=False
+format       |     inference speed
+yolov8.pt    |         0.078
+torchscript  |         0.083
+trt          |         0.08
+onnx         |         0.079
+openvino     |         0.55
+
+process type: single image process
+parameters:
+device=0 | half=False | max_det=100 | agnostic_nms=False
+format       |     inference speed
+yolov8.pt    |         0.056
+torchscript  |         0.056
+trt          |         0.056
+onnx         |         0.057
+openvino     |         0.51
+

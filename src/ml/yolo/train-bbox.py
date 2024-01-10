@@ -23,7 +23,7 @@ To know more about parameters:   https://docs.ultralytics.com/modes/train/#argum
 from ultralytics import YOLO
 
 # Load a model
-model = YOLO('/home/masoud/Desktop/projects/volleyball_analytics/weights/yolov8n.pt')  # load a pretrained.py model (recommended for training)
+model = YOLO('yolov8n.pt')  # load a pretrained.py model (recommended for training)
 # https://docs.ultralytics.com/usage/cfg/#predict
 # Batched Inference:
 # https://medium.com/@smallerNdeeper/yolov8-batch-inference-implementation-using-tensorrt-2-converting-to-batch-model-engine-e02dc203fc8b
@@ -34,7 +34,7 @@ results = model.train(
     epochs=100,
     task='detect',
     batch=32,
-    half=True,
+    int8=True,
     optimizer='AdamW',
     seed=1368,
     cos_lr=True,
@@ -45,4 +45,4 @@ results = model.train(
     device=[0],
     plots=True
 )
-
+print(results)
