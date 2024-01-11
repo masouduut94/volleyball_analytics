@@ -1,4 +1,5 @@
 """
+$TRT --onnx= --saveEngine=/home/masoud/Desktop/projects/volleyball_analytics/scripts/optimize/models/6_classes_half/best.trt
 format	'torchscript'	format to export to
 imgsz	640	image size as scalar or (h, w) list, i.e. (640, 480)
 keras	False	use Keras for TF SavedModel export
@@ -24,29 +25,35 @@ tfjs | yolov8n_web_model/ => imgsz, half, int8
 yolov8n_paddle_model/ => imgsz
 yolov8n_ncnn_model/ => imgsz, half
 """
+import sys
+from pathlib import Path
+from subprocess import call
 
 from ultralytics import YOLO
 
-path = 'models/6_classes_half/best.pt'
-# Load a model
-model = YOLO(path)  # load an official model
-# model = YOLO('path/to/best.pt')  # load a custom trained model
+if __name__ == '__main__':
+    path = 'models/6_classes_half/best.pt'
+    model = YOLO(path)
+    single_mode = True
+    # fmt = 'trt'
+    # fmt = 'onnx'
+    # fmt = 'openvino'
+    fmt = 'torchscript'
 
-formats = [
-    'onnx',
-    # 'trt',
-    'openvino',
-    'torchscript'
-]
-
-# fmt = 'onnx'
-# fmt = 'trt'
-# fmt = 'openvino'
-# fmt = 'torchscript'
-for fmt in formats:
-    # Export the model
-    model.export(
-        batch=30,
-        format=fmt,
-        half=True
-    )
+    args = {}
+    if fmt == 'onnx':
+        args = dict(format=fmt, simplify=False, half=False, dynamic=False)
+    elif fmt == 'torchscript':
+        args = dict(format=fmt, optimize=False)
+    elif fmt == 'openvino':
+        args = dict(format=fmt, half=False, int8=False)
+    if single_mode:
+            model.export(
+                **args
+            )
+    else:
+        args['batch'] = 30
+        model.export(
+            # batch=30,
+            **args
+        )
