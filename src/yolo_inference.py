@@ -1,12 +1,10 @@
-import sys
-from pathlib import Path
-
 import cv2
-from tqdm import tqdm
 from time import time
-
-from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
+from tqdm import tqdm
+from pathlib import Path
 from argparse import ArgumentParser
+
+from ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
 
 
 def config():
@@ -20,7 +18,7 @@ def config():
     parser.add_argument(
         '--video_path',
         type=str,
-        default="/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/11_short.mp4"
+        default="/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/22.mp4"
     )
     parser.add_argument(
         '--output_path',
@@ -84,21 +82,25 @@ if __name__ == '__main__':
                 t1 = time()
                 batch_balls = detector.detect_balls(batch)
                 batch_vb_objects = detector.detect_actions(batch, exclude='ball')
-                t2 = time()
-                for f, balls, vb_objects in zip(batch, batch_balls, batch_vb_objects):
-                    vb_objects.extend(balls)
-                    blocks = detector.extract_objects(vb_objects, item='block')
-                    sets = detector.extract_objects(vb_objects, item='set')
-                    spikes = detector.extract_objects(vb_objects, item='spike')
-                    receives = detector.extract_objects(vb_objects, item='receive')
-                    services = detector.extract_objects(vb_objects, item='serve')
 
-                    f = detector.draw_bboxes(f, vb_objects)
-                    description = (f"time: {t2 - t1:.3f} | balls: {len(balls)} | blocks: {len(blocks)} | "
-                                   f"sets: {len(sets)} | spikes: {len(spikes)} | receives: {len(receives)} | "
-                                   f"services: {len(services)}")
-                    pbar.set_description(description)
+                for f, balls, vb_objects in zip(batch, batch_balls, batch_vb_objects):
+                    # vb_objects.extend(balls)
+                    blocks = vb_objects['block']
+                    sets = vb_objects['set']
+                    spikes = vb_objects['spike']
+                    receives = vb_objects['receive']
+                    services = vb_objects['serve']
+                    objects = balls + blocks + sets + receives + spikes + services
+
+                    f = detector.draw_bboxes(f, objects)
+                    # description = (f"time: {t2 - t1:.3f} | balls: {len(balls)} | blocks: {len(blocks)} | "
+                    #                f"sets: {len(sets)} | spikes: {len(spikes)} | receives: {len(receives)} | "
+                    #                f"services: {len(services)}")
                     writer.write(f)
+                t2 = time()
+                description = f"time: {t2 - t1:.3f}"
+                pbar.set_description(description)
+
                 batch = []
                 batch_fno = []
             else:
@@ -113,16 +115,17 @@ if __name__ == '__main__':
             balls = detector.detect_balls(frame)
             vb_objects = detector.detect_actions(frame, exclude='ball')
             t2 = time()
-            vb_objects.extend(balls)
-            blocks = detector.extract_objects(vb_objects, item='block')
-            sets = detector.extract_objects(vb_objects, item='set')
-            spikes = detector.extract_objects(vb_objects, item='spike')
-            receives = detector.extract_objects(vb_objects, item='receive')
-            services = detector.extract_objects(vb_objects, item='serve')
+            blocks = vb_objects['block']
+            sets = vb_objects['set']
+            spikes = vb_objects['spike']
+            receives = vb_objects['receive']
+            services = vb_objects['serve']
+            objects = balls + blocks + sets + receives + spikes + services
 
-            frame = detector.draw_bboxes(frame, vb_objects)
-            description = (f"time: {t2-t1:.3f} | balls: {len(balls)} | blocks: {len(blocks)} | sets: {len(sets)} | "
-                           f"spikes: {len(spikes)} | recieves: {len(receives)} | services: {len(services)}")
+            frame = detector.draw_bboxes(frame, objects)
+            # description = (f"time: {t2-t1:.3f} | balls: {len(balls)} | blocks: {len(blocks)} | sets: {len(sets)} | "
+            #                f"spikes: {len(spikes)} | receives: {len(receives)} | services: {len(services)}")
+            description = f"time: {t2-t1: .3f}"
             pbar.set_description(description)
             writer.write(frame)
 

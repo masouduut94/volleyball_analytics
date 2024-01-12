@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Any
 
 import cv2
 import numpy as np
@@ -17,9 +17,28 @@ class ActionDetector:
         self.labels = cfg['labels']
         self.labels2ids = {v: k for k, v in self.labels.items()}
 
-    def batch_predict(self, inputs: List[NDArray], verbose=False, exclude=None) -> List[List[BoundingBox]]:
+    def predict(self, inputs: NDArray, verbose=False, exclude=None) -> dict[str, List[BoundingBox]]:
+        detect_ids = self.labels2ids[exclude] if exclude is not None else self.labels.keys()
+        outputs = self.model.predict(inputs, verbose=verbose, classes=detect_ids)
+
+        confs = outputs[0].boxes.conf.cpu().detach().numpy().tolist()
+        boxes = outputs[0].boxes.xyxy.cpu().detach().numpy().tolist()
+        classes = outputs[0].boxes.cls.cpu().detach().numpy().astype(int).tolist()
+        temp = {v: [] for v in self.labels.values()}
+        for box, conf, cl in zip(boxes, confs, classes):
+            name = self.labels[cl]
+            b = BoundingBox(box, name=name, conf=float(conf))
+            try:
+                temp[name].append(b)
+            except KeyError:
+                temp[name] = [b]
+
+        return temp
+
+    def batch_predict(self, inputs: List[NDArray], verbose=False, exclude=None) -> List[dict[str, List[BoundingBox]]]:
         detect_ids = {k: v for k, v in self.labels2ids.items() if k != exclude}
-        # detect_ids = self.labels2ids[exclude] if exclude is not None else self.labels.keys()
+        # TODO: Add exclude to the init function to reduce latency.
+        # TODO: Split the list into a list of dictionaries for actions. by try except
         outputs = self.model.predict(inputs, verbose=verbose, classes=list(detect_ids.values()))
 
         results = []
@@ -27,28 +46,17 @@ class ActionDetector:
             confs = output.boxes.conf.cpu().detach().numpy().tolist()
             boxes = output.boxes.xyxy.cpu().detach().numpy().tolist()
             classes = output.boxes.cls.cpu().detach().numpy().astype(int).tolist()
-            detections = []
-            # TODO: Add frame numbers to detection, so that we can organize the objects based on the frames.
+            # detections = []
+            temp = {v: [] for v in self.labels.values()}
             for box, conf, cl in zip(boxes, confs, classes):
                 name = self.labels[cl]
                 b = BoundingBox(box, name=name, conf=float(conf))
-                detections.append(b)
-            results.append(detections)
-        return results
-
-    def predict(self, inputs: NDArray, verbose=False, exclude=None) -> List[BoundingBox]:
-        detect_ids = self.labels2ids[exclude] if exclude is not None else self.labels.keys()
-        outputs = self.model.predict(inputs, verbose=verbose, classes=detect_ids)
-
-        confs = outputs[0].boxes.conf.cpu().detach().numpy().tolist()
-        boxes = outputs[0].boxes.xyxy.cpu().detach().numpy().tolist()
-        classes = outputs[0].boxes.cls.cpu().detach().numpy().astype(int).tolist()
-        results = []
-        for box, conf, cl in zip(boxes, confs, classes):
-            name = self.labels[cl]
-            b = BoundingBox(box, name=name, conf=float(conf))
-            results.append(b)
-
+                try:
+                    temp[name].append(b)
+                except KeyError:
+                    temp[name] = [b]
+                # detections.append(b)
+            results.append(temp)
         return results
 
     @staticmethod

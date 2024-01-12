@@ -2,10 +2,9 @@
 from typing import List
 
 # import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 from ultralytics import YOLO
 
-from src.ml.abstract.yolo_detector import YoloDetector
 from src.utilities.utils import BoundingBox, Meta, CourtCoordinates
 from pathlib import Path
 import cv2
@@ -24,22 +23,6 @@ class PlayerDetector:
         self.court = None
         self.court = CourtCoordinates(court_dict) if court_dict is not None else None
 
-    def batch_predict(self, inputs: List[NDArray]) -> List[List[BoundingBox]]:
-        outputs = self.model(inputs, verbose=False)
-        results = []
-        for res in outputs:
-            confs = res[0].boxes.conf.cpu().detach().numpy().tolist()
-            boxes = res[0].boxes.xyxy.cpu().detach().numpy().tolist()
-
-            detections: List[BoundingBox] = []
-            for box, conf in zip(boxes, confs):
-                # TODO: make it suitable for multi-class yolo.
-                b = BoundingBox(box, name='ball', conf=float(conf))
-                detections.append(b)
-            detections.sort(key=lambda x: (x.conf, x.area), reverse=True)
-            results.append(detections)
-        return results
-
     def predict(self, inputs: NDArray) -> list[BoundingBox]:
         results = self.model(inputs, classes=0)
         confs = results[0].boxes.conf.cpu().detach().numpy().tolist()
@@ -52,6 +35,22 @@ class PlayerDetector:
             detections.append(b)
         detections.sort(key=lambda x: (x.conf, x.area), reverse=True)
         return detections
+
+    def batch_predict(self, inputs: List[NDArray]) -> List[List[BoundingBox]]:
+        outputs = self.model(inputs, verbose=False, classes=0)
+        results = []
+        for res in outputs:
+            confs = res.boxes.conf.cpu().detach().numpy().tolist()
+            boxes = res.boxes.xyxy.cpu().detach().numpy().tolist()
+
+            detections: List[BoundingBox] = []
+            for box, conf in zip(boxes, confs):
+                # TODO: make it suitable for multi-class yolo.
+                b = BoundingBox(box, name='ball', conf=float(conf))
+                detections.append(b)
+            detections.sort(key=lambda x: (x.conf, x.area), reverse=True)
+            results.append(detections)
+        return results
 
     def filter(self, bboxes: List[BoundingBox], keep: int = None, by_bbox_size: bool = True,
                by_zone: bool = True):
