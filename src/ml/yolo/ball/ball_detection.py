@@ -17,18 +17,33 @@ class BallSegmentor:
         self.model = YOLO(cfg['weight'])
         self.labels = cfg['labels']
 
-    def detect_all(self, frame: NDArray | List[NDArray]) -> list[BoundingBox]:
-        results = self.model(frame, verbose=False)
-        confs = results[0].boxes.conf.cpu().detach().numpy().tolist()
-        boxes = results[0].boxes.xyxy.cpu().detach().numpy().tolist()
+    def predict(self, inputs: NDArray) -> List[BoundingBox]:
+        outputs = self.model(inputs, verbose=False)
+        confs = outputs[0].boxes.conf.cpu().detach().numpy().tolist()
+        boxes = outputs[0].boxes.xyxy.cpu().detach().numpy().tolist()
 
-        detections: List[BoundingBox] = []
+        results: List[BoundingBox] = []
         for box, conf in zip(boxes, confs):
             # TODO: make it suitable for multi-class yolo.
             b = BoundingBox(box, name='ball', conf=float(conf))
-            detections.append(b)
-        detections.sort(key=lambda x: (x.conf, x.area), reverse=True)
-        return detections
+            results.append(b)
+        results.sort(key=lambda x: (x.conf, x.area), reverse=True)
+        return results
+
+    def batch_predict(self, inputs: List[NDArray]) -> List[List[BoundingBox]]:
+        outputs = self.model(inputs, verbose=False)
+        results = []
+        for res in outputs:
+            confs = res.boxes.conf.cpu().detach().numpy().tolist()
+            boxes = res.boxes.xyxy.cpu().detach().numpy().tolist()
+
+            detections: List[BoundingBox] = []
+            for box, conf in zip(boxes, confs):
+                b = BoundingBox(box, name='ball', conf=float(conf))
+                detections.append(b)
+            detections.sort(key=lambda x: (x.conf, x.area), reverse=True)
+            results.append(detections)
+        return results
 
     @staticmethod
     def draw(frame: NDArray, bboxes: List[BoundingBox], use_ellipse: bool = False, use_marker=False, color=Meta.green,
@@ -63,7 +78,7 @@ if __name__ == '__main__':
     for fno in tqdm(list(range(n_frames))):
         cap.set(1, fno)
         status, frame = cap.read()
-        bboxes = action_detector.detect_all(frame)
+        bboxes = action_detector.predict(frame)
         frame = action_detector.draw(frame, bboxes)
         writer.write(frame)
 

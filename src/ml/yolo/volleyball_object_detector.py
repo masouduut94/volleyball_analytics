@@ -1,5 +1,6 @@
 from typing import List
 
+import numpy as np
 import yaml
 import json
 from os.path import isfile
@@ -36,23 +37,29 @@ class VolleyBallObjectDetector:
         return cfg
 
     # TODO: FIXME: Make code adaptable to batch processing ...
-    def detect_balls(self, input: NDArray | List[NDArray]):
-        return self.ball_detector.detect_all(frame=input)
+    def detect_balls(self, inputs: NDArray | List[NDArray]):
+        if isinstance(inputs, np.ndarray):
+            return self.ball_detector.predict(inputs=inputs)
+        else:
+            return self.ball_detector.batch_predict(inputs=inputs)
 
-    def detect_actions(self, input: NDArray | List[NDArray]):
-        return self.action_detector.detect_all(frame=input)
+    def detect_actions(self, inputs: NDArray | List[NDArray], exclude=None):
+        if isinstance(inputs, np.ndarray):
+            return self.action_detector.predict(inputs=inputs, exclude=exclude)
+        else:
+            return self.action_detector.batch_predict(inputs=inputs, exclude=exclude)
 
-    def detect_keypoints(self, input: NDArray | List[NDArray]):
-        return self.pose_estimator.detect_all(frame=input)
+    def detect_keypoints(self, inputs: NDArray | List[NDArray]):
+        if isinstance(inputs, np.ndarray):
+            return self.pose_estimator.predict(inputs=inputs)
+        else:
+            return self.pose_estimator.batch_predict(inputs=inputs)
 
-    def segment_players(self, input: NDArray | List[NDArray]):
-        return self.player_detector.segment_all(frame=input)
+    def segment_players(self, inputs: NDArray | List[NDArray]):
+        return self.player_detector.predict(frame=inputs)
 
     def extract_objects(self, bboxes: List[BoundingBox], item: str = 'ball'):
-        return self.action_detector.extract_item(bboxes=bboxes, item=item)
-
-    def exclude_objects(self, bboxes: List[BoundingBox], item: str = 'ball'):
-        return self.action_detector.exclude_objects(bboxes=bboxes, item=item)
+        return self.action_detector.extract_classes(bboxes=bboxes, item=item)
 
     def draw_bboxes(self, image, bboxes):
         image = self.action_detector.draw(frame=image, items=bboxes)

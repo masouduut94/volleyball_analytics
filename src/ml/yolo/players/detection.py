@@ -24,8 +24,24 @@ class PlayerDetector:
         self.court = None
         self.court = CourtCoordinates(court_dict) if court_dict is not None else None
 
-    def detect_all(self, input: NDArray | List[NDArray]) -> list[BoundingBox]:
-        results = self.model(input, classes=0, device=[0])
+    def batch_predict(self, inputs: List[NDArray]) -> List[List[BoundingBox]]:
+        outputs = self.model(inputs, verbose=False)
+        results = []
+        for res in outputs:
+            confs = res[0].boxes.conf.cpu().detach().numpy().tolist()
+            boxes = res[0].boxes.xyxy.cpu().detach().numpy().tolist()
+
+            detections: List[BoundingBox] = []
+            for box, conf in zip(boxes, confs):
+                # TODO: make it suitable for multi-class yolo.
+                b = BoundingBox(box, name='ball', conf=float(conf))
+                detections.append(b)
+            detections.sort(key=lambda x: (x.conf, x.area), reverse=True)
+            results.append(detections)
+        return results
+
+    def predict(self, inputs: NDArray) -> list[BoundingBox]:
+        results = self.model(inputs, classes=0)
         confs = results[0].boxes.conf.cpu().detach().numpy().tolist()
         boxes = results[0].boxes.xyxy.cpu().detach().numpy().tolist()
 
@@ -101,7 +117,7 @@ if __name__ == '__main__':
         cap.set(1, fno)
         status, frame = cap.read()
         frame = cv2.resize(frame, (640, 640))
-        bboxes = player_detector.detect_all(lst)
+        bboxes = player_detector.predict(lst)
         frame = player_detector.draw(frame, bboxes)
         writer.write(frame)
 

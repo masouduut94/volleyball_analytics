@@ -165,8 +165,8 @@ if __name__ == '__main__':
     for img_path in images:
         img_annot = yolo_fmt.create_img(img_path)
         img = cv2.imread(img_path.as_posix())
-        bboxes = action_detector.detect_all(img)
-        balls: List[BoundingBox] = ball_detector.detect_all(img)
+        bboxes = action_detector.predict(img)
+        balls: List[BoundingBox] = ball_detector.predict(img)
         bboxes = [box for box in bboxes if box.name != 'ball']
         bboxes.extend(balls)
         if len(bboxes):

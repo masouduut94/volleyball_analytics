@@ -15,7 +15,7 @@ yolo:
      weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/action_detection/5_class/weights/best.pt"
      labels: {0: 'ball', 1: 'block', 2: "receive", 3: 'set', 4: 'spike'}
   action_detection6:
-    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/action_detection/6_class/model2/weights/best.pt"
+    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/action_detection/6_class/version2-data-updated/weights/best.pt"
     labels: { 0: 'ball', 1: 'block', 2: "receive", 3: 'set', 4: 'spike', 5: 'serve'}
 
 onnx:

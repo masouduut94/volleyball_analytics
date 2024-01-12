@@ -15,28 +15,45 @@ class ActionDetector:
     def __init__(self, cfg):
         self.model = YOLO(cfg['weight'])
         self.labels = cfg['labels']
+        self.labels2ids = {v: k for k, v in self.labels.items()}
 
-    def detect_all(self, frame: NDArray, verbose=False) -> List[BoundingBox]:
-        results = self.model(frame, verbose=verbose, classes=list(self.labels.keys()))
-        confs = results[0].boxes.conf.cpu().detach().numpy().tolist()
-        boxes = results[0].boxes.xyxy.cpu().detach().numpy().tolist()
-        classes = results[0].boxes.cls.cpu().detach().numpy().astype(int).tolist()
-        # names = results[0].names
-        detections = []
+    def batch_predict(self, inputs: List[NDArray], verbose=False, exclude=None) -> List[List[BoundingBox]]:
+        detect_ids = {k: v for k, v in self.labels2ids.items() if k != exclude}
+        # detect_ids = self.labels2ids[exclude] if exclude is not None else self.labels.keys()
+        outputs = self.model.predict(inputs, verbose=verbose, classes=list(detect_ids.values()))
 
+        results = []
+        for output in outputs:
+            confs = output.boxes.conf.cpu().detach().numpy().tolist()
+            boxes = output.boxes.xyxy.cpu().detach().numpy().tolist()
+            classes = output.boxes.cls.cpu().detach().numpy().astype(int).tolist()
+            detections = []
+            # TODO: Add frame numbers to detection, so that we can organize the objects based on the frames.
+            for box, conf, cl in zip(boxes, confs, classes):
+                name = self.labels[cl]
+                b = BoundingBox(box, name=name, conf=float(conf))
+                detections.append(b)
+            results.append(detections)
+        return results
+
+    def predict(self, inputs: NDArray, verbose=False, exclude=None) -> List[BoundingBox]:
+        detect_ids = self.labels2ids[exclude] if exclude is not None else self.labels.keys()
+        outputs = self.model.predict(inputs, verbose=verbose, classes=detect_ids)
+
+        confs = outputs[0].boxes.conf.cpu().detach().numpy().tolist()
+        boxes = outputs[0].boxes.xyxy.cpu().detach().numpy().tolist()
+        classes = outputs[0].boxes.cls.cpu().detach().numpy().astype(int).tolist()
+        results = []
         for box, conf, cl in zip(boxes, confs, classes):
             name = self.labels[cl]
             b = BoundingBox(box, name=name, conf=float(conf))
-            detections.append(b)
-        return detections
+            results.append(b)
+
+        return results
 
     @staticmethod
-    def extract_item(bboxes: List[BoundingBox], item: str) -> List[BoundingBox]:
+    def extract_classes(bboxes: List[BoundingBox], item: str) -> List[BoundingBox]:
         return [bbox for bbox in bboxes if bbox.name == item]
-
-    @staticmethod
-    def exclude_objects(bboxes: List[BoundingBox], item: str) -> List[BoundingBox]:
-        return [bbox for bbox in bboxes if bbox.name != item]
 
     @staticmethod
     def draw(frame: NDArray, items: List[BoundingBox | KeyPointBox]):
@@ -78,7 +95,7 @@ if __name__ == '__main__':
     for fno in tqdm(list(range(n_frames))):
         cap.set(1, fno)
         status, frame = cap.read()
-        bboxes = action_detector.detect_all(frame)
+        bboxes = action_detector.predict(frame)
         frame = action_detector.draw(frame, bboxes)
         writer.write(frame)
 

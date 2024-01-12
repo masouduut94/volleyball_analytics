@@ -73,7 +73,7 @@ if __name__ == '__main__':
         t1 = time()
         ball = ball_detector.detect_one(frame)
         actions = action_detector.detect(frame)
-        players = player_detector.detect_all(frame)
+        players = player_detector.predict(frame)
         players = player_detector.filter(players, by_bbox_size=True, by_zone=True)
 
         if ball is not None:

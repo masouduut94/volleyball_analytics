@@ -21,7 +21,7 @@ def video_write(input: str, output_path: str, yolo_model, config):
     for fno in tqdm(list(range(n_frames))):
         cap.set(1, fno)
         status, frame = cap.read()
-        bboxes = action_detector.segment_all(frame)
+        bboxes = action_detector.predict(frame)
         frame = action_detector.draw(frame, bboxes)
         writer.write(frame)
 

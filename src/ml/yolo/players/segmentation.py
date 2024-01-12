@@ -15,7 +15,7 @@ class PlayerSegmentor:
         self.labels = cfg['labels']
         self.court = CourtCoordinates(court_dict) if court_dict is not None else None
 
-    def segment_all(self, frame: NDArray) -> list[BoundingBox]:
+    def predict(self, frame: NDArray) -> list[BoundingBox]:
         results = self.model(frame, verbose=False, classes=0)
         confs = results[0].boxes.conf.cpu().detach().numpy().tolist()
         boxes = results[0].boxes.xyxy.cpu().detach().numpy().tolist()
@@ -27,6 +27,21 @@ class PlayerSegmentor:
             detections.append(b)
         detections.sort(key=lambda x: (x.conf, x.area), reverse=True)
         return detections
+
+    def batch_predict(self, frame: List[NDArray]) -> list[List[BoundingBox]]:
+        outputs = self.model(frame, verbose=False, classes=0)
+        results = []
+        for output in outputs:
+            confs = output.boxes.conf.cpu().detach().numpy().tolist()
+            boxes = output.boxes.xyxy.cpu().detach().numpy().tolist()
+
+            detections: List[BoundingBox] = []
+            for box, conf in zip(boxes, confs):
+                b = BoundingBox(box, name=self.name, conf=float(conf))
+                detections.append(b)
+            detections.sort(key=lambda x: (x.conf, x.area), reverse=True)
+            results.append(detections)
+        return results
 
     def filter(self, bboxes: List[BoundingBox], keep: int = None, by_bbox_size: bool = True, by_zone: bool = True):
         """
