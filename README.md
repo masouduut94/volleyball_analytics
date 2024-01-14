@@ -51,7 +51,8 @@ Sports Data Analytics.
 - - [ ] Add RabbitMQ for job scheduling.
 - - [ ] Integrate it with flask for backend processes.
 - - [ ] Integrate FastAPI for API calls.
-
+- - [ ] Work with decord for faster video reading/writing.
+- - https://github.com/dmlc/decord
 # Readme file:
 
 - [ ] Add datasets ...

@@ -7,8 +7,6 @@ from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 
 if __name__ == '__main__':
     match_id = 1
-    # team1_id = 1
-    # team2_id = 2
     base_dir = "/media/masoud/HDD-8TB/DATA/volleyball/"
 
     config = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
@@ -19,7 +17,6 @@ if __name__ == '__main__':
     src = match.get_main_video()
     series_id = match.get_series().id
 
-    # src = Source.get(1)
     video_path = src.path
 
     cap = cv2.VideoCapture(video_path)
@@ -60,28 +57,24 @@ if __name__ == '__main__':
 
             match current:
                 case 'service':
-                    if prev == 'no-play' or prev == 'service':
+                    if prev == 'no-play' or prev == 'service' or prev == 'play':
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
-                    elif prev == 'play':
-
-                        # In the middle of `play`, we never get `service` unless the model is wrong.
-                        # we save the video to investigate the case.
-                        state_manager.keep(current_frames, current_fnos, [current]*len(current_frames))
-                        # state_manager.write_video(mistake_path)
-                        print("Mistake .....")
-                        state_manager.reset_long_buffer()
-                        # Reset states, keep the current frames, but removing previous frames.
+                    # elif :
+                    #     # In the middle of `play`, we never get `service` unless the model is wrong.
+                    #     # we save the video to investigate the case.
+                    #     state_manager.keep(current_frames, current_fnos, [current]*len(current_frames))
+                    #     # state_manager.write_video(mistake_path)
+                    #     print("Mistake .....")
+                    #     state_manager.reset_long_buffer()
+                    #     # Reset states, keep the current frames, but removing previous frames.
                 case 'play':
                     if prev == 'service':
                         # Save the state buffer as the service video and keep buffering the rest ...
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames),
                                            set_serve_last_frame=True)
                         # state_manager.reset_short_term()
-                    elif prev == 'play':
+                    elif prev == 'play' or prev == 'no-play':
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
-                    elif prev == 'no-play':
-                        # TODO: Check this part, not making problems.
-                        state_manager.keep(current_frames, current_fnos, [current]*len(current_frames))
                 case 'no-play':
                     # Only 2 consecutive "no-play" means the end of rally...
                     if prev == 'service' or prev == 'play':
@@ -102,7 +95,9 @@ if __name__ == '__main__':
                                                set_serve_last_frame=True)
                             state_manager.db_store(draw_label=True)
                             state_manager.reset_long_buffer()
-                        else:
+                        elif prev_prev == 'no-play':
+                            # We get 3 consecutive `no-play`s so we get 3 seconds of no-play, it means we have to stop
+                            # recording...
                             state_manager.reset_long_buffer()
                     state_manager.reset_temp_buffer()
         else:

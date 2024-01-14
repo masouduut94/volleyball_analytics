@@ -60,7 +60,8 @@ class Manager:
         self.long_buffer_fno.extend(fnos)
         self.labels.extend(states)
         if set_serve_last_frame:
-            self.service_last_frame = len(self.long_buffer_fno) - 1
+            if self.service_last_frame is not None:
+                self.service_last_frame = len(self.long_buffer_fno) - 1
         self.reset_temp_buffer()
 
     def append_frame(self, frame, fno):
