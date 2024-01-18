@@ -73,12 +73,16 @@ class ServiceData:
     end_frame: The index of a frame in the rally_id video that service ends.
     """
     end_frame: int = field(default=None)
-    ball_positions: dict = field(default=None)
+    end_index: int = field(default=None)
     hitter: str = field(default=None)
     serving_region: dict = field(default=None)
     bounce_point: list = field(default=None)
     target_zone:  int = field(default=None)
     type: int = field(default=None)
+
+    @classmethod
+    def from_dict(cls, **kwargs):
+        return cls(**kwargs)
 
 
 @dataclass_json

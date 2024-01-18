@@ -51,8 +51,9 @@ def main():
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
                 case GameState.PLAY:
                     if prev == GameState.SERVICE:
-                        state_manager.keep(current_frames, current_fnos, [current] * len(current_frames),
-                                           set_serve_last_frame=True)
+                        state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
+                        if state_manager.service_last_frame is None:
+                            state_manager.service_last_frame = len(state_manager.long_buffer_fno) - 1
                     elif prev == GameState.PLAY or prev == GameState.NO_PLAY:
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
                 case GameState.NO_PLAY:
@@ -68,6 +69,8 @@ def main():
                             done = state_manager.write_video(rally_name, all_labels, all_frames, all_fnos,
                                                              draw_label=True)
                             service_last_frame = state_manager.service_last_frame
+                            # TODO: Run in parallel or multiprocessing, try every trick you know like cython,
+                            #  asyncio, ....
                             rally_db = state_manager.db_store(rally_name, all_fnos, service_last_frame, all_labels)
                             vb_objects = state_manager.predict_objects(all_frames)
                             state_manager.save_objects(rally_db, vb_objects)

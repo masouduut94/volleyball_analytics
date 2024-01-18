@@ -92,13 +92,10 @@ class Manager:
         self.states[-2] = prev
         self.states[-1] = curr_state
 
-    def keep(self, frames, fnos, states, set_serve_last_frame=False):
+    def keep(self, frames, fnos, states):
         self.long_buffer.extend(frames)
         self.long_buffer_fno.extend(fnos)
         self.labels.extend(states)
-        if set_serve_last_frame:
-            if self.service_last_frame is not None:
-                self.service_last_frame = len(self.long_buffer_fno) - 1
         self.reset_temp_buffer()
 
     def append_frame(self, frame, fno):
@@ -118,7 +115,6 @@ class Manager:
         self.labels.clear()
         self.service_last_frame = None
 
-    @unsync
     def write_video(self, path: PosixPath, labels: List[str], long_buffer: List[np.ndarray],
                     long_buffer_fno: List[int], draw_label: bool = False):
         writer = cv2.VideoWriter(path.as_posix(), self.codec, self.fps, (self.width, self.height))
@@ -144,7 +140,7 @@ class Manager:
         writer.release()
         return True
 
-    def db_store(self, rally_name, frame_numbers, service_last_frame=None, labels=None):
+    def db_store(self, rally_name, frame_numbers, service_ending_index=None, labels=None):
         """
         Saves a video of the rally, and also creates DB-related items. (video, and rally)
 
@@ -154,18 +150,16 @@ class Manager:
         rally_last_frame = frame_numbers[-1]
         rally_vdata = VideoData(match_id=self.match_id, path=rally_name.as_posix(), camera_type=1, type='rally')
         rally_video_db = Video.save(rally_vdata.to_dict())
+        service_end_frame = rally_1st_frame + service_ending_index if service_ending_index is not None else None
 
-        service_data = ServiceData(end_frame=service_last_frame, ball_positions={}, hitter="Igor Kliuka",
-                                   serving_region=None, bounce_point=[120, 200], target_zone=5,
-                                   type=ServiceType.HIGH_TOSS)
+        service_data = ServiceData(
+            end_frame=service_end_frame, end_index=service_ending_index, hitter="Igor Kliuka", serving_region=None,
+            bounce_point=[120, 200], target_zone=5, type=ServiceType.HIGH_TOSS)
 
         rally_data = RallyData(match_id=self.match_id, video_id=rally_video_db.id, start_frame=rally_1st_frame,
                                end_frame=rally_last_frame, rally_states=str(labels), service=service_data.to_dict())
         rally = Rally.save(rally_data.to_dict())
         return rally
-
-    def yolo_run(self, rally: Rally, gpu: bool = True):
-        video_path = rally.video
 
     @property
     def current(self):
@@ -182,7 +176,8 @@ class Manager:
     def reset(self):
         self.states = [GameState.NO_PLAY, GameState.NO_PLAY, GameState.NO_PLAY]
 
-    def save_objects(self, rally_db: Rally, batch_vb_objects: List[List[BoundingBox]]):
+    @staticmethod
+    def save_objects(rally_db: Rally, batch_vb_objects: List[List[BoundingBox]]):
         balls_js = {}
         blocks_js = {}
         sets_js = {}
@@ -251,10 +246,7 @@ def annotate_service(serve_detection_model: GameStateDetector, video_path, outpu
                     color = (255, 255, 255)
 
             for f, fno in zip(buffer, buffer2):
-                f = cv2.putText(
-                    f, label, (w // 2, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                    1.5, color, 2
-                )
+                f = cv2.putText(f, str(label), (w // 2, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2)
                 f = cv2.putText(
                     f, f"Frame # {fno}/{n_frames}", (w - 200, 50), cv2.FONT_HERSHEY_SIMPLEX,
                     0.6, (255, 0, 0), 2)
