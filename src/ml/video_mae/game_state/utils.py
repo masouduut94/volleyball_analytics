@@ -1,23 +1,21 @@
-from typing import List
-
 import cv2
-from time import time
-
 import numpy as np
 from tqdm import tqdm
+from time import time
 from uuid import uuid1
+from typing import List
 from os import makedirs
-from pathlib import Path, PosixPath
 from os.path import join
+from pathlib import Path, PosixPath
 
-from unsync import unsync
+# from unsync import unsync
 
-from api.data_classes import ServiceData, RallyData, VideoData
-from api.enums import ServiceType, GameState
 from api.models import Video, Rally
-from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
-from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
+from api.enums import ServiceType, GameState
 from src.utilities.utils import timeit, BoundingBox
+from api.data_classes import ServiceData, RallyData, VideoData
+from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
+from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 
 
 class Manager:
@@ -185,11 +183,21 @@ class Manager:
         receives_js = {}
 
         for i, objects in enumerate(batch_vb_objects):
-            balls_js[i] = [obj.xyxy_dict for obj in objects['ball']]
-            blocks_js[i] = [obj.xyxy_dict for obj in objects['block']]
-            sets_js[i] = [obj.xyxy_dict for obj in objects['set']]
-            spikes_js[i] = [obj.xyxy_dict for obj in objects['spike']]
-            receives_js[i] = [obj.xyxy_dict for obj in objects['receive']]
+            balls = [obj.xyxy_dict for obj in objects['ball']]
+            blocks = [obj.xyxy_dict for obj in objects['block']]
+            sets = [obj.xyxy_dict for obj in objects['set']]
+            spikes = [obj.xyxy_dict for obj in objects['spike']]
+            receives = [obj.xyxy_dict for obj in objects['receive']]
+            if len(balls):
+                balls_js[i] = balls
+            if len(blocks):
+                blocks_js[i] = blocks
+            if len(sets):
+                sets_js[i] = sets
+            if len(spikes):
+                spikes_js[i] = spikes
+            if len(receives):
+                receives_js[i] = receives
 
         Rally.update(
             rally_db.id,
