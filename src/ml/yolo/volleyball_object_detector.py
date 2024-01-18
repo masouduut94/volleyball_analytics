@@ -3,7 +3,6 @@ from typing import List
 import numpy as np
 import yaml
 import json
-from os.path import isfile
 from numpy.typing import NDArray
 from yaml.loader import SafeLoader
 
@@ -14,11 +13,11 @@ from .players import PlayerSegmentor, PlayerDetector, PoseEstimator
 
 
 class VolleyBallObjectDetector:
-    def __init__(self, ml_yaml, court_keypoints_json: str = None, video_name: str = None, use_player_detection=True):
-        self.config = self._parse_configs(ml_yaml)
+    def __init__(self, config: dict, video_name: str = None, use_player_detection=True):
+        self.config = config
         court_dict = None
-        if court_keypoints_json is not None and video_name is not None:
-            court_dict = json.load(open(court_keypoints_json))[video_name]
+        if video_name is not None:
+            court_dict = json.load(open(self.config['court_json']))[video_name]
             # TODO: create a model to segment the court at first sight, or make us capable of annotating the court
             #       keypoints on a GUI ...
         if use_player_detection:
@@ -28,13 +27,6 @@ class VolleyBallObjectDetector:
         self.action_detector = ActionDetector(self.config['yolo']['action_detection6'])
         self.ball_detector = BallSegmentor(self.config['yolo']['ball_segmentation'])
         self.pose_estimator = PoseEstimator(self.config['yolo']['pose_estimation'])
-
-    @staticmethod
-    def _parse_configs(ml_yaml):
-        assert isfile(ml_yaml)
-        with open(ml_yaml) as cfg_file:
-            cfg = yaml.load(cfg_file, Loader=SafeLoader)
-        return cfg
 
     # TODO: FIXME: Make code adaptable to batch processing ...
     def detect_balls(self, inputs: NDArray | List[NDArray]):
@@ -68,5 +60,12 @@ class VolleyBallObjectDetector:
 
 if __name__ == '__main__':
     config_file = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
+    setup = '/home/masoud/Desktop/projects/volleyball_analytics/conf/setup.yaml'
     court_json = '/home/masoud/Desktop/projects/volleyball_analytics/conf/court.json'
-    vb_detector = VolleyBallObjectDetector(config_file, court_json)
+    video_name = "22.mp4"
+
+    cfg: dict = yaml.load(open(config_file), Loader=SafeLoader)
+    cfg2: dict = yaml.load(open(setup), Loader=SafeLoader)
+    cfg.update(cfg2)
+
+    vb_detector = VolleyBallObjectDetector(cfg, video_name)

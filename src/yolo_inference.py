@@ -53,8 +53,7 @@ if __name__ == '__main__':
     cfg = config()
     video_path = Path(cfg.video_path)
     output_path = Path(cfg.output_path)
-    detector = VolleyBallObjectDetector(cfg.model_cfg, cfg.court, use_player_detection=cfg.use_segment,
-                                        video_name=video_path.name)
+    detector = VolleyBallObjectDetector(cfg.model_cfg, use_player_detection=cfg.use_segment, video_name=video_path.name)
     # Define capture, and get certain values.
     cap = cv2.VideoCapture(video_path.as_posix())
     w, h, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
@@ -125,7 +124,7 @@ if __name__ == '__main__':
             frame = detector.draw_bboxes(frame, objects)
             # description = (f"time: {t2-t1:.3f} | balls: {len(balls)} | blocks: {len(blocks)} | sets: {len(sets)} | "
             #                f"spikes: {len(spikes)} | receives: {len(receives)} | services: {len(services)}")
-            description = f"time: {t2-t1: .3f}"
+            description = f"time: {t2 - t1: .3f}"
             pbar.set_description(description)
             writer.write(frame)
 

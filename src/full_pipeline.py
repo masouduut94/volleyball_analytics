@@ -5,32 +5,30 @@ import yaml
 from tqdm import tqdm
 from api.models import Match
 from src.ml.video_mae.game_state.utils import Manager
-from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 
-if __name__ == '__main__':
+
+def main():
     match_id = 1
-    base_dir = "/media/masoud/HDD-8TB/DATA/volleyball/"
-    config = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
-    cfg = yaml.load(open(config), Loader=yaml.SafeLoader)
-    model = GameStateDetector(cfg=cfg['video_mae']['game_state_3'])
+    ml_config = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
+    setup_config = "/home/masoud/Desktop/projects/volleyball_analytics/conf/setup.yaml"
+    cfg: dict = yaml.load(open(ml_config), Loader=yaml.SafeLoader)
+    temp: dict = yaml.load(open(setup_config), Loader=yaml.SafeLoader)
+    cfg.update(temp)
 
     match = Match.get(match_id)
     src = match.get_main_video()
     series_id = match.get_series().id
     video_path = src.path
+    video_name = Path(video_path).name
 
+    # state_detector = GameStateDetector(cfg=cfg['video_mae']['game_state_3'])
+    # object_detector = VolleyBallObjectDetector(config=cfg, court_keypoints_json=court_json, video_name=video_name,
+    #                                            use_player_detection=True)
     cap = cv2.VideoCapture(video_path)
     assert cap.isOpened(), "file is not accessible..."
-    width, height, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
-    previous_state = 'no-play'
-    current_state = None
-    no_play_flag = 0
-    state_manager = Manager(
-        base_dir=base_dir, match_id=match_id, series_id=series_id,
-        fps=30, width=width, height=height, buffer_size=30
-    )
+    n_frames = int(cap.get(7))
     pbar = tqdm(list(range(n_frames)))
-    rally = None
+    state_manager = Manager(cfg=cfg, series_id=series_id, cap=cap, buffer_size=30, video_name=video_name)
 
     for fno in pbar:
         pbar.update(1)
@@ -40,8 +38,7 @@ if __name__ == '__main__':
 
         if state_manager.is_full():
             current_frames, current_fnos = state_manager.get_current_frames_and_fnos()
-            current_state = model.predict(current_frames)
-            state_manager.set_current_state(current_state)
+            current_state = state_manager.predict_state(current_frames)
             pbar.set_description(f"state: {current_state}")
             current = state_manager.current
             prev = state_manager.prev
@@ -71,6 +68,7 @@ if __name__ == '__main__':
                                                              draw_label=True)
                             service_last_frame = state_manager.service_last_frame
                             saved = state_manager.db_store(rally_name, all_fnos, service_last_frame, all_labels)
+                            vb_objects = state_manager.predict_objects(all_frames)
                             print(f'{rally_name} saved ...')
                             state_manager.rally_counter += 1
                             state_manager.reset_long_buffer()
@@ -79,3 +77,7 @@ if __name__ == '__main__':
                     state_manager.reset_temp_buffer()
         else:
             continue
+
+
+if __name__ == '__main__':
+    main()

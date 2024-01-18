@@ -36,7 +36,7 @@ if __name__ == '__main__':
         if state_manager.is_full():
             current_frames = state_manager.get_current_frames_and_fnos()
             current_state = model.predict(current_frames)
-            state_manager.set_current_state(current_state)
+            state_manager._set_current_state(current_state)
             pbar.set_description(f"state: {current_state}")
             current = state_manager.current
             prev = state_manager.prev

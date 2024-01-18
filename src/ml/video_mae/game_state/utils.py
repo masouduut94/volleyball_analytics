@@ -10,25 +10,26 @@ from os import makedirs
 from pathlib import Path, PosixPath
 from os.path import join
 
-# from unsync import unsync
+from unsync import unsync
 
 from api.data_classes import ServiceData, RallyData, VideoData
 from api.enums import ServiceType
 from api.models import Video, Rally
 from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
+from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
+from src.utilities.utils import timeit
 
 
 class Manager:
-    def __init__(self, base_dir: str, match_id: int, series_id: int, fps: int, width: int, height: int,
-                 buffer_size: int):
-        self.base_dir = base_dir
-        self.match_id = match_id
+    def __init__(self, cfg: dict, series_id: int, cap: cv2.VideoCapture, buffer_size: int, video_name: str):
+        self.state_detector = GameStateDetector(cfg=cfg['video_mae']['game_state_3'])
+        self.vb_object_detector = VolleyBallObjectDetector(config=cfg, video_name=video_name, use_player_detection=True)
+        self.base_dir = cfg['base_dir']
+        self.match_id = cfg['match_id']
         self.series_id = series_id
 
         self.rally_base_dir = f'{self.base_dir}/{self.series_id}/{self.match_id}/rallies/'
-        # self.service_dir = f'{self.base_dir}/{self.series_id}/{self.match_id}/services/'
         makedirs(self.rally_base_dir, exist_ok=True)
-        # makedirs(self.service_dir, exist_ok=True)
 
         self.buffer_size = buffer_size
         self.states = ['no-play', 'no-play', 'no-play']
@@ -37,20 +38,38 @@ class Manager:
         self.temp_buffer_fno = []
         self.long_buffer = []
         self.long_buffer_fno = []
-        self.service_frames = []
         self.labels = []
-
         self.service_last_frame = None
 
-        self.service_fnos = []
-
         self.codec = cv2.VideoWriter_fourcc(*'mp4v')
-        self.width = width
-        self.height = height
-        self.fps = fps
-
-        # self.serve_counter = 0
+        self.width = int(cap.get(3))
+        self.height = int(cap.get(4))
+        self.fps = int(cap.get(5))
         self.rally_counter = 0
+
+    # @timeit
+    def predict_state(self, frames):
+        current_state = self.state_detector.predict(frames)
+        self._set_current_state(current_state)
+        return current_state
+
+    @timeit
+    def predict_objects(self, frames):
+        batch_size = 30
+        # d, r = divmod(len(frames), batch_size)
+        d = len(frames) // batch_size
+        results = []
+        for i in range(d+1):
+            temp = frames[batch_size*i: batch_size*(i+1)]
+            if len(temp):
+                batch_balls = self.vb_object_detector.detect_balls(temp)
+                batch_vb_objects = self.vb_object_detector.detect_actions(temp, exclude='ball')
+                batch_results = []
+                for balls, vb_objects in zip(batch_balls, batch_vb_objects):
+                    vb_objects['ball'] = balls
+                    batch_results.append(vb_objects)
+                results.extend(batch_results)
+        return results
 
     def is_full(self):
         return len(self.temp_buffer) == self.buffer_size
@@ -67,7 +86,7 @@ class Manager:
     def get_path(self, fno, video_type='rally'):
         return Path(self.rally_base_dir) / f'{video_type}_{self.rally_counter}_start_frame_{fno}.mp4'
 
-    def set_current_state(self, curr_state):
+    def _set_current_state(self, curr_state):
         prev = self.states[-1]
         prev_prev = self.states[-2]
         self.states[-3] = prev_prev
@@ -100,6 +119,7 @@ class Manager:
         self.labels.clear()
         self.service_last_frame = None
 
+    @unsync
     def write_video(self, path: PosixPath, labels: List[str], long_buffer: List[np.ndarray],
                     long_buffer_fno: List[int], draw_label: bool = False):
         writer = cv2.VideoWriter(path.as_posix(), self.codec, self.fps, (self.width, self.height))
@@ -117,7 +137,7 @@ class Manager:
                                     (255, 0, 0), 2)
                 writer.write(frame)
         else:
-            for frame in self.long_buffer:
+            for frame in long_buffer:
                 writer.write(frame)
         writer.release()
         return True
@@ -137,10 +157,13 @@ class Manager:
                                    serving_region=None, bounce_point=[120, 200], target_zone=5,
                                    type=ServiceType.HIGH_TOSS)
 
-        rally_data = RallyData(match_id=self.match_id, video_id=rally_video_db.id,start_frame=rally_1st_frame,
+        rally_data = RallyData(match_id=self.match_id, video_id=rally_video_db.id, start_frame=rally_1st_frame,
                                end_frame=rally_last_frame, rally_states=str(labels), service=service_data.to_dict())
-        Rally.save(rally_data.to_dict())
-        return True
+        rally = Rally.save(rally_data.to_dict())
+        return rally
+
+    def yolo_run(self, rally: Rally, gpu: bool = True):
+        video_path = rally.video
 
     @property
     def current(self):

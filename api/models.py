@@ -1,11 +1,11 @@
-from datetime import datetime
 from typing import List
 from pathlib import Path
-from sqlalchemy.orm import Mapped, relationship, backref
+from datetime import datetime
+from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy import Column, Integer, String, Text, JSON, Boolean, ForeignKey, DateTime
 
-from api.data_classes import TeamData, NationData, VideoData, MatchData, SeriesData, CameraData
 from api.database import engine, Base
+from api.data_classes import TeamData, NationData, VideoData, MatchData, SeriesData, CameraData
 
 
 class Team(Base):
@@ -89,6 +89,8 @@ class Rally(Base):
     team2_positions: Mapped[dict] = Column(JSON)
     result: Mapped[int] = Column(Integer)
     match: Mapped["Match"] = relationship(back_populates='rallies')
+
+    video: Mapped["Video"] = relationship(backref="video")
 
 
 if __name__ == '__main__':

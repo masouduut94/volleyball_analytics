@@ -3,9 +3,11 @@ from pathlib import Path
 import cv2
 import numpy as np
 import math
-from typing import List, Tuple
 from numpy.typing import NDArray
 from tqdm import tqdm
+
+from functools import wraps
+from time import time
 
 
 def video_write(input: str, output_path: str, yolo_model, config):
@@ -31,6 +33,18 @@ def video_write(input: str, output_path: str, yolo_model, config):
     print(f'saved results in {output_file}')
 
 
+def timeit(f):
+    @wraps(f)
+    def wrap(*args, **kw):
+        ts = time()
+        result = f(*args, **kw)
+        te = time()
+        print(f'func:{f.__name__} took: {te - ts: .2f} sec')
+        return result
+
+    return wrap
+
+
 class Meta:
     white = (255, 255, 255)
     black = (0, 0, 0)
@@ -45,7 +59,7 @@ class Meta:
     red = (255, 0, 0)
     aqua = (0, 255, 255)
     grey = (128, 128, 128)
-    
+
     bgr_purple = (211, 0, 148)
     bgr_blue = (255, 0, 0)
     bgr_red = (0, 0, 255)
