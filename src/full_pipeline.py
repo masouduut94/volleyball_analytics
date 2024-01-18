@@ -1,9 +1,10 @@
-from pathlib import Path
-
 import cv2
 import yaml
 from tqdm import tqdm
+from pathlib import Path
+
 from api.models import Match
+from api.enums import GameState
 from src.ml.video_mae.game_state.utils import Manager
 
 
@@ -45,20 +46,20 @@ def main():
             prev_prev = state_manager.prev_prev
 
             match current:
-                case 'service':
-                    if prev in ['no-play', 'service', 'play']:
+                case GameState.SERVICE:
+                    if prev in [GameState.NO_PLAY, GameState.SERVICE, GameState.PLAY]:
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
-                case 'play':
-                    if prev == 'service':
+                case GameState.PLAY:
+                    if prev == GameState.SERVICE:
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames),
                                            set_serve_last_frame=True)
-                    elif prev == 'play' or prev == 'no-play':
+                    elif prev == GameState.PLAY or prev == GameState.NO_PLAY:
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
-                case 'no-play':
-                    if prev == 'service' or prev == 'play':
+                case GameState.NO_PLAY:
+                    if prev == GameState.SERVICE or prev == GameState.PLAY:
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
-                    elif prev == 'no-play':
-                        if prev_prev == 'play' or prev_prev == 'service':
+                    elif prev == GameState.NO_PLAY:
+                        if prev_prev == GameState.PLAY or prev_prev == GameState.SERVICE:
                             all_labels = state_manager.get_labels()
                             all_frames = state_manager.get_long_buffer()
                             all_fnos = state_manager.get_long_buffer_fno()
@@ -67,12 +68,13 @@ def main():
                             done = state_manager.write_video(rally_name, all_labels, all_frames, all_fnos,
                                                              draw_label=True)
                             service_last_frame = state_manager.service_last_frame
-                            saved = state_manager.db_store(rally_name, all_fnos, service_last_frame, all_labels)
+                            rally_db = state_manager.db_store(rally_name, all_fnos, service_last_frame, all_labels)
                             vb_objects = state_manager.predict_objects(all_frames)
+                            state_manager.save_objects(rally_db, vb_objects)
                             print(f'{rally_name} saved ...')
                             state_manager.rally_counter += 1
                             state_manager.reset_long_buffer()
-                        elif prev_prev == 'no-play':
+                        elif prev_prev == GameState.NO_PLAY:
                             state_manager.reset_long_buffer()
                     state_manager.reset_temp_buffer()
         else:

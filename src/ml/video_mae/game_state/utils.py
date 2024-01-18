@@ -13,11 +13,11 @@ from os.path import join
 from unsync import unsync
 
 from api.data_classes import ServiceData, RallyData, VideoData
-from api.enums import ServiceType
+from api.enums import ServiceType, GameState
 from api.models import Video, Rally
 from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
-from src.utilities.utils import timeit
+from src.utilities.utils import timeit, BoundingBox
 
 
 class Manager:
@@ -32,7 +32,7 @@ class Manager:
         makedirs(self.rally_base_dir, exist_ok=True)
 
         self.buffer_size = buffer_size
-        self.states = ['no-play', 'no-play', 'no-play']
+        self.states = [GameState.NO_PLAY, GameState.NO_PLAY, GameState.NO_PLAY]
         # Buffers
         self.temp_buffer = []
         self.temp_buffer_fno = []
@@ -56,11 +56,10 @@ class Manager:
     @timeit
     def predict_objects(self, frames):
         batch_size = 30
-        # d, r = divmod(len(frames), batch_size)
         d = len(frames) // batch_size
         results = []
-        for i in range(d+1):
-            temp = frames[batch_size*i: batch_size*(i+1)]
+        for i in range(d + 1):
+            temp = frames[batch_size * i: batch_size * (i + 1)]
             if len(temp):
                 batch_balls = self.vb_object_detector.detect_balls(temp)
                 batch_vb_objects = self.vb_object_detector.detect_actions(temp, exclude='ball')
@@ -126,13 +125,16 @@ class Manager:
         if draw_label:
             for label, frame, fno in zip(labels, long_buffer, long_buffer_fno):
                 match label:
-                    case "service":
+                    case GameState.SERVICE:
+                        string = 'service'
                         color = (0, 255, 0)
-                    case "play":
+                    case GameState.PLAY:
+                        string = 'play'
                         color = (0, 255, 255)
                     case _:
+                        string = 'no-play'
                         color = (255, 0, 0)
-                frame = cv2.putText(frame, label, (100, 50), cv2.FONT_HERSHEY_PLAIN, 2, color, 2)
+                frame = cv2.putText(frame, string, (100, 50), cv2.FONT_HERSHEY_PLAIN, 2, color, 2)
                 frame = cv2.putText(frame, str(fno), (self.width - 400, 50), cv2.FONT_HERSHEY_PLAIN, 2,
                                     (255, 0, 0), 2)
                 writer.write(frame)
@@ -178,7 +180,27 @@ class Manager:
         return self.states[-3]
 
     def reset(self):
-        self.states = ['no-play', 'no-play', 'no-play']
+        self.states = [GameState.NO_PLAY, GameState.NO_PLAY, GameState.NO_PLAY]
+
+    def save_objects(self, rally_db: Rally, batch_vb_objects: List[List[BoundingBox]]):
+        balls_js = {}
+        blocks_js = {}
+        sets_js = {}
+        spikes_js = {}
+        receives_js = {}
+
+        for i, objects in enumerate(batch_vb_objects):
+            balls_js[i] = [obj.xyxy_dict for obj in objects['ball']]
+            blocks_js[i] = [obj.xyxy_dict for obj in objects['block']]
+            sets_js[i] = [obj.xyxy_dict for obj in objects['set']]
+            spikes_js[i] = [obj.xyxy_dict for obj in objects['spike']]
+            receives_js[i] = [obj.xyxy_dict for obj in objects['receive']]
+
+        Rally.update(
+            rally_db.id,
+            {"blocks": blocks_js, 'sets': sets_js, "spikes": spikes_js, "ball_positions": balls_js,
+             "receives": receives_js})
+        # serves = objects['serve']
 
 
 def annotate_service(serve_detection_model: GameStateDetector, video_path, output_path, buffer_size=30):

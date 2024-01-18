@@ -1,4 +1,6 @@
 import os
+from typing import List
+
 import cv2
 import torch
 import numpy as np
@@ -18,12 +20,13 @@ class GameStateDetector:
         self.feature_extractor = VideoMAEImageProcessor.from_pretrained(ckpt)
         self.model = VideoMAEForVideoClassification.from_pretrained(ckpt).to(self.device)
         self.labels = list(self.model.config.label2id.keys())
-        self.tri_states = len(self.labels) == 3
+        # self.tri_states = len(self.labels) == 3
         # processor = VideoMAEFeatureExtractor.from_pretrained(ckpt)
         sample_size = self.model.config.num_frames
         mean = self.feature_extractor.image_mean
         resize_to = 224
         std = self.feature_extractor.image_std
+        self.label2state = {'service': 1, 'play': 2, 'no-play': 3}
 
         self.transforms = Compose(
             [
@@ -34,7 +37,7 @@ class GameStateDetector:
             ]
         )
 
-    def predict(self, frames):
+    def predict(self, frames: List[np.ndarray]) -> int:
         video_tensor = torch.tensor(np.array(frames).astype(frames[0].dtype))
         video_tensor = video_tensor.permute(3, 0, 1, 2)  # (num_channels, num_frames, height, width)
         video_tensor_pp = self.transforms(video_tensor)
@@ -49,4 +52,4 @@ class GameStateDetector:
         softmax_scores = torch.nn.functional.softmax(logits, dim=-1).squeeze(0)
         confidences = {self.labels[i]: float(softmax_scores[i]) for i in range(len(self.labels))}
         label = max(confidences, key=confidences.get)
-        return label
+        return self.label2state[label]
