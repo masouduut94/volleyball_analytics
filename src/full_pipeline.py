@@ -21,10 +21,6 @@ def main():
     series_id = match.get_series().id
     video_path = src.path
     video_name = Path(video_path).name
-
-    # state_detector = GameStateDetector(cfg=cfg['video_mae']['game_state_3'])
-    # object_detector = VolleyBallObjectDetector(config=cfg, court_keypoints_json=court_json, video_name=video_name,
-    #                                            use_player_detection=True)
     cap = cv2.VideoCapture(video_path)
     assert cap.isOpened(), "file is not accessible..."
     n_frames = int(cap.get(7))
@@ -69,8 +65,12 @@ def main():
                             done = state_manager.write_video(rally_name, all_labels, all_frames, all_fnos,
                                                              draw_label=True)
                             service_last_frame = state_manager.service_last_frame
-                            # TODO: Run in parallel or multiprocessing, try every trick you know like cython,
-                            #  asyncio, ....
+                            # TODO: Try process optimization:
+                            #  - parallel processing.
+                            #  - cython, jit
+                            #  - asyncio, asyncio.Queue
+                            #  - Keep the results in RabbitMQ and then create analytics from them on a async process.
+                            #  -
                             rally_db = state_manager.db_store(rally_name, all_fnos, service_last_frame, all_labels)
                             vb_objects = state_manager.predict_objects(all_frames)
                             state_manager.save_objects(rally_db, vb_objects)
