@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import cv2
 import yaml
 from tqdm import tqdm
@@ -24,7 +26,8 @@ if __name__ == '__main__':
     current_state = None
     no_play_flag = 0
     state_manager = Manager(
-        base_dir=base_dir, match_id=match_id, series_id=series_id, fps=30, width=width, height=height, buffer_size=30
+        base_dir=base_dir, match_id=match_id, series_id=series_id,
+        fps=30, width=width, height=height, buffer_size=30
     )
     pbar = tqdm(list(range(n_frames)))
     rally = None
@@ -58,12 +61,18 @@ if __name__ == '__main__':
                     if prev == 'service' or prev == 'play':
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
                     elif prev == 'no-play':
-                        if prev_prev == 'play':
-                            state_manager.db_store(draw_label=True)
-                        elif prev_prev == 'service':
-                            state_manager.keep(current_frames, current_fnos, [current] * len(current_frames),
-                                               set_serve_last_frame=True)
-                            state_manager.db_store(draw_label=True)
+                        if prev_prev == 'play' or prev_prev == 'service':
+                            all_labels = state_manager.get_labels()
+                            all_frames = state_manager.get_long_buffer()
+                            all_fnos = state_manager.get_long_buffer_fno()
+                            start_frame = all_fnos[0]
+                            rally_name = state_manager.get_path(start_frame, video_type='rally')
+                            done = state_manager.write_video(rally_name, all_labels, all_frames, all_fnos,
+                                                             draw_label=True)
+                            service_last_frame = state_manager.service_last_frame
+                            saved = state_manager.db_store(rally_name, all_fnos, service_last_frame, all_labels)
+                            print(f'{rally_name} saved ...')
+                            state_manager.rally_counter += 1
                             state_manager.reset_long_buffer()
                         elif prev_prev == 'no-play':
                             state_manager.reset_long_buffer()

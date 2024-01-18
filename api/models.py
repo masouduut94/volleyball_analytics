@@ -82,25 +82,13 @@ class Rally(Base):
     spikes: Mapped[dict] = Column(JSON)
     blocks: Mapped[dict] = Column(JSON)
     receives: Mapped[dict] = Column(JSON)
-    serve: Mapped[dict] = Column(JSON)
+    service: Mapped[dict] = Column(JSON)
     ball_positions: Mapped[dict] = Column(JSON)
-    team1_players_positions: Mapped[dict] = Column(JSON)
-    team2_players_positions: Mapped[dict] = Column(JSON)
+    rally_states: Mapped[str] = Column(Text)
+    team1_positions: Mapped[dict] = Column(JSON)
+    team2_positions: Mapped[dict] = Column(JSON)
     result: Mapped[int] = Column(Integer)
-
     match: Mapped["Match"] = relationship(back_populates='rallies')
-
-
-class Service(Base):
-    rally_id: Mapped[int] = Column(Integer, ForeignKey("rally.id", ondelete="CASCADE"))
-    ball_positions: Mapped[dict] = Column(JSON)
-    service_man: Mapped[str] = Column(String(200))  # It has to be player id...
-    service_position: Mapped[dict] = Column(JSON)
-    service_landing_position: Mapped[dict] = Column(JSON)
-    service_landing_zone: Mapped[dict] = Column(JSON)
-    start_frame: Mapped[int]
-    end_frame: Mapped[int]
-    video_id: Mapped[int]
 
 
 if __name__ == '__main__':
@@ -134,12 +122,9 @@ if __name__ == '__main__':
     m1 = MatchData(team1_id=team1.id, team2_id=team2.id, series_id=se.id, video_id=None)
     match1 = Match.save(m1.to_dict())
 
-    video_path = Path('/media/masoud/HDD-8TB/datasets/VOLLEYBALL/RAW-VIDEOS/train/22.mp4')
+    video_path = Path('/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/22.mp4')
     v1 = VideoData(match1.id, path=video_path.as_posix(), camera_type=camera.id, type='main')
     video = Video.save(v1.to_dict())
 
     Match.update(match1.id, {"video_id": video.id})
     # Inserting matches...
-
-
-    # Inserting video sources...

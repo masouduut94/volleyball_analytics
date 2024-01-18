@@ -55,10 +55,11 @@ class RallyData:
     spikes: dict = field(default=None)
     blocks: dict = field(default=None)
     receives: dict = field(default=None)
-    serve: dict = field(default=None)
+    service: dict = field(default=None)
     ball_positions: dict = field(default=None)
-    team1_players_positions: dict = field(default=None)
-    team2_players_positions: dict = field(default=None)
+    team1_positions: dict = field(default=None)
+    team2_positions: dict = field(default=None)
+    rally_states: str = field(default=None)
     result: int = field(default=None)
     start_frame: int = field(default=None)
     end_frame: int = field(default=None)
@@ -68,11 +69,16 @@ class RallyData:
 @dataclass_json
 @dataclass
 class ServiceData:
-    rally_id: int = field(default=None)
-    start_frame: int = field(default=None)
+    """
+    end_frame: The index of a frame in the rally_id video that service ends.
+    """
     end_frame: int = field(default=None)
-    video_id: int = field(default=None)
     ball_positions: dict = field(default=None)
+    hitter: str = field(default=None)
+    serving_region: dict = field(default=None)
+    bounce_point: list = field(default=None)
+    target_zone:  int = field(default=None)
+    type: int = field(default=None)
 
 
 @dataclass_json

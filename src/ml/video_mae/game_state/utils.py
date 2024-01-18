@@ -1,13 +1,20 @@
+from typing import List
+
 import cv2
 from time import time
+
+import numpy as np
 from tqdm import tqdm
 from uuid import uuid1
 from os import makedirs
-from pathlib import Path
+from pathlib import Path, PosixPath
 from os.path import join
 
+# from unsync import unsync
+
 from api.data_classes import ServiceData, RallyData, VideoData
-from api.models import Video, Rally, Service
+from api.enums import ServiceType
+from api.models import Video, Rally
 from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 
 
@@ -18,10 +25,10 @@ class Manager:
         self.match_id = match_id
         self.series_id = series_id
 
-        self.rally_dir = f'{self.base_dir}/{self.series_id}/{self.match_id}/rallies/'
-        self.service_dir = f'{self.base_dir}/{self.series_id}/{self.match_id}/services/'
-        makedirs(self.rally_dir, exist_ok=True)
-        makedirs(self.service_dir, exist_ok=True)
+        self.rally_base_dir = f'{self.base_dir}/{self.series_id}/{self.match_id}/rallies/'
+        # self.service_dir = f'{self.base_dir}/{self.series_id}/{self.match_id}/services/'
+        makedirs(self.rally_base_dir, exist_ok=True)
+        # makedirs(self.service_dir, exist_ok=True)
 
         self.buffer_size = buffer_size
         self.states = ['no-play', 'no-play', 'no-play']
@@ -42,11 +49,23 @@ class Manager:
         self.height = height
         self.fps = fps
 
-        self.serve_counter = 0
+        # self.serve_counter = 0
         self.rally_counter = 0
 
     def is_full(self):
         return len(self.temp_buffer) == self.buffer_size
+
+    def get_long_buffer(self):
+        return self.long_buffer
+
+    def get_long_buffer_fno(self):
+        return self.long_buffer_fno
+
+    def get_labels(self):
+        return self.labels
+
+    def get_path(self, fno, video_type='rally'):
+        return Path(self.rally_base_dir) / f'{video_type}_{self.rally_counter}_start_frame_{fno}.mp4'
 
     def set_current_state(self, curr_state):
         prev = self.states[-1]
@@ -81,13 +100,11 @@ class Manager:
         self.labels.clear()
         self.service_last_frame = None
 
-    def db_store(self, draw_label: bool = False):
-        rally_name = Path(self.rally_dir) / f'rally_{self.rally_counter}.mp4'
-        writer = cv2.VideoWriter(
-            rally_name.as_posix(), self.codec, self.fps, (self.width, self.height)
-        )
+    def write_video(self, path: PosixPath, labels: List[str], long_buffer: List[np.ndarray],
+                    long_buffer_fno: List[int], draw_label: bool = False):
+        writer = cv2.VideoWriter(path.as_posix(), self.codec, self.fps, (self.width, self.height))
         if draw_label:
-            for label, frame, fno in zip(self.labels, self.long_buffer, self.long_buffer_fno):
+            for label, frame, fno in zip(labels, long_buffer, long_buffer_fno):
                 match label:
                     case "service":
                         color = (0, 255, 0)
@@ -103,33 +120,27 @@ class Manager:
             for frame in self.long_buffer:
                 writer.write(frame)
         writer.release()
+        return True
 
-        rally_1st_frame = self.long_buffer_fno[0]
-        rally_last_frame = self.long_buffer_fno[-1]
+    def db_store(self, rally_name, frame_numbers, service_last_frame=None, labels=None):
+        """
+        Saves a video of the rally, and also creates DB-related items. (video, and rally)
+
+        """
+
+        rally_1st_frame = frame_numbers[0]
+        rally_last_frame = frame_numbers[-1]
         rally_vdata = VideoData(match_id=self.match_id, path=rally_name.as_posix(), camera_type=1, type='rally')
         rally_video_db = Video.save(rally_vdata.to_dict())
-        rally_data = RallyData(match_id=self.match_id, start_frame=rally_1st_frame, end_frame=rally_last_frame,
-                               video_id=rally_video_db.id)
-        rally = Rally.save(rally_data.to_dict())
-        self.rally_counter += 1
-        self.serve_counter += 1
-        print(f"rally is saved in {rally_name.name}...\n")
-        # write service video and save it in DB...
-        if self.service_last_frame is not None:
-            serve_name = Path(self.service_dir) / f'serve_{self.serve_counter}.mp4'
-            writer = cv2.VideoWriter(serve_name.as_posix(), self.codec, self.fps, (self.width, self.height))
-            serve_1st_frame = self.long_buffer_fno[0]
-            serve_last_frame = self.long_buffer_fno[self.service_last_frame]
-            serve_frames = self.long_buffer[:self.service_last_frame]
-            for frame in serve_frames:
-                writer.write(frame)
-            writer.release()
-            serve_vdata = VideoData(match_id=self.match_id, path=serve_name.as_posix(), camera_type=1, type='serve')
-            serve_video_db = Video.save(serve_vdata.to_dict())
-            service_data = ServiceData(rally_id=rally.id, start_frame=serve_1st_frame, end_frame=serve_last_frame,
-                                       video_id=serve_video_db.id)
-            Service.save(service_data.to_dict())
-            print(f"serve is saved in {serve_name.name}...\n")
+
+        service_data = ServiceData(end_frame=service_last_frame, ball_positions={}, hitter="Igor Kliuka",
+                                   serving_region=None, bounce_point=[120, 200], target_zone=5,
+                                   type=ServiceType.HIGH_TOSS)
+
+        rally_data = RallyData(match_id=self.match_id, video_id=rally_video_db.id,start_frame=rally_1st_frame,
+                               end_frame=rally_last_frame, rally_states=str(labels), service=service_data.to_dict())
+        Rally.save(rally_data.to_dict())
+        return True
 
     @property
     def current(self):
