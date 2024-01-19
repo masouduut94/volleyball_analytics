@@ -70,7 +70,10 @@ def main():
                             #  - cython, jit
                             #  - asyncio, asyncio.Queue
                             #  - Keep the results in RabbitMQ and then create analytics from them on a async process.
-                            #  -
+                            #  - Create KPIs based on outputs.
+                            #  - Select the best model from YOLO models.
+                            #  - Create TEST SET for yolo model.
+                            #  - Create demo for your work.
                             rally_db = state_manager.db_store(rally_name, all_fnos, service_last_frame, all_labels)
                             vb_objects = state_manager.predict_objects(all_frames)
                             state_manager.save_objects(rally_db, vb_objects)
