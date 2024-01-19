@@ -1,3 +1,7 @@
+"""
+We can use below dataclasses to initialize the SQL ORM objects.
+
+"""
 import datetime
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
@@ -79,10 +83,6 @@ class ServiceData:
     bounce_point: list = field(default=None)
     target_zone:  int = field(default=None)
     type: int = field(default=None)
-
-    @classmethod
-    def from_dict(cls, **kwargs):
-        return cls(**kwargs)
 
 
 @dataclass_json

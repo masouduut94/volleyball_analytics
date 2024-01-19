@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 from time import time
 from uuid import uuid1
-from typing import List
+from typing import List, Dict
 from os import makedirs
 from os.path import join
 from pathlib import Path, PosixPath
@@ -20,6 +20,16 @@ from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 
 class Manager:
     def __init__(self, cfg: dict, series_id: int, cap: cv2.VideoCapture, buffer_size: int, video_name: str):
+        """
+
+        Parameters
+        ----------
+        cfg(dict): dictionary of configs for the project.
+        series_id: It's the tournament series id from database.
+        cap: OpenCV videoCapture object
+        buffer_size: It's the size of the buffer that keeps the video frames for ML operations.
+        video_name: It is used for finding the court corners on the court.json file.
+        """
         self.state_detector = GameStateDetector(cfg=cfg['video_mae']['game_state_3'])
         self.vb_object_detector = VolleyBallObjectDetector(config=cfg, video_name=video_name, use_player_detection=True)
         self.base_dir = cfg['base_dir']
@@ -46,13 +56,35 @@ class Manager:
         self.rally_counter = 0
 
     # @timeit
-    def predict_state(self, frames):
+    def predict_state(self, frames: List[np.ndarray]):
+        """
+        It gets a list of frames and outputs the label of the game state.
+        It's important to note that we currently work on videos with 30 fps,
+        so the input is a list of 30 frames.
+        Parameters
+        ----------
+        frames
+
+        Returns
+        -------
+
+        """
         current_state = self.state_detector.predict(frames)
         self._set_current_state(current_state)
         return current_state
 
     @timeit
-    def predict_objects(self, frames):
+    def predict_objects(self, frames: List[np.ndarray]):
+        """
+        Runs the yolo model object detection on the frames. (batch inference)
+        Parameters
+        ----------
+        frames: List of numpy.ndarray
+
+        Returns
+        -------
+
+        """
         batch_size = 30
         d = len(frames) // batch_size
         results = []
@@ -69,6 +101,12 @@ class Manager:
         return results
 
     def is_full(self):
+        """
+        Checks if the size of temporary buffer is equal to size of 30 frames in a second or not.
+        Returns
+        -------
+
+        """
         return len(self.temp_buffer) == self.buffer_size
 
     def get_long_buffer(self):
@@ -81,9 +119,30 @@ class Manager:
         return self.labels
 
     def get_path(self, fno, video_type='rally'):
+        """
+        Provided
+        Parameters
+        ----------
+        fno
+        video_type
+
+        Returns
+        -------
+
+        """
         return Path(self.rally_base_dir) / f'{video_type}_{self.rally_counter}_start_frame_{fno}.mp4'
 
     def _set_current_state(self, curr_state):
+        """
+        Keeps track of 3 consecutive states.(each state consists of 30 frames.)
+        Parameters
+        ----------
+        curr_state
+
+        Returns
+        -------
+
+        """
         prev = self.states[-1]
         prev_prev = self.states[-2]
         self.states[-3] = prev_prev
@@ -91,23 +150,64 @@ class Manager:
         self.states[-1] = curr_state
 
     def keep(self, frames, fnos, states):
+        """
+        Attach the current frames, frame numbers and states to the end of the long buffer.
+        Parameters
+        ----------
+        frames: list of frames
+        fnos: list of frame numbers.
+        states: list of states.
+
+        -------
+
+        """
         self.long_buffer.extend(frames)
         self.long_buffer_fno.extend(fnos)
         self.labels.extend(states)
         self.reset_temp_buffer()
 
     def append_frame(self, frame, fno):
+        """
+        Appends the video frames and frame numbers to the temporary buffer.
+        Parameters
+        ----------
+        frame
+        fno
+
+        Returns
+        -------
+
+        """
         self.temp_buffer.append(frame)
         self.temp_buffer_fno.append(fno)
 
     def get_current_frames_and_fnos(self):
+        """
+        Just a getter method for getting frames and frame numbers together.
+        Returns
+        -------
+
+        """
         return self.temp_buffer, self.temp_buffer_fno
 
     def reset_temp_buffer(self):
+        """
+        Reset the frame buffers that keep the current frames.
+
+        Returns
+        -------
+
+        """
         self.temp_buffer.clear()
         self.temp_buffer_fno.clear()
 
     def reset_long_buffer(self):
+        """
+        Resets the video frame storage that saves the rally videos.
+        Returns
+        -------
+
+        """
         self.long_buffer.clear()
         self.long_buffer_fno.clear()
         self.labels.clear()
@@ -115,6 +215,20 @@ class Manager:
 
     def write_video(self, path: PosixPath, labels: List[str], long_buffer: List[np.ndarray],
                     long_buffer_fno: List[int], draw_label: bool = False):
+        """
+        It handles the creation of rally video along with the attaching the labels...
+        Parameters
+        ----------
+        path: path to save the file.
+        labels: list of the output labels for the video frames...
+        long_buffer: list of frames to be written
+        long_buffer_fno: List of the frame numbers.
+        draw_label: Whether to write the video labels or not...
+
+        Returns true after work is done.
+        -------
+
+        """
         writer = cv2.VideoWriter(path.as_posix(), self.codec, self.fps, (self.width, self.height))
         if draw_label:
             for label, frame, fno in zip(labels, long_buffer, long_buffer_fno):
@@ -143,7 +257,6 @@ class Manager:
         Saves a video of the rally, and also creates DB-related items. (video, and rally)
 
         """
-
         rally_1st_frame = frame_numbers[0]
         rally_last_frame = frame_numbers[-1]
         rally_vdata = VideoData(match_id=self.match_id, path=rally_name.as_posix(), camera_type=1, type='rally')
@@ -175,7 +288,19 @@ class Manager:
         self.states = [GameState.NO_PLAY, GameState.NO_PLAY, GameState.NO_PLAY]
 
     @staticmethod
-    def save_objects(rally_db: Rally, batch_vb_objects: List[List[BoundingBox]]):
+    def save_objects(rally_db: Rally, batch_vb_objects: List[Dict[str, List[BoundingBox]]]):
+        """
+        It converts the Yolo detected objects into Json-serializable objects and saves it in DB.
+
+        Parameters
+        ----------
+        rally_db: rally table ORM object that is going to attach the yolo objects to it.
+        batch_vb_objects: yolo objects for all frames in a rally.
+
+        Returns
+        -------
+
+        """
         balls_js = {}
         blocks_js = {}
         sets_js = {}
@@ -203,10 +328,22 @@ class Manager:
             rally_db.id,
             {"blocks": blocks_js, 'sets': sets_js, "spikes": spikes_js, "ball_positions": balls_js,
              "receives": receives_js})
-        # serves = objects['serve']
 
 
 def annotate_service(serve_detection_model: GameStateDetector, video_path, output_path, buffer_size=30):
+    """
+    Annotates the video frames based on the game-state detector detections.
+    Parameters
+    ----------
+    serve_detection_model: The initialized game-state detection model.
+    video_path: Path to the input video.
+    output_path: path to save the output video.
+    buffer_size: Size of the game-state detection model input.
+
+    Returns
+    -------
+
+    """
     video_path = Path(video_path)
     cap = cv2.VideoCapture(video_path.as_posix())
     assert video_path.is_file(), f'file {video_path.as_posix()} not found...'
@@ -222,8 +359,8 @@ def annotate_service(serve_detection_model: GameStateDetector, video_path, outpu
 
     codec = cv2.VideoWriter_fourcc(*'mp4v')
     w, h, fps = [int(cap.get(i)) for i in range(3, 6)]
-    filename = join(output_path, Path(video_path).stem + f'_visualization.mp4')
-    writer = cv2.VideoWriter(filename, codec, fps, (w, h))
+    output_name = join(output_path, Path(video_path).stem + f'_visualization.mp4')
+    writer = cv2.VideoWriter(output_name, codec, fps, (w, h))
 
     while status:
         status, frame = cap.read()
@@ -244,20 +381,20 @@ def annotate_service(serve_detection_model: GameStateDetector, video_path, outpu
             pbar.set_description(f'processing {fno}/{n_frames} | p-time: {abs(t2 - t1): .3f}')
 
             match label:
-                case 'service':
+                case GameState.SERVICE:
                     color = (0, 255, 0)
-                case 'no-play':
+                case GameState.NO_PLAY:
                     color = (0, 0, 255)
-                case 'play':
+                case GameState.PLAY:
                     color = (255, 255, 0)
                 case _:
                     color = (255, 255, 255)
 
             for f, fno in zip(buffer, buffer2):
-                f = cv2.putText(f, str(label), (w // 2, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2)
-                f = cv2.putText(
-                    f, f"Frame # {fno}/{n_frames}", (w - 200, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6, (255, 0, 0), 2)
+                f = cv2.putText(f, serve_detection_model.state2label[label].upper(), (w // 2, 50),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2)
+                f = cv2.putText(f, f"Frame # {fno}/{n_frames}".upper(), (w - 200, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                                0.6, (255, 0, 0), 2)
                 writer.write(f)
         buffer.clear()
         buffer2.clear()
@@ -265,3 +402,4 @@ def annotate_service(serve_detection_model: GameStateDetector, video_path, outpu
     writer.release()
     cap.release()
     pbar.close()
+    print(f"Done. Saved as {output_name} ...")
