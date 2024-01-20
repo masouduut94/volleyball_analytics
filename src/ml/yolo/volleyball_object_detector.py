@@ -18,8 +18,6 @@ class VolleyBallObjectDetector:
         court_dict = None
         if video_name is not None:
             court_dict = json.load(open(self.config['court_json']))[video_name]
-            # TODO: create a model to segment the court at first sight, or make us capable of annotating the court
-            #       keypoints on a GUI ...
         if use_player_detection:
             self.player_detector = PlayerDetector(self.config['yolo']['player_detection'], court_dict=court_dict)
         else:
