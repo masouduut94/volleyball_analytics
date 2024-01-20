@@ -1,5 +1,5 @@
 """
-We can use below dataclasses to initialize the SQL ORM objects.
+These dataclasses are utilized to help us for the SQL ORM objects serialization for JSON input and outputs.
 
 """
 import datetime

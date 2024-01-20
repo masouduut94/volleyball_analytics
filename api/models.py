@@ -1,3 +1,15 @@
+"""
+This is the core ORM objects to interact with DB.
+Note that you need to initialize the Postgres/Mysql tables before running this script.
+
+$ sudo -i -u postgres
+$ psql
+$ CREATE DATABASE volleyball;
+or
+$ DROP DATABASE volleyball;
+$ CREATE DATABASE volleyball;
+
+"""
 from typing import List
 from pathlib import Path
 from datetime import datetime

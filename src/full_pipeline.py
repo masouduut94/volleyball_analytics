@@ -1,3 +1,11 @@
+"""
+This code gets the match and video data from db, and runs the ML processing pipeline that consists of
+video classification model (HuggingFace VideoMAE) and Volleyball-Specific object detection models
+(Ultralytics Yolov8) on the fetched video file.
+Then the statistics and outputs are stored on the db to get ready for visualization.
+
+"""
+
 import cv2
 import yaml
 from tqdm import tqdm
@@ -64,9 +72,8 @@ def main():
                             rally_name = state_manager.get_path(start_frame, video_type='rally')
                             done = state_manager.write_video(rally_name, all_labels, all_frames, all_fnos,
                                                              draw_label=True)
-                            service_last_frame = state_manager.service_last_frame
                             # TODO: Try process optimization:
-                            #  - parallel processing.
+                            #  - parallel processing
                             #  - cython, jit
                             #  - asyncio, asyncio.Queue
                             #  - Keep the results in RabbitMQ and then create analytics from them on a async process.
@@ -74,7 +81,9 @@ def main():
                             #  - Select the best model from YOLO models.
                             #  - Create TEST SET for yolo model.
                             #  - Create demo for your work.
-                            rally_db = state_manager.db_store(rally_name, all_fnos, service_last_frame, all_labels)
+                            rally_db = state_manager.db_store(
+                                rally_name, all_fnos, state_manager.service_last_frame, all_labels
+                            )
                             vb_objects = state_manager.predict_objects(all_frames)
                             state_manager.save_objects(rally_db, vb_objects)
                             print(f'{rally_name} saved ...')

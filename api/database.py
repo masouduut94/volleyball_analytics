@@ -1,3 +1,7 @@
+"""
+This is the core ORM object that all the other table models inherit from it.
+
+"""
 import yaml
 from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, DateTime, inspect
@@ -23,7 +27,7 @@ engine.connect()  # Check if it is connected
 Session = sessionmaker(autocommit=False, autoflush=True, bind=engine)
 
 
-class ModelMixin(object):
+class SQLMixins(object):
     id: Mapped[int] = Column(Integer, primary_key=True)
     created: Mapped[datetime] = Column(DateTime, default=datetime.now)
     updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
@@ -91,6 +95,6 @@ class ModelMixin(object):
         session.close()
 
 
-Base = declarative_base(cls=ModelMixin)
+Base = declarative_base(cls=SQLMixins)
 
 # if psycopg-2 didn't work: sudo apt install libpq-dev gcc

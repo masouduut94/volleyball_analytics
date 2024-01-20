@@ -1,3 +1,7 @@
+"""
+Here we keep all the Enum objects that help us with code readability.
+
+"""
 from enum import IntEnum
 
 

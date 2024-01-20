@@ -1,5 +1,7 @@
 import cv2
 from time import time
+
+import yaml
 from tqdm import tqdm
 from pathlib import Path
 from argparse import ArgumentParser
@@ -14,6 +16,12 @@ def config():
         "--model_cfg",
         type=str,
         default='/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
+    )
+    parser.add_argument(
+
+        "--setup_cfg",
+        type=str,
+        default='/home/masoud/Desktop/projects/volleyball_analytics/conf/setup.yaml'
     )
     parser.add_argument(
         '--video_path',
@@ -53,7 +61,10 @@ if __name__ == '__main__':
     cfg = config()
     video_path = Path(cfg.video_path)
     output_path = Path(cfg.output_path)
-    detector = VolleyBallObjectDetector(cfg.model_cfg, use_player_detection=cfg.use_segment, video_name=video_path.name)
+    model_cfg: dict = yaml.load(open(cfg.model_cfg), Loader=yaml.SafeLoader)
+    setup_cfg: dict = yaml.load(open(cfg.setup_cfg), Loader=yaml.SafeLoader)
+    model_cfg.update(setup_cfg)
+    detector = VolleyBallObjectDetector(model_cfg, use_player_detection=cfg.use_segment, video_name=video_path.name)
     # Define capture, and get certain values.
     cap = cv2.VideoCapture(video_path.as_posix())
     w, h, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
@@ -83,7 +94,6 @@ if __name__ == '__main__':
                 batch_vb_objects = detector.detect_actions(batch, exclude='ball')
 
                 for f, balls, vb_objects in zip(batch, batch_balls, batch_vb_objects):
-                    # vb_objects.extend(balls)
                     blocks = vb_objects['block']
                     sets = vb_objects['set']
                     spikes = vb_objects['spike']
@@ -92,9 +102,6 @@ if __name__ == '__main__':
                     objects = balls + blocks + sets + receives + spikes + services
 
                     f = detector.draw_bboxes(f, objects)
-                    # description = (f"time: {t2 - t1:.3f} | balls: {len(balls)} | blocks: {len(blocks)} | "
-                    #                f"sets: {len(sets)} | spikes: {len(spikes)} | receives: {len(receives)} | "
-                    #                f"services: {len(services)}")
                     writer.write(f)
                 t2 = time()
                 description = f"time: {t2 - t1:.3f}"
@@ -109,7 +116,6 @@ if __name__ == '__main__':
             pbar.update(1)
             cap.set(1, fno)
             status, frame = cap.read()
-
             t1 = time()
             balls = detector.detect_balls(frame)
             vb_objects = detector.detect_actions(frame, exclude='ball')
@@ -122,8 +128,6 @@ if __name__ == '__main__':
             objects = balls + blocks + sets + receives + spikes + services
 
             frame = detector.draw_bboxes(frame, objects)
-            # description = (f"time: {t2-t1:.3f} | balls: {len(balls)} | blocks: {len(blocks)} | sets: {len(sets)} | "
-            #                f"spikes: {len(spikes)} | receives: {len(receives)} | services: {len(services)}")
             description = f"time: {t2 - t1: .3f}"
             pbar.set_description(description)
             writer.write(frame)
