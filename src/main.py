@@ -70,8 +70,8 @@ def main():
                             all_fnos = state_manager.get_long_buffer_fno()
                             start_frame = all_fnos[0]
                             rally_name = state_manager.get_path(start_frame, video_type='rally')
-                            done = state_manager.write_video(rally_name, all_labels, all_frames, all_fnos,
-                                                             draw_label=True)
+                            state_manager.write_video(rally_name, all_labels, all_frames, all_fnos,
+                                                      draw_label=True)
                             # TODO: Try process optimization:
                             #  - parallel processing
                             #  - cython, jit

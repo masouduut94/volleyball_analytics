@@ -326,10 +326,8 @@ class Manager:
             if len(receives):
                 receives_js[i] = receives
 
-        Rally.update(
-            rally_db.id,
-            {"blocks": blocks_js, 'sets': sets_js, "spikes": spikes_js, "ball_positions": balls_js,
-             "receives": receives_js})
+        rally_db.update({"blocks": blocks_js, 'sets': sets_js, "spikes": spikes_js, "ball_positions": balls_js,
+                         "receives": receives_js})
 
 
 def annotate_service(serve_detection_model: GameStateDetector, video_path: str, output_path: str,

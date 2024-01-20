@@ -58,21 +58,20 @@ class Match(Base):
     # series_id: Mapped["Video"] = Column(Integer, ForeignKey("video.id"))
     series_id: Mapped[int] = Column(Integer, ForeignKey('series.id', ondelete="CASCADE"))
     video_id: Mapped[int] = Column(Integer, ForeignKey("video.id", ondelete="CASCADE"))
-
     team1_id: Mapped[int] = Column(Integer)
     team2_id: Mapped[int] = Column(Integer)
-
-    rallies: Mapped[List["Rally"]] = relationship(back_populates='match')
 
     def get_series(self):
         s = Series.get(self.series_id)
         return s
 
-    def get_rally_videos(self):
-        pass
+    def get_rallies(self):
+        results = Rally.query().filter(Rally.match_id == self.id).all()
+        return results
 
-    def get_main_video(self):
-        return Video.get(id=self.video_id)
+    @staticmethod
+    def get_main_video(video_id):
+        return Video.query().filter(Video.id == video_id and type == "main").one()
 
 
 class Video(Base):
@@ -100,7 +99,6 @@ class Rally(Base):
     team1_positions: Mapped[dict] = Column(JSON)
     team2_positions: Mapped[dict] = Column(JSON)
     result: Mapped[int] = Column(Integer)
-    match: Mapped["Match"] = relationship(back_populates='rallies')
 
     video: Mapped["Video"] = relationship(backref="video")
 
@@ -140,5 +138,5 @@ if __name__ == '__main__':
     v1 = VideoData(match1.id, path=video_path.as_posix(), camera_type=camera.id, type='main')
     video = Video.save(v1.to_dict())
 
-    Match.update(match1.id, {"video_id": video.id})
+    match1.update({"video_id": video.id})
     # Inserting matches...

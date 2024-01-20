@@ -60,9 +60,10 @@ class SQLMixins(object):
         session.close()
         return result
 
-    def query(self):
+    @classmethod
+    def query(cls):
         session = Session()
-        result = session.query(self)
+        result = session.query(cls)
         return result
 
     @classmethod
@@ -75,16 +76,16 @@ class SQLMixins(object):
         session.close()
         return new
 
-    @classmethod
-    def update(cls, id, kwargs):
+    def update(self, kwargs):
         session = Session()
-        item = cls.get(id)
+        item = self.get(self.id)
         for k, v in kwargs.items():
             setattr(item, k, v)
         session.add(item)
         session.commit()
         session.flush()
         session.close()
+        return item
 
     @classmethod
     def delete(cls, id):
@@ -93,6 +94,7 @@ class SQLMixins(object):
         session.delete(item)
         session.commit()
         session.close()
+        return item
 
 
 Base = declarative_base(cls=SQLMixins)
