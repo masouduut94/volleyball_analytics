@@ -19,7 +19,7 @@ if __name__ == '__main__':
     match: Match = Match.get(match_id)
     video: Video = Match.get_main_video(video_id=match.video_id)
     rallies: List[Rally] = match.get_rallies()
-
+    # TODO: Check if you can add asyncIO
     for rally in tqdm(rallies):
         cap = cv2.VideoCapture(rally.video.path)
         # Get items from rally jsons.
