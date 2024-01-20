@@ -91,7 +91,7 @@ if __name__ == '__main__':
     std = feature_extractor.image_std
     resize_to = (224, 224)
 
-    num_frames_to_sample = model.config.num_frames
+    num_frames_to_sample = model.parse_args.num_frames
     sample_rate = 3
     fps = 30
     clip_duration = num_frames_to_sample * sample_rate / fps
