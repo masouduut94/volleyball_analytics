@@ -4,7 +4,6 @@ These dataclasses are utilized to help us for the SQL ORM objects serialization 
 """
 import datetime
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
 from dataclasses_json import DataClassJsonMixin
 
 
@@ -14,6 +13,13 @@ class TeamData(DataClassJsonMixin):
     Stores the data about national and club teams.
     """
     name: str
+    is_national_team: bool
+
+    @classmethod
+    def from_instance(cls, instance):
+        inst_dict = instance.to_dict()
+        new = cls(**inst_dict)
+        return new
 
 
 @dataclass
@@ -24,6 +30,11 @@ class NationData(DataClassJsonMixin):
     name: str
     display_name: str
 
+    @classmethod
+    def from_instance(cls, instance):
+        inst_dict = instance.to_dict()
+        new = cls(**inst_dict)
+        return new
 
 @dataclass
 class PlayerData(DataClassJsonMixin):
@@ -39,6 +50,12 @@ class PlayerData(DataClassJsonMixin):
     club: int = field(default=None)
     birthdate: datetime.datetime = field(default=None)
 
+    @classmethod
+    def from_instance(cls, instance):
+        inst_dict = instance.to_dict()
+        new = cls(**inst_dict)
+        return new
+
 
 @dataclass
 class VideoData(DataClassJsonMixin):
@@ -53,6 +70,12 @@ class VideoData(DataClassJsonMixin):
     camera_type: int = field(default=0)
     type: str = field(default='main')
 
+    @classmethod
+    def from_instance(cls, instance):
+        inst_dict = instance.to_dict()
+        new = cls(**inst_dict)
+        return new
+
 
 @dataclass
 class MatchData(DataClassJsonMixin):
@@ -63,6 +86,12 @@ class MatchData(DataClassJsonMixin):
     team2_id: int
     series_id: int
     video_id: int = field(default=None)
+
+    @classmethod
+    def from_instance(cls, instance):
+        inst_dict = instance.to_dict()
+        new = cls(**inst_dict)
+        return new
 
 
 @dataclass
@@ -86,6 +115,12 @@ class RallyData(DataClassJsonMixin):
     start_frame: int = field(default=None)
     end_frame: int = field(default=None)
     video_id: int = field(default=None)
+
+    @classmethod
+    def from_instance(cls, instance):
+        inst_dict = instance.to_dict()
+        new = cls(**inst_dict)
+        return new
 
 
 @dataclass
@@ -115,6 +150,12 @@ class SeriesData(DataClassJsonMixin):
     end_date: datetime = field(default=datetime.datetime.now())
     host: str = field(default=None)
 
+    @classmethod
+    def from_instance(cls, instance):
+        inst_dict = instance.to_dict()
+        new = cls(**inst_dict)
+        return new
+
 
 @dataclass
 class CameraData(DataClassJsonMixin):
@@ -124,8 +165,14 @@ class CameraData(DataClassJsonMixin):
     """
     angle_name: str
 
+    @classmethod
+    def from_instance(cls, instance):
+        inst_dict = instance.to_dict()
+        new = cls(**inst_dict)
+        return new
+
 
 if __name__ == '__main__':
-    team = TeamData(name='brazil')
+    team = TeamData(name='brazil', is_national_team=True)
     d = team.to_dict()
     print(d)

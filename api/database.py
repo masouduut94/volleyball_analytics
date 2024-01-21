@@ -46,6 +46,12 @@ class SQLMixins(object):
             t += f"{key}: {value} | "
         return f'<{self.__class__.__name__} | id: {id_value} | {t}'
 
+    def to_dict(self):
+        attrs = {
+            c.key: c.value for c in inspect(self).attrs
+        }
+        return attrs
+
     @classmethod
     def get(cls, id):
         session = Session()
