@@ -65,7 +65,6 @@ class VideoData(DataClassJsonMixin):
         video is clipped for a specific rally that belongs to some match.
         `main-type` indicates the video for specific game.
     """
-    match_id: int
     path: str
     camera_type: int = field(default=0)
     type: str = field(default='main')

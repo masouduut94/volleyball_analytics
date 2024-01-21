@@ -14,7 +14,7 @@ from typing import List
 from pathlib import Path
 from datetime import datetime
 from sqlalchemy.orm import Mapped, relationship
-from sqlalchemy import Column, Integer, String, Text, JSON, Boolean, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Text, JSON, Boolean, ForeignKey, DateTime, ForeignKeyConstraint
 
 from api.database import engine, Base
 from api.data_classes import TeamData, NationData, VideoData, MatchData, SeriesData, CameraData
@@ -37,8 +37,10 @@ class Player(Base):
     age: Mapped[int] = Column(Integer)
     height: Mapped[int] = Column(Integer)
     weight: Mapped[int] = Column(Integer)
-    nation: Mapped[int] = Column(Integer, ForeignKey("nation.id", ondelete="CASCADE"))
-    club: Mapped[int] = Column(Integer, ForeignKey("team.id", ondelete="CASCADE"))
+    nation_id: Mapped[int] = Column(Integer, ForeignKey("nation.id", ondelete="CASCADE"))
+    team_id: Mapped[int] = Column(Integer, ForeignKey("team.id", ondelete="CASCADE"))
+    ForeignKeyConstraint(["team_id"], ["team.id"], name="fk_element_player_team_id")
+    ForeignKeyConstraint(["nation_id"], ["nation.id"], name="fk_element_player_nation_id")
 
 
 class Series(Base):
@@ -61,6 +63,9 @@ class Match(Base):
     team1_id: Mapped[int] = Column(Integer)
     team2_id: Mapped[int] = Column(Integer)
 
+    ForeignKeyConstraint(["series_id"], ["series.id"], name="fk_element_series_id")
+    ForeignKeyConstraint(["video_id"], ["video.id"], name="fk_element_video_id")
+
     def get_series(self):
         s = Series.get(self.series_id)
         return s
@@ -75,18 +80,19 @@ class Match(Base):
 
 
 class Video(Base):
-    match_id: Mapped[int] = Column(Integer, ForeignKey('match.id', ondelete="CASCADE"))
     camera_type: Mapped[int] = Column(Integer, ForeignKey('camera.id'))
     path: Mapped[str] = Column(String(200), nullable=False)
     type: Mapped[str] = Column(String(50), nullable=False)  # 3 types: main, rally, serve
+
+    # ForeignKeyConstraint(["match_id"], ["match.id"], name="fk_element_match_id")
 
     def get_videos_by_type(self, video_type='main'):
         return self.query().filter(self.type == video_type).one()
 
 
 class Rally(Base):
-    video_id: Mapped[int] = Column(Integer, ForeignKey("video.id", ondelete="CASCADE"))
     match_id: Mapped[int] = Column(Integer, ForeignKey("match.id", ondelete="CASCADE"))
+    video_id: Mapped[int] = Column(Integer, ForeignKey("video.id", ondelete="CASCADE"))
     start_frame: Mapped[int] = Column(Integer)
     end_frame: Mapped[int] = Column(Integer)
     sets: Mapped[dict] = Column(JSON)
@@ -101,17 +107,17 @@ class Rally(Base):
     result: Mapped[int] = Column(Integer)
 
     video: Mapped["Video"] = relationship(backref="video")
+    ForeignKeyConstraint(["match_id"], ["match.id"], name="fk_element_match_id")
+    ForeignKeyConstraint(["video_id"], ["video.id"], name="fk_element_video_id")
 
 
 if __name__ == '__main__':
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
-    # Seeding initial data
-
     # Inserting teams
-    t1 = TeamData(name='canada')
-    t2 = TeamData(name='usa')
+    t1 = TeamData(name='canada', is_national_team=True)
+    t2 = TeamData(name='usa', is_national_team=True)
 
     team1 = Team.save(t1.to_dict())
     team2 = Team.save(t2.to_dict())
@@ -135,7 +141,7 @@ if __name__ == '__main__':
     match1 = Match.save(m1.to_dict())
 
     video_path = Path('/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/22.mp4')
-    v1 = VideoData(match1.id, path=video_path.as_posix(), camera_type=camera.id, type='main')
+    v1 = VideoData(path=video_path.as_posix(), camera_type=camera.id, type='main')
     video = Video.save(v1.to_dict())
 
     match1.update({"video_id": video.id})
