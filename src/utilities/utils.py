@@ -153,7 +153,8 @@ class BoundingBox:
             'x1': self.x1,
             'x2': self.x2,
             'y1': self.y1,
-            'y2': self.y2
+            'y2': self.y2,
+            'conf': self.conf
         }
 
     @property
@@ -609,3 +610,12 @@ class KeyPointBox:
             'right_ankle': self.right_ankle
         }
         return js
+
+
+def state_changes(states: list):
+    curr: int = states[0]
+    temp = [curr]
+    for item in states:
+        if item != curr:
+            curr = item
+            temp.append(curr)

@@ -4,6 +4,8 @@ These dataclasses are utilized to help us for the SQL ORM objects serialization 
 """
 import datetime
 from dataclasses import dataclass, field
+from typing import Dict, List
+
 from dataclasses_json import DataClassJsonMixin
 
 
@@ -67,7 +69,6 @@ class VideoData(DataClassJsonMixin):
     """
     path: str
     camera_type: int = field(default=0)
-    type: str = field(default='main')
 
     @classmethod
     def from_instance(cls, instance):
@@ -101,19 +102,19 @@ class RallyData(DataClassJsonMixin):
 
     """
     match_id: int
-    sets: dict = field(default=None)
-    spikes: dict = field(default=None)
-    blocks: dict = field(default=None)
-    receives: dict = field(default=None)
+    sets: Dict[int, List[int | float]] = field(default=None)
+    spikes: Dict[int, List[int | float]] = field(default=None)
+    blocks: Dict[int, List[int | float]] = field(default=None)
+    receives: Dict[int, List[int | float]] = field(default=None)
     service: dict = field(default=None)
-    ball_positions: dict = field(default=None)
+    ball_positions: Dict[int, List[int | float]] = field(default=None)
     team1_positions: dict = field(default=None)
     team2_positions: dict = field(default=None)
     rally_states: str = field(default=None)
-    result: int = field(default=None)
+    result: dict = field(default=None)
     start_frame: int = field(default=None)
     end_frame: int = field(default=None)
-    video_id: int = field(default=None)
+    clip_path: str = field(default=None)
 
     @classmethod
     def from_instance(cls, instance):

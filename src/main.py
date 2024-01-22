@@ -25,8 +25,8 @@ def main():
     cfg.update(temp)
 
     match = Match.get(match_id)
-    src = match.get_main_video()
-    series_id = match.get_series().id
+    src = match.video()
+    series_id = match.series().id
     video_path = src.path
     video_name = Path(video_path).name
     cap = cv2.VideoCapture(video_path)

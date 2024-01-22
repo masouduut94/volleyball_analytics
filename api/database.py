@@ -1,7 +1,9 @@
 """
 This is the core ORM object that all the other table models inherit from it.
-
+https://mmas.github.io/sqlalchemy-serialize-json
+https://gist.github.com/alanhamlett/6604662
 """
+import sqlalchemy.orm
 import yaml
 from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, DateTime, inspect
@@ -48,7 +50,7 @@ class SQLMixins(object):
 
     def to_dict(self):
         attrs = {
-            c.key: c.value for c in inspect(self).attrs
+            c.key: c.value for c in inspect(self).attrs if c.key in self.__table__.columns.keys()
         }
         return attrs
 
@@ -67,10 +69,9 @@ class SQLMixins(object):
         return result
 
     @classmethod
-    def query(cls):
+    def query(cls) -> sqlalchemy.orm.Query:
         session = Session()
-        result = session.query(cls)
-        return result
+        return session.query(cls)
 
     @classmethod
     def save(cls, kwargs):

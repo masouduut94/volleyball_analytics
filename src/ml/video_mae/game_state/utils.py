@@ -12,7 +12,7 @@ from pathlib import Path, PosixPath
 
 from api.models import Video, Rally
 from api.enums import ServiceType, GameState
-from src.utilities.utils import timeit, BoundingBox
+from src.utilities.utils import timeit, BoundingBox, state_changes
 from api.data_classes import ServiceData, RallyData, VideoData
 from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
 from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
@@ -260,8 +260,9 @@ class Manager:
         """
         rally_1st_frame = frame_numbers[0]
         rally_last_frame = frame_numbers[-1]
-        rally_vdata = VideoData(match_id=self.match_id, path=rally_name.as_posix(), camera_type=1, type='rally')
-        rally_video_db = Video.save(rally_vdata.to_dict())
+        labels = state_changes(labels)
+        # rally_vdata = VideoData(path=rally_name.as_posix(), camera_type=1)
+        # rally_video_db = Video.save(rally_vdata.to_dict())
         service_end_frame = rally_1st_frame + service_ending_index if service_ending_index is not None else None
 
         service_data = ServiceData(
@@ -269,8 +270,10 @@ class Manager:
             serving_region={'x1': 21, 'x2': 20, 'y1': 44, "y2": 223}, bounce_point=[120, 200], target_zone=5,
             type=ServiceType.HIGH_TOSS
         )
-        rally_data = RallyData(match_id=self.match_id, video_id=rally_video_db.id, start_frame=rally_1st_frame,
-                               end_frame=rally_last_frame, rally_states=str(labels), service=service_data.to_dict())
+        rally_data = RallyData(
+            match_id=self.match_id, start_frame=rally_1st_frame, end_frame=rally_last_frame,
+            rally_states=str(labels), service=service_data.to_dict(), clip_path=rally_name.as_posix()
+        )
         rally = Rally.save(rally_data.to_dict())
         return rally
 
