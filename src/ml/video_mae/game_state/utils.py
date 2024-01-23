@@ -2,18 +2,17 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 from time import time
-from uuid import uuid1
-from typing import List, Dict, Tuple
 from os import makedirs
+from pathlib import Path
 from os.path import join
-from pathlib import Path, PosixPath
+from typing_extensions import List, Dict, Tuple
 
 # from unsync import unsync
 
-from api.models import Video, Rally
+from api.models import Rally
 from api.enums import ServiceType, GameState
 from src.utilities.utils import timeit, BoundingBox, state_changes
-from api.data_classes import ServiceData, RallyData, VideoData
+from api.schemas import ServiceData, RallyData
 from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
 from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 
@@ -262,19 +261,18 @@ class Manager:
         rally_last_frame = frame_numbers[-1]
         labels = state_changes(labels)
         # rally_vdata = VideoData(path=rally_name.as_posix(), camera_type=1)
-        # rally_video_db = Video.save(rally_vdata.to_dict())
+        # rally_video_db = Video.save(rally_vdata.model_dump())
         service_end_frame = rally_1st_frame + service_ending_index if service_ending_index is not None else None
 
         service_data = ServiceData(
             end_frame=service_end_frame, end_index=service_ending_index, hitter="Igor Kliuka",
-            serving_region={'x1': 21, 'x2': 20, 'y1': 44, "y2": 223}, bounce_point=[120, 200], target_zone=5,
-            type=ServiceType.HIGH_TOSS
+            hitter_bbox={}, bounce_point=[120, 200], target_zone=5, type=ServiceType.HIGH_TOSS
         )
         rally_data = RallyData(
             match_id=self.match_id, start_frame=rally_1st_frame, end_frame=rally_last_frame,
-            rally_states=str(labels), service=service_data.to_dict(), clip_path=rally_name.as_posix()
+            rally_states=str(labels), service=service_data.model_dump(), clip_path=str(rally_name)
         )
-        rally = Rally.save(rally_data.to_dict())
+        rally = Rally.save(rally_data.model_dump())
         return rally
 
     @property
