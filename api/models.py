@@ -15,23 +15,40 @@ https://vegibit.com/sqlalchemy-orm-relationships-one-to-many-many-to-one-many-to
 """
 from datetime import datetime
 from typing_extensions import List, Dict, Any
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy.orm import Mapped, relationship, declared_attr
 from sqlalchemy import Column, Integer, String, Text, JSON, Boolean, ForeignKey, DateTime, ForeignKeyConstraint
 # from sqlalchemy.dialects.postgresql
-from api.database import Base, engine
+from api.database import Base, get_db
 
 
 class Team(Base):
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
+    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     name: Mapped[str] = Column(String(200), nullable=False)
     is_national_team: Mapped[bool] = Column(Boolean, default=True)
 
+    @declared_attr
+    def __tablename__(cls):
+        return cls.__name__.lower()
+
 
 class Nation(Base):
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
+    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     name: Mapped[str] = Column(String(200))
     display_name: Mapped[str] = Column(String(200))
 
+    @declared_attr
+    def __tablename__(cls):
+        return cls.__name__.lower()
+
 
 class Player(Base):
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
+    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     first_name: Mapped[str] = Column(String(200))
     last_name: Mapped[str] = Column(String(200))
     gender: Mapped[bool] = Column(Boolean)
@@ -42,31 +59,54 @@ class Player(Base):
     nation_id: Mapped[int] = Column(Integer, ForeignKey("nation.id", ondelete="CASCADE"))
     team_id: Mapped[int] = Column(Integer, ForeignKey("team.id", ondelete="CASCADE"))
 
-    ForeignKeyConstraint(["team_id"], ["team.id"], name="fk_element_player_team_id")
-    ForeignKeyConstraint(["nation_id"], ["nation.id"], name="fk_element_player_nation_id")
+    ForeignKeyConstraint(("team_id",), ["team.id"], name="fk_element_player_team_id")
+    ForeignKeyConstraint(("nation_id",), ["nation.id"], name="fk_element_player_nation_id")
+
+    @declared_attr
+    def __tablename__(cls):
+        return cls.__name__.lower()
 
     def get_team(self):
-        return Team.get(self.team_id)
+        db = get_db()
+        return db.get(Team, self.team_id).one()
 
     def get_nation(self):
-        return Nation.get(self.nation_id)
+        db = get_db()
+        return db.get(Nation, self.nation_id).one()
 
 
 class Series(Base):
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
+    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     host: Mapped[str] = Column(String(100))
     start_date: Mapped[datetime] = Column(DateTime, default=datetime.now)
     end_date: Mapped[datetime] = Column(DateTime)
 
+    @declared_attr
+    def __tablename__(cls):
+        return cls.__name__.lower()
+
     def matches(self):
-        return Match.query().filter(Match.series_id == self.id).all()
+        db = get_db()
+        return db.query(Match).filter(Match.series_id == self.id).all()
 
 
 class Camera(Base):
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
+    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     angle_name: Mapped[str] = Column(String(100))
+
+    @declared_attr
+    def __tablename__(cls):
+        return cls.__name__.lower()
 
 
 class Match(Base):
-    # series_id: Mapped["Video"] = Column(Integer, ForeignKey("video.id"))
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
+    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     series_id: Mapped[int] = Column(Integer, ForeignKey('series.id', ondelete="CASCADE"))
     video_id: Mapped[int] = Column(Integer, ForeignKey("video.id", ondelete="CASCADE"))
     team1_id: Mapped[int] = Column(Integer)
@@ -74,31 +114,50 @@ class Match(Base):
 
     rallies: Mapped[List["Rally"]] = relationship('Rally', lazy='joined', primaryjoin="Match.id == Rally.match_id")
 
-    ForeignKeyConstraint(["series_id"], ["series.id"], name="fk_element_series_id")
-    ForeignKeyConstraint(["video_id"], ["video.id"], name="fk_element_video_id")
+    ForeignKeyConstraint(("series_id",), ["series.id"], name="fk_element_series_id")
+    ForeignKeyConstraint(("video_id",), ["video.id"], name="fk_element_video_id")
+
+    @declared_attr
+    def __tablename__(cls):
+        return cls.__name__.lower()
 
     def team1(self):
-        return Team.get(self.team1_id)
+        db = get_db()
+        return db.get(Team, self.team1_id).one()
 
     def team2(self):
-        return Team.get(self.team2_id)
+        db = get_db()
+        return db.get(Team, self.team2_id).one()
 
     def series(self):
-        return Series.get(self.series_id)
+        db = get_db()
+        return db.get(Series, self.series_id).one()
 
     def get_rallies(self):
-        return Rally.query().filter(Rally.match_id == self.id).all()
+        db = get_db()
+        return db.query(Rally).filter(Rally.match_id == self.id).all()
 
     def video(self):
-        return Video.get(self.video_id)
+        db = get_db()
+        return db.get(Video, self.video_id).one()
 
 
 class Video(Base):
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
+    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     camera_type: Mapped[int] = Column(Integer, ForeignKey('camera.id'))
     path: Mapped[str] = Column(String(200), nullable=False)
 
+    @declared_attr
+    def __tablename__(cls):
+        return cls.__name__.lower()
+
 
 class Rally(Base):
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
+    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
     match_id: Mapped[int] = Column(Integer, ForeignKey('match.id', ondelete="CASCADE"))
     clip_path: Mapped[str] = Column(String(200))
     start_frame: Mapped[int] = Column(Integer)
@@ -114,7 +173,14 @@ class Rally(Base):
     team2_positions: Mapped[dict] = Column(JSON)
     result: Mapped[dict] = Column(JSON)
 
-    ForeignKeyConstraint(["match_id"], ["match.id"], name="fk_element_match_id")
+    ForeignKeyConstraint(("match_id",), ["match.id"], name="fk_element_match_id")
 
     def get_match(self):
-        return Match.get(self.match_id).one()
+        db = get_db()
+        return db.get(Match, self.match_id).one()
+
+    @declared_attr
+    def __tablename__(cls):
+        return cls.__name__.lower()
+
+

@@ -2,31 +2,37 @@ import unittest
 
 from fastapi.testclient import TestClient
 from api.rest import app
-from api.database import db_setup, Base, Team, Nation, Player, Series, Camera, Match, Video, Rally
-from api.schemas import MatchData, NationData
+from api.schemas import TeamData
 
-mode = 'test'
 client = TestClient(app)
 
-Session, engine = db_setup(mode=mode)
-Base.metadata.drop_all(bind=engine)
-Base.metadata.create_all(bind=engine)
 
-
-class TestCase(unittest.TestCase):
+class TestTeam(unittest.TestCase):
     #
     # def tearDown(self) -> None:
     #     # Drop the tables in the test database
     #     Base.metadata.drop_all(bind=engine)
 
-    def test_get_matches(self):
+    # def test_get_team(self):
+    #     # Base.metadata.create_all(bind=engine)
+    #     t = TeamData(name='canada', is_national_team=True)
+    #     response1 = client.post(f"/team/", json=t.model_dump_json())
+    #     assert response1.status_code == 200
+    #     f = response1.json()
+    #     # nation = Nation.save(**n.model_dump())
+    #     response = client.get(f"/team/{f.id}")
+    #     self.assertEqual(response.status_code, 200)
+        # self.assertIn('team1_id', dict(response.json()))
+
+    def test_get_all_teams(self):
         # Base.metadata.create_all(bind=engine)
-        n = NationData(name='wfwafa', display_name='USA')
-        nation = Nation(**n.model_dump())
+        # t = TeamData(name='canada', is_national_team=True)
+        # response1 = client.post(f"/team/", json=t.model_dump_json())
+        # assert response1.status_code == 200
+        # f = response1.json()
         # nation = Nation.save(**n.model_dump())
-        response = client.get(f"/match/{nation.id}")
+        response = client.get(f"/team/")
         self.assertEqual(response.status_code, 200)
-        self.assertIn('team1_id', dict(response.json()))
 
 
 if __name__ == '__main__':

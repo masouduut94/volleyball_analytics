@@ -1,109 +1,25 @@
-"""
-This is the core ORM object that all the other table models inherit from it.
-https://mmas.github.io/sqlalchemy-serialize-json
-https://gist.github.com/alanhamlett/6604662
-"""
+import os
+
 import sqlalchemy.orm
-import yaml
-from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, DateTime, inspect
-from sqlalchemy.orm import declarative_base, sessionmaker, Mapped, declared_attr
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-db_file = open("/home/masoud/Desktop/projects/volleyball_analytics/conf/db_conf.yaml").read()
-cfg = yaml.load(db_file, Loader=yaml.SafeLoader)
-# db_type = 'mysql'
-db_type = 'postgres'
-
-user = cfg[db_type]["user"]
-pwd = cfg[db_type]["password"]
-host = cfg[db_type]["host"]
-db = cfg[db_type]["db"]
-port = cfg[db_type]["port"]
-dialect = cfg[db_type]["dialect"]
-driver = cfg[db_type]["driver"]
-
-SQLALCHEMY_DB_URL = f'{dialect}+{driver}://{user}:{pwd}@{host}:{port}/{db}'
-
+load_dotenv('/home/masoud/Desktop/projects/volleyball_analytics/conf/.env')
+mode = os.getenv('MODE')
+SQLALCHEMY_DB_URL = os.getenv("DB_URL_DEVELOPMENT") if mode == "development" else os.getenv("DB_URL_TEST")
+debug = False if mode == 'development' else True
 engine = create_engine(SQLALCHEMY_DB_URL)
-engine.connect()  # Check if it is connected
+engine.connect()
 Session = sessionmaker(autocommit=False, autoflush=True, bind=engine)
 
 
-class SQLMixins(object):
-    id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
-
-    @declared_attr
-    def __tablename__(cls):
-        return cls.__name__.lower()
-
-    def __repr__(self):
-        attrs = {
-            c.key: c.value for c in inspect(self).attrs
-        }
-        id_value = attrs.pop('id')
-        t = ''
-        for key, value in attrs.items():
-            t += f"{key}: {value} | "
-        return f'<{self.__class__.__name__} | id: {id_value} | {t}'
-
-    def to_dict(self):
-        attrs = {
-            c.key: c.value for c in inspect(self).attrs if c.key in self.__table__.columns.keys()
-        }
-        return attrs
-
-    @classmethod
-    def get(cls, id):
-        session = Session()
-        result = session.get(cls, id)
-        session.close()
-        return result
-
-    @classmethod
-    def get_all(cls):
-        session = Session()
-        result = session.query(cls).all()
-        session.close()
-        return result
-
-    @classmethod
-    def query(cls) -> sqlalchemy.orm.Query:
-        session = Session()
-        return session.query(cls)
-
-    @classmethod
-    def save(cls, kwargs):
-        session = Session()
-        new = cls(**kwargs)
-        session.add(new)
-        session.commit()
-        session.refresh(new)
-        session.close()
-        return new
-
-    def update(self, kwargs):
-        session = Session()
-        item = self.get(self.id)
-        for k, v in kwargs.items():
-            setattr(item, k, v)
-        session.add(item)
-        session.commit()
-        session.flush()
-        session.close()
-        return item
-
-    @classmethod
-    def delete(cls, id):
-        session = Session()
-        item = cls.get(id)
-        session.delete(item)
-        session.commit()
-        session.close()
-        return item
+def get_db() -> sqlalchemy.orm.Session:
+    db = Session()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
-Base = declarative_base(cls=SQLMixins)
-
-# if psycopg-2 didn't work: sudo apt install libpq-dev gcc
+Base = declarative_base()
