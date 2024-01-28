@@ -5,13 +5,18 @@ from fastapi import FastAPI, Depends, HTTPException
 from api.schemas import (TeamData, NationData, PlayerData, VideoData, MatchData, ServiceData, RallyData, SeriesData,
                          CameraData)
 
-from api.database import Session, Base, engine, get_db, debug
+from api.database import Session, Base, engine, get_db
 from api.models import Team, Nation, Player, Series, Camera, Video, Match, Rally
 
 # ######################################### Defining APIs #######################
 Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 app = FastAPI(debug=False)
+
+
+@app.get("/")
+async def read_main():
+    return {"msg": "Hello World"}
 
 
 # ############ TEAM

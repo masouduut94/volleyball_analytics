@@ -17,7 +17,6 @@ model_validate_json(): a utility for validating the given JSON data against the 
 
 """
 from datetime import datetime
-# from typing_extensions import ClassVar
 from typing_extensions import Dict, List, Annotated
 from pydantic import BaseModel, ConfigDict, StringConstraints, Field
 
@@ -29,8 +28,6 @@ class TeamData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = None
-    created: datetime = datetime.now()
-    updated: datetime = datetime.now()
     name: str = Field(max_length=60)
     is_national_team: bool = Field(default=True)
 
@@ -42,8 +39,6 @@ class NationData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = None
-    created: datetime = datetime.now()
-    updated: datetime = datetime.now()
     name: str = Field(max_length=60)
     display_name: str = Field(max_length=10)
 
@@ -55,8 +50,6 @@ class PlayerData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = None
-    created: datetime = datetime.now()
-    updated: datetime = datetime.now()
     first_name: str = Field(max_length=100)
     last_name: str = Field(max_length=100)
     is_male: bool = Field(default=True)
@@ -65,7 +58,7 @@ class PlayerData(BaseModel):
     weight: int = Field(default=None, gt=30)
     nation: int = Field(default=None)
     club: int = Field(default=None)
-    birthdate: datetime = Field(default_factory=datetime.now)
+    # birthdate: datetime = Field(default_factory=datetime.now)
 
 
 class VideoData(BaseModel):
@@ -78,8 +71,6 @@ class VideoData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = None
-    created: datetime = datetime.now()
-    updated: datetime = datetime.now()
     path: str = Field(max_length=100)
     camera_type: int = Field(default=None)
 
@@ -91,8 +82,6 @@ class MatchData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = None
-    created: datetime = datetime.now()
-    updated: datetime = datetime.now()
 
     team1_id: int
     team2_id: int
@@ -111,8 +100,6 @@ class ServiceData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = None
-    created: datetime = datetime.now()
-    updated: datetime = datetime.now()
     end_frame: int = Field(default=None)
     end_index: int = Field(default=None)
     hitter_name: str = Field(default='Igor Kliuka', max_length=100)
@@ -131,8 +118,6 @@ class RallyData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = None
-    created: datetime = datetime.now()
-    updated: datetime = datetime.now()
     match_id: int
     sets: Dict[int, List[Dict[str, int | float]]] = Field(default={})
     spikes: Dict[int, List[Dict[str, int | float]]] = Field(default={})
@@ -156,8 +141,6 @@ class SeriesData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = None
-    created: datetime = datetime.now()
-    updated: datetime = datetime.now()
     start_date: datetime = Field(default_factory=datetime.now)
     end_date: datetime = Field(default_factory=datetime.now)
     host: str = Field(default=None, max_length=100)
@@ -171,8 +154,6 @@ class CameraData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = None
-    created: datetime = datetime.now()
-    updated: datetime = datetime.now()
     angle_name: str = Field(max_length=20)
 
 
