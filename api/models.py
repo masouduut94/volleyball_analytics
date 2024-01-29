@@ -16,15 +16,15 @@ https://vegibit.com/sqlalchemy-orm-relationships-one-to-many-many-to-one-many-to
 from datetime import datetime
 from typing_extensions import List, Dict, Any
 from sqlalchemy.orm import Mapped, relationship, declared_attr
-from sqlalchemy import Column, Integer, String, Text, JSON, Boolean, ForeignKey, DateTime, ForeignKeyConstraint
-# from sqlalchemy.dialects.postgresql
+from sqlalchemy.sql import func
+from sqlalchemy import Column, Integer, String, Text, JSON, Boolean, ForeignKey, TIMESTAMP, ForeignKeyConstraint
 from api.database import Base, get_db
 
 
 class Team(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
+    created: Mapped[datetime] = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
+    updated: Mapped[datetime] = Column(TIMESTAMP(timezone=True), default=None, onupdate=func.now())
     name: Mapped[str] = Column(String(200), nullable=False)
     is_national_team: Mapped[bool] = Column(Boolean, default=True)
 
@@ -35,8 +35,8 @@ class Team(Base):
 
 class Nation(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
+    created: Mapped[datetime] = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
+    updated: Mapped[datetime] = Column(TIMESTAMP(timezone=True), default=None, onupdate=func.now())
     name: Mapped[str] = Column(String(200))
     display_name: Mapped[str] = Column(String(200))
 
@@ -47,8 +47,8 @@ class Nation(Base):
 
 class Player(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
+    created: Mapped[datetime] = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
+    updated: Mapped[datetime] = Column(TIMESTAMP(timezone=True), default=None, onupdate=func.now())
     first_name: Mapped[str] = Column(String(200))
     last_name: Mapped[str] = Column(String(200))
     gender: Mapped[bool] = Column(Boolean)
@@ -77,11 +77,11 @@ class Player(Base):
 
 class Series(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
+    created: Mapped[datetime] = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
+    updated: Mapped[datetime] = Column(TIMESTAMP(timezone=True), default=None, onupdate=func.now())
     host: Mapped[str] = Column(String(100))
-    start_date: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    end_date: Mapped[datetime] = Column(DateTime)
+    start_date: Mapped[datetime] = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
+    end_date: Mapped[datetime] = Column(TIMESTAMP(timezone=True), default=None, onupdate=func.now())
 
     @declared_attr
     def __tablename__(cls):
@@ -94,8 +94,8 @@ class Series(Base):
 
 class Camera(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
+    created: Mapped[datetime] = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
+    updated: Mapped[datetime] = Column(TIMESTAMP(timezone=True), default=None, onupdate=func.now())
     angle_name: Mapped[str] = Column(String(100))
 
     @declared_attr
@@ -105,8 +105,8 @@ class Camera(Base):
 
 class Match(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
+    created: Mapped[datetime] = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
+    updated: Mapped[datetime] = Column(TIMESTAMP(timezone=True), default=None, onupdate=func.now())
     series_id: Mapped[int] = Column(Integer, ForeignKey('series.id', ondelete="CASCADE"))
     video_id: Mapped[int] = Column(Integer, ForeignKey("video.id", ondelete="CASCADE"))
     team1_id: Mapped[int] = Column(Integer)
@@ -144,8 +144,8 @@ class Match(Base):
 
 class Video(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
+    created: Mapped[datetime] = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
+    updated: Mapped[datetime] = Column(TIMESTAMP(timezone=True), default=None, onupdate=func.now())
     camera_type: Mapped[int] = Column(Integer, ForeignKey('camera.id'))
     path: Mapped[str] = Column(String(200), nullable=False)
 
@@ -156,8 +156,8 @@ class Video(Base):
 
 class Rally(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
-    created: Mapped[datetime] = Column(DateTime, default=datetime.now)
-    updated: Mapped[datetime] = Column(DateTime, onupdate=datetime.now)
+    created: Mapped[datetime] = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
+    updated: Mapped[datetime] = Column(TIMESTAMP(timezone=True), default=None, onupdate=func.now())
     match_id: Mapped[int] = Column(Integer, ForeignKey('match.id', ondelete="CASCADE"))
     clip_path: Mapped[str] = Column(String(200))
     start_frame: Mapped[int] = Column(Integer)

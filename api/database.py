@@ -3,19 +3,20 @@ import os
 import sqlalchemy.orm
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 load_dotenv('/home/masoud/Desktop/projects/volleyball_analytics/conf/.env')
 mode = os.getenv('MODE')
 if mode == 'development':
     SQLALCHEMY_DB_URL = os.getenv("DB_URL_DEVELOPMENT")
-    engine = create_engine(SQLALCHEMY_DB_URL)
+    engine = create_engine(SQLALCHEMY_DB_URL, echo=True)
     engine.connect()
 else:
     SQLALCHEMY_DB_URL = os.getenv("DB_URL_TEST")
     engine = create_engine(
-        SQLALCHEMY_DB_URL,
+        SQLALCHEMY_DB_URL, echo=True,
         connect_args={"check_same_thread": False},
         poolclass=StaticPool
     )

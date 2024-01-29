@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import datetime
-from schemas import TeamData, NationData, CameraData, SeriesData, RallyData, MatchData, VideoData
+from schemas import TeamBaseSchema, NationBaseSchema, CameraData, SeriesData, RallyData, MatchData, VideoData
 # from database import Base, engine
 from models import *
 
@@ -9,15 +9,15 @@ if __name__ == '__main__':
     Base.metadata.create_all(engine)
 
     # Inserting teams
-    t1 = TeamData(name='canada', is_national_team=True)
-    t2 = TeamData(name='usa', is_national_team=True)
+    t1 = TeamBaseSchema(name='canada', is_national_team=True)
+    t2 = TeamBaseSchema(name='usa', is_national_team=True)
 
     team1 = Team.save(t1.model_dump())
     team2 = Team.save(t2.model_dump())
 
     # Inserting nations
-    n1 = NationData(name='poland', display_name='POL')
-    n2 = NationData(name='united states of america', display_name='USA')
+    n1 = NationBaseSchema(name='poland', display_name='POL')
+    n2 = NationBaseSchema(name='united states of america', display_name='USA')
 
     nation1 = Nation.save(n1.model_dump())
     nation2 = Nation.save(n2.model_dump())

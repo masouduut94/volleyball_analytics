@@ -18,10 +18,10 @@ model_validate_json(): a utility for validating the given JSON data against the 
 """
 from datetime import datetime
 from typing_extensions import Dict, List, Annotated
-from pydantic import BaseModel, ConfigDict, StringConstraints, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class TeamData(BaseModel):
+class TeamBaseSchema(BaseModel):
     """
     Stores the data about national and club teams.
     """
@@ -31,8 +31,15 @@ class TeamData(BaseModel):
     name: str = Field(max_length=60)
     is_national_team: bool = Field(default=True)
 
+    # class Config:
+    #
 
-class NationData(BaseModel):
+
+class ListTeamSchema(BaseModel):
+    users: List[TeamBaseSchema]
+
+
+class NationBaseSchema(BaseModel):
     """
     Stores the nationalities and how they are displayed on the scoreboard.
     """
@@ -158,6 +165,6 @@ class CameraData(BaseModel):
 
 
 if __name__ == '__main__':
-    team = TeamData(name='brazil', is_national_team=True)
+    team = TeamBaseSchema(name='brazil', is_national_team=True)
     d = team.model_dump()
     print(d)

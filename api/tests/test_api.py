@@ -1,38 +1,40 @@
 import unittest
 
-import pytest
-
-from api.rest import app
-from api.schemas import TeamData
+from api.main import app
+from api.schemas import TeamBaseSchema
 from fastapi.testclient import TestClient
 from api.database import Base, engine, get_db
 
-Base.metadata.create_all(bind=engine)
-client = TestClient(app)
-app.dependency_overrides[get_db] = get_db
 
+class TeamTest(unittest.TestCase):
+    def setUp(self):
+        Base.metadata.create_all(bind=engine)
+        app.dependency_overrides[get_db] = get_db
+        self.client = TestClient(app)
 
-def test_get_main():
-    # Base.metadata.create_all(bind=engine)
-    response1 = client.get("http://127.0.0.1:8000/")
-    assert response1.status_code == 200
+    def tearDown(self):
+        Base.metadata.drop_all(bind=engine)
 
+    def test_get_main(self):
+        response1 = self.client.get("/")
+        assert response1.status_code == 200
 
-def test_get_team():
-    # Base.metadata.create_all(bind=engine)
-    t: TeamData = TeamData(name='canada', is_national_team=True)
-    response1 = client.post("http://127.0.0.1:8000/team/", json=t.dict())
-    assert response1.status_code == 200
-    f = response1.json()
-    # nation = Nation.save(**n.model_dump())
-    response = client.get(f"/team/{f.id}")
-    assert response.status_code == 200
+    def test_get_team(self):
+        # Base.metadata.create_all(bind=engine)
+        t = TeamBaseSchema(name='canada', is_national_team=True)
+        response = self.client.post("/team/", json=t.model_dump(exclude={'id'}))
+        self.assertEqual(response.status_code, 201)
 
+        team_output = response.json()
+        team_output = TeamBaseSchema(**team_output)
+        response = self.client.get(f"/team/{team_output.id}")
+        self.assertEqual(response.status_code, 200)
 
-def test_get_all_teams():
-    t = TeamData(name='canada', is_national_team=True)
-    response1 = client.post(f"localhost:8000/team/", json=t.model_dump_json())
-    assert response1.status_code == 200
-    f = response1.json()
-    response = client.get(f"localhost:8000/team/")
-    assert response.status_code == 200
+    def test_get_all_teams(self):
+        t = TeamBaseSchema(name='canada', is_national_team=True)
+        response = self.client.post(f"/team/", json=t.model_dump(exclude={'id'}))
+        self.assertEqual(response.status_code, 201)
+
+        response = self.client.get(f"/team/")
+        self.assertEqual(response.status_code, 200)
+
