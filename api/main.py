@@ -3,9 +3,9 @@ from typing import List
 import sqlalchemy.orm
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
-from api.schemas import (TeamBaseSchema, NationBaseSchema, PlayerData, VideoData, MatchData, ServiceData, RallyData,
-                         SeriesData,
-                         CameraData, ListTeamSchema)
+from api.schemas import (TeamBaseSchema, NationBaseSchema, PlayerBaseSchema, VideoBaseSchema, MatchBaseSchema, ServiceBaseSchema, RallyBaseSchema,
+                         SeriesBaseSchema,
+                         CameraBaseSchema, ListTeamSchema)
 
 from api.database import Session, Base, engine, get_db
 from api.models import Team, Nation, Player, Series, Camera, Video, Match, Rally
@@ -119,22 +119,22 @@ async def get_player_by_id(player_id: int, db: sqlalchemy.orm.Session = Depends(
     player = db.get(Player, player_id)
     if not player:
         raise HTTPException(status_code=404, detail="Player not found")
-    return PlayerData.model_validate(player).model_dump()
+    return PlayerBaseSchema.model_validate(player).model_dump()
 
 
 @app.get('/player/')
 async def get_all_players(db: sqlalchemy.orm.Session = Depends(get_db)) -> List[dict]:
     players = db.query(Player).all()
-    return [PlayerData.model_validate(player).model_dump() for player in players]
+    return [PlayerBaseSchema.model_validate(player).model_dump() for player in players]
 
 
 @app.post('/player/', status_code=status.HTTP_201_CREATED)
-async def create_player(player_data: PlayerData, db: sqlalchemy.orm.Session = Depends(get_db)) -> dict:
+async def create_player(player_data: PlayerBaseSchema, db: sqlalchemy.orm.Session = Depends(get_db)) -> dict:
     new_player = Player(**player_data.model_dump(exclude={"id"}))
     db.add(new_player)
     db.commit()
     db.refresh(new_player)
-    return PlayerData.model_validate(new_player).model_dump()
+    return PlayerBaseSchema.model_validate(new_player).model_dump()
 
 
 @app.delete('/player/{player_id}')
@@ -155,22 +155,22 @@ async def get_series_by_id(series_id: int, db: sqlalchemy.orm.Session = Depends(
     series = db.get(Series, series_id)
     if not series:
         raise HTTPException(status_code=404, detail="Series not found")
-    return SeriesData.model_validate(series).model_dump()
+    return SeriesBaseSchema.model_validate(series).model_dump()
 
 
 @app.get('/series/')
 async def get_all_series(db: sqlalchemy.orm.Session = Depends(get_db)) -> List[dict]:
     series = db.query(Series).all()
-    return [SeriesData.model_validate(s).model_dump() for s in series]
+    return [SeriesBaseSchema.model_validate(s).model_dump() for s in series]
 
 
 @app.post('/series/', status_code=status.HTTP_201_CREATED)
-async def create_series(series_data: SeriesData, db: sqlalchemy.orm.Session = Depends(get_db)) -> dict:
+async def create_series(series_data: SeriesBaseSchema, db: sqlalchemy.orm.Session = Depends(get_db)) -> dict:
     new_serie = Series(**series_data.model_dump(exclude={"id"}))
     db.add(new_serie)
     db.commit()
     db.refresh(new_serie)
-    return SeriesData.model_validate(new_serie).model_dump()
+    return SeriesBaseSchema.model_validate(new_serie).model_dump()
 
 
 @app.delete('/series/{series_id}')
@@ -190,23 +190,23 @@ async def get_camera_by_id(camera_id: int, db: sqlalchemy.orm.Session = Depends(
     camera = db.get(Camera, camera_id)
     if not camera:
         raise HTTPException(status_code=404, detail="Camera not found")
-    return CameraData.model_validate(camera).model_dump()
+    return CameraBaseSchema.model_validate(camera).model_dump()
 
 
 @app.get('/camera/')
 async def get_all_camera(db: sqlalchemy.orm.Session = Depends(get_db)) -> List[dict]:
     camera = db.query(Camera).all()
-    return [CameraData.model_validate(c).model_dump() for c in camera]
+    return [CameraBaseSchema.model_validate(c).model_dump() for c in camera]
 
 
 @app.post('/camera/', status_code=status.HTTP_201_CREATED)
-async def create_camera(camera_data: CameraData, db: sqlalchemy.orm.Session = Depends(get_db)) -> dict:
+async def create_camera(camera_data: CameraBaseSchema, db: sqlalchemy.orm.Session = Depends(get_db)) -> dict:
     new_camera = Camera(**camera_data.model_dump(exclude={"id"}))
     print(new_camera)
     db.add(new_camera)
     db.commit()
     db.refresh(new_camera)
-    return CameraData.model_validate(new_camera).model_dump()
+    return CameraBaseSchema.model_validate(new_camera).model_dump()
 
 
 @app.delete('/camera/{camera_id}')
@@ -227,22 +227,22 @@ async def get_video_by_id(video_id: int, db: sqlalchemy.orm.Session = Depends(ge
     video = db.get(Video, video_id)
     if not video:
         raise HTTPException(status_code=404, detail="Video not found")
-    return VideoData.model_validate(video).model_dump()
+    return VideoBaseSchema.model_validate(video).model_dump()
 
 
 @app.get('/video/')
 async def get_all_video(db: sqlalchemy.orm.Session = Depends(get_db)) -> List[dict]:
     video = db.query(Video).all()
-    return [VideoData.model_validate(c).model_dump() for c in video]
+    return [VideoBaseSchema.model_validate(c).model_dump() for c in video]
 
 
 @app.post('/video/', status_code=status.HTTP_201_CREATED)
-async def create_video(video_data: VideoData, db: sqlalchemy.orm.Session = Depends(get_db)) -> dict:
+async def create_video(video_data: VideoBaseSchema, db: sqlalchemy.orm.Session = Depends(get_db)) -> dict:
     new_video = Video(**video_data.model_dump(exclude={"id"}))
     db.add(new_video)
     db.commit()
     db.refresh(new_video)
-    return VideoData.model_validate(new_video).model_dump()
+    return VideoBaseSchema.model_validate(new_video).model_dump()
 
 
 @app.delete('/video/{video_id}')
@@ -263,22 +263,22 @@ async def get_match_by_id(match_id: int, db: sqlalchemy.orm.Session = Depends(ge
     match = db.get(Match, match_id)
     if not match:
         raise HTTPException(status_code=404, detail="match not found")
-    return MatchData.model_validate(match).model_dump()
+    return MatchBaseSchema.model_validate(match).model_dump()
 
 
 @app.get('/match/')
 async def get_all_match(db: sqlalchemy.orm.Session = Depends(get_db)) -> List[dict]:
     match = db.query(Match).all()
-    return [MatchData.model_validate(c).model_dump() for c in match]
+    return [MatchBaseSchema.model_validate(c).model_dump() for c in match]
 
 
 @app.post('/match/', status_code=status.HTTP_201_CREATED)
-async def create_match(match_data: MatchData, db: sqlalchemy.orm.Session = Depends(get_db)) -> dict:
+async def create_match(match_data: MatchBaseSchema, db: sqlalchemy.orm.Session = Depends(get_db)) -> dict:
     new_match = Match(**match_data.model_dump(exclude={"id"}))
     db.add(new_match)
     db.commit()
     db.refresh(new_match)
-    return MatchData.model_validate(new_match).model_dump()
+    return MatchBaseSchema.model_validate(new_match).model_dump()
 
 
 @app.delete('/match/{match_id}')
@@ -299,22 +299,22 @@ async def get_rally_by_id(rally_id: int, db: sqlalchemy.orm.Session = Depends(ge
     rally = db.get(Rally, rally_id)
     if not rally:
         raise HTTPException(status_code=404, detail="rally not found")
-    return RallyData.model_validate(rally).model_dump()
+    return RallyBaseSchema.model_validate(rally).model_dump()
 
 
 @app.get('/rally/')
 async def get_all_rally(db: sqlalchemy.orm.Session = Depends(get_db)) -> List[dict]:
     rally = db.query(Rally).all()
-    return [RallyData.model_validate(c).model_dump() for c in rally]
+    return [RallyBaseSchema.model_validate(c).model_dump() for c in rally]
 
 
 @app.post('/rally/', status_code=status.HTTP_201_CREATED)
-async def create_rally(rally_data: RallyData, db: sqlalchemy.orm.Session = Depends(get_db)) -> dict:
+async def create_rally(rally_data: RallyBaseSchema, db: sqlalchemy.orm.Session = Depends(get_db)) -> dict:
     new_rally = Rally(**rally_data.model_dump(exclude={"id"}))
     db.add(new_rally)
     db.commit()
     db.refresh(new_rally)
-    return RallyData.model_validate(new_rally).model_dump()
+    return RallyBaseSchema.model_validate(new_rally).model_dump()
 
 
 @app.delete('/rally/{rally_id}')

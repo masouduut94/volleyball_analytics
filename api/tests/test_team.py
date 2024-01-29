@@ -38,3 +38,5 @@ class TeamTest(unittest.TestCase):
         response = self.client.get(f"/team/")
         self.assertEqual(response.status_code, 200)
 
+
+

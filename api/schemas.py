@@ -50,7 +50,7 @@ class NationBaseSchema(BaseModel):
     display_name: str = Field(max_length=10)
 
 
-class PlayerData(BaseModel):
+class PlayerBaseSchema(BaseModel):
     """
     Basic information about the players.
     """
@@ -68,7 +68,7 @@ class PlayerData(BaseModel):
     # birthdate: datetime = Field(default_factory=datetime.now)
 
 
-class VideoData(BaseModel):
+class VideoBaseSchema(BaseModel):
     """
     information about videos stored on database.
     type: Video types can be either main or rally. `rally`-type indicates that
@@ -82,7 +82,7 @@ class VideoData(BaseModel):
     camera_type: int = Field(default=None)
 
 
-class MatchData(BaseModel):
+class MatchBaseSchema(BaseModel):
     """
     Stores the information for a specific match.
     """
@@ -96,7 +96,7 @@ class MatchData(BaseModel):
     video_id: int
 
 
-class ServiceData(BaseModel):
+class ServiceBaseSchema(BaseModel):
     """
     serving_region: indicates the place that hitter is standing right before
         tossing the ball.
@@ -116,7 +116,7 @@ class ServiceData(BaseModel):
     type: int = Field(default=None)
 
 
-class RallyData(BaseModel):
+class RallyBaseSchema(BaseModel):
     """
     Stores the data for each rally. all the dict-type items are
     keeping the statistics that extracted by ML pipelines.
@@ -130,7 +130,7 @@ class RallyData(BaseModel):
     spikes: Dict[int, List[Dict[str, int | float]]] = Field(default={})
     blocks: Dict[int, List[Dict[str, int | float]]] = Field(default={})
     receives: Dict[int, List[Dict[str, int | float]]] = Field(default={})
-    service: dict = ServiceData
+    service: dict = ServiceBaseSchema
     ball_positions: Dict[int, Dict[str, List[int | float]]] = Field(default={})
     team1_positions: dict = Field(default={})
     team2_positions: dict = Field(default={})
@@ -141,7 +141,7 @@ class RallyData(BaseModel):
     clip_path: str = Field(max_length=100)
 
 
-class SeriesData(BaseModel):
+class SeriesBaseSchema(BaseModel):
     """
     It stores the information of tournament series.
     """
@@ -153,7 +153,7 @@ class SeriesData(BaseModel):
     host: str = Field(default=None, max_length=100)
 
 
-class CameraData(BaseModel):
+class CameraBaseSchema(BaseModel):
     """
     For the time being, there is only 2 camera angles and both are in the
     back of the court.
@@ -166,5 +166,4 @@ class CameraData(BaseModel):
 
 if __name__ == '__main__':
     team = TeamBaseSchema(name='brazil', is_national_team=True)
-    d = team.model_dump()
-    print(d)
+    d = team.model_dump(exclude={'id'})

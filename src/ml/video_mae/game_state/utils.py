@@ -12,7 +12,7 @@ from typing_extensions import List, Dict, Tuple
 from api.models import Rally
 from api.enums import ServiceType, GameState
 from src.utilities.utils import timeit, BoundingBox, state_changes
-from api.schemas import ServiceData, RallyData
+from api.schemas import ServiceBaseSchema, RallyBaseSchema
 from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
 from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 
@@ -264,11 +264,11 @@ class Manager:
         # rally_video_db = Video.save(rally_vdata.model_dump())
         service_end_frame = rally_1st_frame + service_ending_index if service_ending_index is not None else None
 
-        service_data = ServiceData(
+        service_data = ServiceBaseSchema(
             end_frame=service_end_frame, end_index=service_ending_index, hitter="Igor Kliuka",
             hitter_bbox={}, bounce_point=[120, 200], target_zone=5, type=ServiceType.HIGH_TOSS
         )
-        rally_data = RallyData(
+        rally_data = RallyBaseSchema(
             match_id=self.match_id, start_frame=rally_1st_frame, end_frame=rally_last_frame,
             rally_states=str(labels), service=service_data.model_dump(), clip_path=str(rally_name)
         )

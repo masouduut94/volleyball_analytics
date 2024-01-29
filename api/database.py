@@ -7,7 +7,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-load_dotenv('/home/masoud/Desktop/projects/volleyball_analytics/conf/.env')
+env_path = 'C:\\Users\\masoud-pc\\PycharmProjects\\volleyball_analytics\\conf\\.env'
+
+load_dotenv(env_path)
 mode = os.getenv('MODE')
 if mode == 'development':
     SQLALCHEMY_DB_URL = os.getenv("DB_URL_DEVELOPMENT")
@@ -15,11 +17,7 @@ if mode == 'development':
     engine.connect()
 else:
     SQLALCHEMY_DB_URL = os.getenv("DB_URL_TEST")
-    engine = create_engine(
-        SQLALCHEMY_DB_URL, echo=True,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool
-    )
+    engine = create_engine(SQLALCHEMY_DB_URL)
     engine.connect()
 
 Session = sessionmaker(autocommit=False, autoflush=True, bind=engine)
