@@ -36,7 +36,7 @@ class TeamBaseSchema(BaseModel):
 
 
 class ListTeamSchema(BaseModel):
-    users: List[TeamBaseSchema]
+    teams: List[TeamBaseSchema]
 
 
 class NationBaseSchema(BaseModel):
