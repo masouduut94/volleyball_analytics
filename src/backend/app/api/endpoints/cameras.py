@@ -1,82 +1,70 @@
 from fastapi import Depends, HTTPException, status, APIRouter
 from sqlalchemy.orm import Session
+from typing_extensions import List
 
 from src.backend.app.api.deps import SessionDep
 from src.backend.app.crud.base import CRUDBase
-
+from src.backend.app.models.models import Camera
+from src.backend.app.schemas.cameras import CameraBaseSchema
 
 router = APIRouter()
 
+camera_crud = CRUDBase(Camera)
 
-@router.get("/", status_code=status.HTTP_200_OK)
+
+@router.get("/", status_code=status.HTTP_200_OK, response_model=List[CameraBaseSchema])
 def get_all_cameras(db: Session = SessionDep):
-    crud = CRUDBase()
+    cameras = camera_crud.get_all(db)
+    if not cameras:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No Camera found.."
+        )
+    return cameras
 
-def get_users(
-        db: Session = SessionDep, limit: int = 10, page: int = 1, search: str = ""
+
+@router.get("/{camera_id}", status_code=status.HTTP_200_OK, response_model=CameraBaseSchema)
+def get_camera(camera_id: int, db: Session = SessionDep):
+    camera = camera_crud.get(db=db, id=camera_id)
+    if not camera:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No Camera with this id: `{camera_id}` found"
+        )
+    return camera
+
+
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=CameraBaseSchema)
+def create_camera(payload: CameraBaseSchema, db: Session = SessionDep):
+    new_camera = Camera(**payload.model_dump())
+    db.add(new_camera)
+    db.commit()
+    db.refresh(new_camera)
+    return new_camera
+
+
+@router.patch("/{camera_id}", status_code=status.HTTP_202_ACCEPTED)
+def update_camera(
+        camera_id: int, payload: CameraBaseSchema, db: Session = CameraBaseSchema
 ):
-    skip = (page - 1) * limit
-
-    users = (
-        db.query(models.User)
-        .filter(models.User.first_name.contains(search))
-        .limit(limit)
-        .offset(skip)
-        .all()
-    )
-    return {"Status": "Success", "Results": len(users), "Users": users}
-
-
-@router.post("/", status_code=status.HTTP_201_CREATED)
-def create_user(payload: schemas.UserBaseSchema, db: Session = Depends(get_db)):
-    new_user = models.User(**payload.dict())
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return {"Status": "Success", "User": new_user}
-
-
-@router.patch("/{userId}", status_code=status.HTTP_202_ACCEPTED)
-def update_user(
-        userId: str, payload: schemas.UserBaseSchema, db: Session = Depends(get_db)
-):
-    user_query = db.query(models.User).filter(models.User.id == userId)
-    db_user = user_query.first()
-
-    if not db_user:
+    db_camera = camera_crud.get(db=db, id=camera_id)
+    if not db_camera:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No User with this id: {userId} found",
+            detail=f"No Camera with this id: {camera_id} found .....",
         )
-    update_data = payload.dict(exclude_unset=True)
-    user_query.filter(models.User.id == userId).update(
-        update_data, synchronize_session=False
-    )
-    db.commit()
-    db.refresh(db_user)
-    return {"Status": "Success", "User": db_user}
+    updated_camera = camera_crud.update(db=db, db_obj=db_camera, obj_in=payload)
+    return updated_camera
 
 
-@router.get("/{userId}", status_code=status.HTTP_200_OK)
-def get_user(userId: str, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == userId).first()
-    if not user:
+@router.delete("/{camera_id}", status_code=status.HTTP_200_OK)
+def delete_camera(camera_id: int, db: Session = SessionDep):
+    db_camera = camera_crud.get(db=db, id=camera_id)
+    if not db_camera:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No User with this id: `{userId}` found",
+            detail=f"No Camera with this id: {camera_id} found .....",
         )
-    return {"Status": "Success", "User": user}
+    camera_crud.remove(db=db, id=camera_id)
+    return {"status": "success", "message": "Item removed successfully"}
 
-
-@router.delete("/{userId}", status_code=status.HTTP_200_OK)
-def delete_user(userId: str, db: Session = Depends(get_db)):
-    user_query = db.query(models.User).filter(models.User.id == userId)
-    user = user_query.first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No user with this id: {userId} found",
-        )
-    user_query.delete(synchronize_session=False)
-    db.commit()
-    return {"Status": "Success", "Message": "User deleted successfully"}
