@@ -6,6 +6,7 @@ from src.backend.app.crud.base import CRUDBase
 from src.backend.app.db.engine import get_db
 from src.backend.app.models.models import Team
 from src.backend.app.schemas.teams import TeamBaseSchema, TeamBaseCreateSchema
+# from fastapi.encoders import jsonable_encoder
 
 router = APIRouter()
 
@@ -43,7 +44,7 @@ def create_team(payload: TeamBaseCreateSchema, db: Session = Depends(get_db)):
     return new_team
 
 
-@router.patch("/{team_id}", status_code=status.HTTP_202_ACCEPTED)
+@router.put("/{team_id}", status_code=status.HTTP_202_ACCEPTED, response_model=TeamBaseSchema)
 def update_team(
         team_id: int, payload: TeamBaseCreateSchema, db: Session = Depends(get_db)
 ):
@@ -57,7 +58,7 @@ def update_team(
     return updated_team
 
 
-@router.delete("/{team_id}", status_code=status.HTTP_200_OK)
+@router.delete("/{team_id}", status_code=status.HTTP_200_OK, response_model=dict)
 def delete_team(team_id: int, db: Session = Depends(get_db)):
     db_team = team_crud.get(db=db, id=team_id)
     if not db_team:
