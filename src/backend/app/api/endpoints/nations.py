@@ -5,7 +5,7 @@ from typing_extensions import List
 from src.backend.app.crud.base import CRUDBase
 from src.backend.app.db.engine import get_db
 from src.backend.app.models.models import Nation
-from src.backend.app.schemas.nations import NationBaseSchema
+from src.backend.app.schemas.nations import NationBaseSchema, NationCreateSchema
 
 router = APIRouter()
 
@@ -13,7 +13,7 @@ nation_crud = CRUDBase(Nation)
 
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=List[NationBaseSchema])
-def get_all_nations(db: Session = Depends(get_db)):
+async def get_all_nations(db: Session = Depends(get_db)):
     nations = nation_crud.get_all(db)
     if not nations:
         raise HTTPException(
@@ -24,7 +24,7 @@ def get_all_nations(db: Session = Depends(get_db)):
 
 
 @router.get("/{nation_id}", status_code=status.HTTP_200_OK, response_model=NationBaseSchema)
-def get_nation(nation_id: int, db: Session = Depends(get_db)):
+async def get_nation(nation_id: int, db: Session = Depends(get_db)):
     nation = nation_crud.get(db=db, id=nation_id)
     if not nation:
         raise HTTPException(
@@ -35,7 +35,7 @@ def get_nation(nation_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=NationBaseSchema)
-def create_nation(payload: NationBaseSchema, db: Session = Depends(get_db)):
+async def create_nation(payload: NationCreateSchema, db: Session = Depends(get_db)):
     new_nation = Nation(**payload.model_dump())
     db.add(new_nation)
     db.commit()
@@ -43,9 +43,9 @@ def create_nation(payload: NationBaseSchema, db: Session = Depends(get_db)):
     return new_nation
 
 
-@router.patch("/{nation_id}", status_code=status.HTTP_202_ACCEPTED)
-def update_nation(
-        nation_id: int, payload: NationBaseSchema, db: Session = Depends(get_db)
+@router.put("/{nation_id}", status_code=status.HTTP_202_ACCEPTED)
+async def update_nation(
+        nation_id: int, payload: NationCreateSchema, db: Session = Depends(get_db)
 ):
     db_nation = nation_crud.get(db=db, id=nation_id)
     if not db_nation:
@@ -58,7 +58,7 @@ def update_nation(
 
 
 @router.delete("/{nation_id}", status_code=status.HTTP_200_OK)
-def delete_nation(nation_id: int, db: Session = Depends(get_db)):
+async def delete_nation(nation_id: int, db: Session = Depends(get_db)):
     db_nation = nation_crud.get(db=db, id=nation_id)
     if not db_nation:
         raise HTTPException(

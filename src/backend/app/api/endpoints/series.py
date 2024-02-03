@@ -13,7 +13,7 @@ series_crud = CRUDBase(Series)
 
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=List[SeriesBaseSchema])
-def get_all_series(db: Session = Depends(get_db)):
+async def get_all_series(db: Session = Depends(get_db)):
     series = series_crud.get_all(db)
     if not series:
         raise HTTPException(
@@ -23,8 +23,8 @@ def get_all_series(db: Session = Depends(get_db)):
     return series
 
 
-@router.get("/{serie_id}", status_code=status.HTTP_200_OK, response_model=SeriesBaseSchema)
-def get_serie(series_id: int, db: Session = Depends(get_db)):
+@router.get("/{series_id}", status_code=status.HTTP_200_OK, response_model=SeriesBaseSchema)
+async def get_series(series_id: int, db: Session = Depends(get_db)):
     series = series_crud.get(db=db, id=series_id)
     if not series:
         raise HTTPException(
@@ -35,7 +35,7 @@ def get_serie(series_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=SeriesBaseSchema)
-def create_series(payload: SeriesBaseSchema, db: Session = Depends(get_db)):
+async def create_series(payload: SeriesBaseSchema, db: Session = Depends(get_db)):
     new_series = Series(**payload.model_dump())
     db.add(new_series)
     db.commit()
@@ -43,8 +43,8 @@ def create_series(payload: SeriesBaseSchema, db: Session = Depends(get_db)):
     return new_series
 
 
-@router.patch("/{series_id}", status_code=status.HTTP_202_ACCEPTED)
-def update_series(
+@router.put("/{series_id}", status_code=status.HTTP_202_ACCEPTED)
+async def update_series(
         series_id: int, payload: SeriesBaseSchema, db: Session = Depends(get_db)
 ):
     db_series = series_crud.get(db=db, id=series_id)
@@ -58,7 +58,7 @@ def update_series(
 
 
 @router.delete("/{series_id}", status_code=status.HTTP_200_OK)
-def delete_series(series_id: int, db: Session = Depends(get_db)):
+async def delete_series(series_id: int, db: Session = Depends(get_db)):
     db_series = series_crud.get(db=db, id=series_id)
     if not db_series:
         raise HTTPException(
@@ -67,4 +67,3 @@ def delete_series(series_id: int, db: Session = Depends(get_db)):
         )
     series_crud.remove(db=db, id=series_id)
     return {"status": "success", "message": "Item removed successfully"}
-

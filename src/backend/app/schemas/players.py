@@ -4,10 +4,9 @@ from pydantic import BaseModel, Field, ConfigDict
 
 
 # Shared properties
-class PlayerBaseSchema(BaseModel):
+class PlayerCreateSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int = None
     first_name: str = Field(max_length=100)
     last_name: str = Field(max_length=100)
     is_male: bool = Field(default=True)
@@ -18,3 +17,6 @@ class PlayerBaseSchema(BaseModel):
     nation_id: int = Field(default=None)
     club_id: int = Field(default=None)
 
+
+class PlayerBaseSchema(PlayerCreateSchema):
+    id: int = None

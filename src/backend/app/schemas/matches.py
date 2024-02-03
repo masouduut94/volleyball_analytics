@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel, ConfigDict
 
 
@@ -10,9 +8,14 @@ class MatchBaseSchema(BaseModel):
     """
     model_config = ConfigDict(from_attributes=True)
 
-    id: int = None
-
     team1_id: int
     team2_id: int
     series_id: int
     video_id: int
+
+
+class MatchCreateSchema(MatchBaseSchema):
+    """
+    Stores the information for a specific match.
+    """
+    id: int = None

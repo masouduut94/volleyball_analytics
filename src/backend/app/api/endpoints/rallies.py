@@ -23,7 +23,7 @@ POST: /rallies/
 
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=List[RallyBaseSchema])
-def get_all_rallies(db: Session = Depends(get_db)):
+async def get_all_rallies(db: Session = Depends(get_db)):
     rallies = rally_crud.get_all(db)
     if not rallies:
         raise HTTPException(
@@ -34,7 +34,7 @@ def get_all_rallies(db: Session = Depends(get_db)):
 
 
 @router.get("/{rally_id}", status_code=status.HTTP_200_OK, response_model=RallyBaseSchema)
-def get_rally(rally_id: int, db: Session = Depends(get_db)):
+async def get_rally(rally_id: int, db: Session = Depends(get_db)):
     rally = rally_crud.get(db=db, id=rally_id)
     if not rally:
         raise HTTPException(
@@ -45,7 +45,7 @@ def get_rally(rally_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=RallyBaseSchema)
-def create_rally(payload: RallyBaseSchema, db: Session = Depends(get_db)):
+async def create_rally(payload: RallyBaseSchema, db: Session = Depends(get_db)):
     new_rally = Rally(**payload.model_dump())
     db.add(new_rally)
     db.commit()
@@ -53,8 +53,8 @@ def create_rally(payload: RallyBaseSchema, db: Session = Depends(get_db)):
     return new_rally
 
 
-@router.patch("/{rally_id}", status_code=status.HTTP_202_ACCEPTED)
-def update_rally(
+@router.put("/{rally_id}", status_code=status.HTTP_202_ACCEPTED)
+async def update_rally(
         rally_id: int, payload: RallyBaseSchema, db: Session = Depends(get_db)
 ):
     db_rally = rally_crud.get(db=db, id=rally_id)
@@ -68,7 +68,7 @@ def update_rally(
 
 
 @router.delete("/{rally_id}", status_code=status.HTTP_200_OK)
-def delete_rally(rally_id: int, db: Session = Depends(get_db)):
+async def delete_rally(rally_id: int, db: Session = Depends(get_db)):
     db_rally = rally_crud.get(db=db, id=rally_id)
     if not db_rally:
         raise HTTPException(

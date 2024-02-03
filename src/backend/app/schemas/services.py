@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, ConfigDict
 
 
 # Shared properties
-class ServiceBaseSchema(BaseModel):
+class ServiceCreateSchema(BaseModel):
     """
     serving_region: indicates the place that hitter is standing right before
         tossing the ball.
@@ -13,7 +13,6 @@ class ServiceBaseSchema(BaseModel):
     """
     model_config = ConfigDict(from_attributes=True)
 
-    id: int = None
     end_frame: int = Field(default=None)
     end_index: int = Field(default=None)
     hitter_name: str = Field(default='Igor Kliuka', max_length=100)

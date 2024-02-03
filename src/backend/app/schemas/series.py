@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class SeriesBaseSchema(BaseModel):
+class SeriesCreateSchema(BaseModel):
     """
     It stores the information of tournament series.
     """
@@ -13,3 +13,7 @@ class SeriesBaseSchema(BaseModel):
     start_date: datetime = Field(default_factory=datetime.now)
     end_date: datetime = Field(default_factory=datetime.now)
     host: str = Field(default=None, max_length=100)
+
+
+class SeriesBaseSchema(SeriesCreateSchema):
+    id: int = None
