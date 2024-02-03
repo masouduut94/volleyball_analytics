@@ -66,4 +66,4 @@ async def delete_player(player_id: int, db: Session = Depends(get_db)):
             detail=f"No Player with this id: {player_id} found .....",
         )
     player_crud.remove(db=db, id=player_id)
-    return {"status": "success", "message": "Item removed successfully"}
+    return {"status": "success", "message": "item removed successfully"}

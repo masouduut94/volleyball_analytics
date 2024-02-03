@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict
 class VideoCreateSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    camera_type: Optional[str] = None
+    camera_type_id: Optional[int] = None
     path: str
 
 

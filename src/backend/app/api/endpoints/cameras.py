@@ -46,7 +46,7 @@ async def create_camera(payload: CameraBaseSchema, db: Session = Depends(get_db)
 
 @router.put("/{camera_id}", status_code=status.HTTP_202_ACCEPTED)
 async def update_camera(
-        camera_id: str, payload: CameraBaseSchema, db: Session = CameraBaseSchema
+        camera_id: str, payload: CameraBaseSchema, db: Session = Depends(get_db)
 ):
     db_camera = camera_crud.get(db=db, id=camera_id)
     if not db_camera:

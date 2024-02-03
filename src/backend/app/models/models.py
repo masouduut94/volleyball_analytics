@@ -19,7 +19,7 @@ from sqlalchemy.orm import Mapped, relationship, declared_attr
 from sqlalchemy.sql import func
 from sqlalchemy import Column, Integer, String, Text, JSON, Boolean, ForeignKey, TIMESTAMP, ForeignKeyConstraint
 
-from src.backend.app.db.engine import Base
+from src.backend.app.db.engine import Base, get_db
 
 
 class Team(Base):
@@ -52,7 +52,8 @@ class Player(Base):
     updated: Mapped[datetime] = Column(TIMESTAMP(timezone=True), default=None, onupdate=func.now())
     first_name: Mapped[str] = Column(String(200))
     last_name: Mapped[str] = Column(String(200))
-    gender: Mapped[bool] = Column(Boolean)
+    is_male: Mapped[bool] = Column(Boolean)
+    is_right_handed: Mapped[bool] = Column(Boolean)
     role: Mapped[str] = Column(String)
     age: Mapped[int] = Column(Integer)
     height: Mapped[int] = Column(Integer)
@@ -147,7 +148,7 @@ class Video(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
     created: Mapped[datetime] = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
     updated: Mapped[datetime] = Column(TIMESTAMP(timezone=True), default=None, onupdate=func.now())
-    camera_type: Mapped[int] = Column(Integer, ForeignKey('camera.id'))
+    camera_type_id: Mapped[int] = Column(Integer, ForeignKey('camera.id'))
     path: Mapped[str] = Column(String(200), nullable=False)
 
     @declared_attr

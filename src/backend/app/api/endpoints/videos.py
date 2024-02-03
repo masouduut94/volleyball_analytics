@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, status, APIRouter
 from src.backend.app.crud.base import CRUDBase
 from src.backend.app.db.engine import get_db
-from src.backend.app.models.models import Video
+from src.backend.app.models.models import Video, Camera
 from src.backend.app.schemas.videos import VideoCreateSchema, VideoBaseSchema
 
 router = APIRouter()
@@ -36,6 +36,13 @@ async def get_video(video_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=VideoBaseSchema)
 async def create_video(payload: VideoCreateSchema, db: Session = Depends(get_db)):
+    # camera = db.query(Camera).filter(Camera.id == id).first()
+    camera = db.query(Camera).get(payload.camera_type_id)
+    if not camera:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail=f"No camera with this id: {payload.camera_type_id} found. .....",
+        )
     new_video = Video(**payload.model_dump())
     db.add(new_video)
     db.commit()
