@@ -1,6 +1,6 @@
 import unittest
 
-from src.backend.app.schemas.matches import MatchBaseSchema
+from src.backend.app.schemas.players import PlayerBaseSchema
 from src.backend.app.db.engine import Base, engine, get_db
 from fastapi.testclient import TestClient
 from src.backend.app.app import app
@@ -14,7 +14,7 @@ Testing Match
 """
 
 
-class MatchTest(unittest.TestCase):
+class PlayerTest(unittest.TestCase):
     def setUp(self):
         Base.metadata.create_all(bind=engine)
         app.dependency_overrides[get_db] = get_db
@@ -25,7 +25,7 @@ class MatchTest(unittest.TestCase):
 
     def test_get_one_match(self):
         # Testing match creation and fetching for one match.
-        t = MatchBaseSchema(name='canada', is_national_match=True)
+        t = MatchBaseSchema()
         response = self.client.post("/api/matches/", json=t.model_dump())
         self.assertEqual(response.status_code, 201)
 
@@ -36,7 +36,7 @@ class MatchTest(unittest.TestCase):
 
     def test_update_match(self):
         # Testing match creation and fetching for one match.
-        t = MatchBaseSchema(name='canada', is_national_match=True)
+        t = MatchBaseSchema()
         r = self.client.post("/api/matches/", json=t.model_dump())
         t = MatchBaseSchema(**r.json())
 
@@ -49,7 +49,7 @@ class MatchTest(unittest.TestCase):
 
     def test_delete_match(self):
         # Testing match creation and fetching for one match.
-        t = MatchBaseSchema(name='canada', is_national_match=True)
+        t = MatchBaseSchema()
         r = self.client.post("/api/matches/", json=t.model_dump())
         t = MatchBaseSchema(**r.json())
 
@@ -61,8 +61,8 @@ class MatchTest(unittest.TestCase):
 
     def test_get_all_matches(self):
         # Testing match creation and fetching for multiple match.
-        t = MatchBaseSchema(name='canada', is_national_match=True)
-        e = MatchBaseSchema(name='usa', is_national_match=True)
+        t = MatchBaseSchema()
+        e = MatchBaseSchema()
         response = self.client.post(f"/api/matches/", json=e.model_dump())
         response = self.client.post(f"/api/matches/", json=t.model_dump())
 

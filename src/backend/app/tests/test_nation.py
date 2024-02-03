@@ -6,7 +6,7 @@ from src.backend.app.db.engine import Base, engine, get_db
 from src.backend.app.app import app
 
 
-class TeamTest(unittest.TestCase):
+class NationTest(unittest.TestCase):
     def setUp(self):
         Base.metadata.create_all(bind=engine)
         app.dependency_overrides[get_db] = get_db

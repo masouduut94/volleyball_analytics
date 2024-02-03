@@ -9,9 +9,8 @@ class SeriesCreateSchema(BaseModel):
     """
     model_config = ConfigDict(from_attributes=True)
 
-    id: int = None
-    start_date: datetime = Field(default_factory=datetime.now)
-    end_date: datetime = Field(default_factory=datetime.now)
+    start_date: datetime = None
+    end_date: datetime = None
     host: str = Field(default=None, max_length=100)
 
 

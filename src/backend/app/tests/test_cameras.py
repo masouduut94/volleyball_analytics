@@ -1,6 +1,6 @@
 import unittest
 
-from src.backend.app.schemas.matches import MatchBaseSchema
+from src.backend.app.schemas.cameras import CameraBaseSchema
 from src.backend.app.db.engine import Base, engine, get_db
 from fastapi.testclient import TestClient
 from src.backend.app.app import app
@@ -14,7 +14,7 @@ Testing Match
 """
 
 
-class MatchTest(unittest.TestCase):
+class CameraTest(unittest.TestCase):
     def setUp(self):
         Base.metadata.create_all(bind=engine)
         app.dependency_overrides[get_db] = get_db
@@ -25,20 +25,20 @@ class MatchTest(unittest.TestCase):
 
     def test_get_one_match(self):
         # Testing match creation and fetching for one match.
-        t = MatchBaseSchema(name='canada', is_national_match=True)
+        t = CameraBaseSchema()
         response = self.client.post("/api/matches/", json=t.model_dump())
         self.assertEqual(response.status_code, 201)
 
         match_output = response.json()
-        match_output = MatchBaseSchema(**match_output)
+        match_output = CameraBaseSchema(**match_output)
         response = self.client.get(f"/api/matches/{match_output.id}")
         self.assertEqual(response.status_code, 200)
 
     def test_update_match(self):
         # Testing match creation and fetching for one match.
-        t = MatchBaseSchema(name='canada', is_national_match=True)
+        t = CameraBaseSchema()
         r = self.client.post("/api/matches/", json=t.model_dump())
-        t = MatchBaseSchema(**r.json())
+        t = CameraBaseSchema(**r.json())
 
         t.name = 'IRAN'
         _ = self.client.put(f"/api/matches/{t.id}", json=t.model_dump())
@@ -49,9 +49,9 @@ class MatchTest(unittest.TestCase):
 
     def test_delete_match(self):
         # Testing match creation and fetching for one match.
-        t = MatchBaseSchema(name='canada', is_national_match=True)
+        t = CameraBaseSchema()
         r = self.client.post("/api/matches/", json=t.model_dump())
-        t = MatchBaseSchema(**r.json())
+        t = CameraBaseSchema()
 
         f = self.client.delete(f"/api/matches/{t.id}")
         self.assertEqual(f.status_code, 200)
@@ -61,8 +61,8 @@ class MatchTest(unittest.TestCase):
 
     def test_get_all_matches(self):
         # Testing match creation and fetching for multiple match.
-        t = MatchBaseSchema(name='canada', is_national_match=True)
-        e = MatchBaseSchema(name='usa', is_national_match=True)
+        t = CameraBaseSchema()
+        e = CameraBaseSchema()
         response = self.client.post(f"/api/matches/", json=e.model_dump())
         response = self.client.post(f"/api/matches/", json=t.model_dump())
 
