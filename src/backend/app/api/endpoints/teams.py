@@ -1,11 +1,11 @@
-from fastapi import HTTPException, status, APIRouter
+from fastapi import HTTPException, status, APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing_extensions import List
 
-from src.backend.app.api.deps import SessionDep
 from src.backend.app.crud.base import CRUDBase
+from src.backend.app.db.engine import get_db
 from src.backend.app.models.models import Team
-from src.backend.app.schemas.teams import TeamBaseSchema
+from src.backend.app.schemas.teams import TeamBaseSchema, TeamBaseCreateSchema
 
 router = APIRouter()
 
@@ -13,7 +13,7 @@ team_crud = CRUDBase(Team)
 
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=List[TeamBaseSchema])
-def get_all_teams(db: Session = SessionDep):
+def get_all_teams(db: Session = Depends(get_db)):
     teams = team_crud.get_all(db)
     if not teams:
         raise HTTPException(
@@ -24,7 +24,7 @@ def get_all_teams(db: Session = SessionDep):
 
 
 @router.get("/{team_id}", status_code=status.HTTP_200_OK, response_model=TeamBaseSchema)
-def get_team(team_id: int, db: Session = SessionDep):
+def get_team(team_id: int, db: Session = Depends(get_db)):
     team = team_crud.get(db=db, id=team_id)
     if not team:
         raise HTTPException(
@@ -35,7 +35,7 @@ def get_team(team_id: int, db: Session = SessionDep):
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=TeamBaseSchema)
-def create_team(payload: TeamBaseSchema, db: Session = SessionDep):
+def create_team(payload: TeamBaseCreateSchema, db: Session = Depends(get_db)):
     new_team = Team(**payload.model_dump())
     db.add(new_team)
     db.commit()
@@ -45,7 +45,7 @@ def create_team(payload: TeamBaseSchema, db: Session = SessionDep):
 
 @router.patch("/{team_id}", status_code=status.HTTP_202_ACCEPTED)
 def update_team(
-        team_id: int, payload: TeamBaseSchema, db: Session = TeamBaseSchema
+        team_id: int, payload: TeamBaseCreateSchema, db: Session = Depends(get_db)
 ):
     db_team = team_crud.get(db=db, id=team_id)
     if not db_team:
@@ -58,7 +58,7 @@ def update_team(
 
 
 @router.delete("/{team_id}", status_code=status.HTTP_200_OK)
-def delete_team(team_id: int, db: Session = SessionDep):
+def delete_team(team_id: int, db: Session = Depends(get_db)):
     db_team = team_crud.get(db=db, id=team_id)
     if not db_team:
         raise HTTPException(

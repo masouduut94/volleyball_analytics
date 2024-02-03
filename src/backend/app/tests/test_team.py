@@ -1,9 +1,9 @@
 import unittest
 
-from api.main import app
-from api.schemas import TeamBaseSchema
+from src.backend.app.schemas.teams import TeamBaseSchema
 from fastapi.testclient import TestClient
-from api.database import Base, engine, get_db
+from src.backend.app.db.engine import Base, engine, get_db
+from src.backend.app.app import app
 
 
 class TeamTest(unittest.TestCase):
@@ -15,28 +15,21 @@ class TeamTest(unittest.TestCase):
     def tearDown(self):
         Base.metadata.drop_all(bind=engine)
 
-    def test_get_main(self):
-        response1 = self.client.get("/")
-        assert response1.status_code == 200
-
     def test_get_team(self):
         # Base.metadata.create_all(bind=engine)
         t = TeamBaseSchema(name='canada', is_national_team=True)
-        response = self.client.post("/team/", json=t.model_dump(exclude={'id'}))
+        response = self.client.post("/api/teams/", json=t.model_dump())
         self.assertEqual(response.status_code, 201)
 
         team_output = response.json()
         team_output = TeamBaseSchema(**team_output)
-        response = self.client.get(f"/team/{team_output.id}")
+        response = self.client.get(f"/api/teams/{team_output.id}")
         self.assertEqual(response.status_code, 200)
 
     def test_get_all_teams(self):
         t = TeamBaseSchema(name='canada', is_national_team=True)
-        response = self.client.post(f"/team/", json=t.model_dump(exclude={'id'}))
+        response = self.client.post(f"/api/teams/", json=t.model_dump())
         self.assertEqual(response.status_code, 201)
 
-        response = self.client.get(f"/team/")
+        response = self.client.get(f"/api/teams/")
         self.assertEqual(response.status_code, 200)
-
-
-

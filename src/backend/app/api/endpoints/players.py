@@ -1,8 +1,8 @@
-import api.just_check.schemas as schemas
-import api.just_check.models as models
+import scripts.just_check.schemas as schemas
+import scripts.just_check.models as models
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, status, APIRouter
-from api.just_check.database import get_db
+from scripts.just_check import get_db
 
 router = APIRouter()
 

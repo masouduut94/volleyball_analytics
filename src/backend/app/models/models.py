@@ -19,7 +19,6 @@ from sqlalchemy.orm import Mapped, relationship, declared_attr
 from sqlalchemy.sql import func
 from sqlalchemy import Column, Integer, String, Text, JSON, Boolean, ForeignKey, TIMESTAMP, ForeignKeyConstraint
 
-from src.backend.app.api.deps import get_db
 from src.backend.app.db.engine import Base
 
 
@@ -157,6 +156,24 @@ class Video(Base):
 
 
 class Rally(Base):
+    """
+    Args:
+        match_id: the db id of the match that the rally belongs to
+        clip_path: The clipped video of the whole rally.
+        start_frame: denotes where exactly in the match video, the rally clip gets started from.
+        end_frame: denotes where exactly in the match video, the rally clip finishes.
+        rally_order: this shows the ordinal number of the rally in the video.
+        sets: the detected sets and their attributes.
+        spikes: the detected spikes and their attributes.
+        blocks: the detected blocks and their attributes.
+        receives: the detected receives and their attributes.
+        service: the detected services and their attributes.
+        ball_positions: the detected balls and their positioning.
+        rally_states: Denotes the output of the game state classification.
+        team1_positions: Team1 players positioning.
+        team2_positions: Team2 players positioning.
+        result: The results of the rally. scores, the referee gesture results, the reason the rally ended.
+    """
     id: Mapped[int] = Column(Integer, primary_key=True)
     created: Mapped[datetime] = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
     updated: Mapped[datetime] = Column(TIMESTAMP(timezone=True), default=None, onupdate=func.now())
@@ -164,6 +181,7 @@ class Rally(Base):
     clip_path: Mapped[str] = Column(String(200))
     start_frame: Mapped[int] = Column(Integer)
     end_frame: Mapped[int] = Column(Integer)
+    rally_order: Mapped[int] = Column(Integer)
     sets: Mapped[dict] = Column(JSON)
     spikes: Mapped[dict] = Column(JSON)
     blocks: Mapped[dict] = Column(JSON)
