@@ -1,9 +1,10 @@
-import unittest
+from pydantic import ValidationError
 
-from src.backend.app.schemas.rallies import RallyBaseSchema
-from src.backend.app.db.engine import Base, engine, get_db
-from fastapi.testclient import TestClient
-from src.backend.app.app import app
+from src.backend.app.tests.utility import UnitTestMain
+from src.backend.app.schemas import rallies
+from src.backend.app.schemas import matches
+from fastapi import status
+from datetime import datetime
 
 """
 match_id
@@ -24,59 +25,116 @@ clip_path
 """
 
 
-class RallyTest(unittest.TestCase):
-    def setUp(self):
-        Base.metadata.create_all(bind=engine)
-        app.dependency_overrides[get_db] = get_db
-        self.client = TestClient(app)
-
-    def tearDown(self):
-        Base.metadata.drop_all(bind=engine)
-
+class RallyTest(UnitTestMain):
     def test_get_one_rally(self):
         # Testing rally creation and fetching for one rally.
-        t = RallyBaseSchema(name='canada', is_national_rally=True)
-        response = self.client.post("/api/rallies/", json=t.model_dump())
-        self.assertEqual(response.status_code, 201)
+        cam = self.create_camera(angle_name='behind_1')
+        vid = self.create_video(camera_type_id=cam.id, path='ss.mp4')
+        team1 = self.create_team(name='usa')
+        team2 = self.create_team(name='canada')
+        tournament = self.create_series(host='netherlands', start_date=datetime.now(), end_date=datetime.now())
+        match = matches.MatchCreateSchema(
+            video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
+        )
+        response = self.client.post("/api/matches/", json=match.model_dump())
+        self.assertEqual(response.status_code, 201, msg="match creation error")
+        match_output = response.json()
+        match = matches.MatchBaseSchema(**match_output)
+        rally_input = rallies.RallyCreateSchema(
+            match_id=match.id,
+            start_frame=20,
+            end_frame=100,
+            order=1,
+            clip_path='/mnt/videos/clip_1.mp4'
+        )
+        response = self.client.post("/api/rallies/", json=rally_input.model_dump())
+        self.assertEqual(response.status_code, 201, msg="rally creation error")
 
         rally_output = response.json()
-        rally_output = RallyBaseSchema(**rally_output)
+        rally_output = rallies.RallyBaseSchema(**rally_output)
         response = self.client.get(f"/api/rallies/{rally_output.id}")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200, msg="the rally was not found...")
 
     def test_update_rally(self):
         # Testing rally creation and fetching for one rally.
-        t = RallyBaseSchema(name='canada', is_national_rally=True)
-        r = self.client.post("/api/rallies/", json=t.model_dump())
-        t = RallyBaseSchema(**r.json())
+        match = self.create_match()
 
-        t.name = 'IRAN'
-        _ = self.client.put(f"/api/rallies/{t.id}", json=t.model_dump())
-        r = self.client.get(f"/api/rallies/{t.id}")
-        output = r.json()
-        self.assertEqual(output['name'], t.name)
-        self.assertEqual(r.status_code, 200)
+        # Start frame must be less than end frame...
+        with self.assertRaises(ValidationError):
+            rally = self.create_rally(
+                match=match,
+                clip_path='/mnt/disk1/video1.mp4',
+                start_frame=500,
+                end_frame=200,
+                order=1
+            )
+
+        rally = self.create_rally(
+            match=match,
+            clip_path='/mnt/disk1/video1.mp4',
+            start_frame=100,
+            end_frame=200,
+            order=1
+        )
+
+        rally.clip_path = '/mnt/video222222.webm'
+        _ = self.client.put(f"/api/rallies/{rally.id}", json=rally.model_dump())
+        resp = self.client.get(f"/api/rallies/{rally.id}")
+        new_rally = rallies.RallyBaseSchema(**resp.json())
+        self.assertEqual(new_rally.clip_path, rally.clip_path, msg="do not match")
+        self.assertEqual(resp.status_code, 200)
+
+        new_rally.end_frame = new_rally.start_frame - 20
+        resp = self.client.put(f"/api/rallies/{new_rally.id}", json=new_rally.model_dump())
+        self.assertEqual(resp.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
     def test_delete_rally(self):
-        # Testing rally creation and fetching for one rally.
-        t = RallyBaseSchema(name='canada', is_national_rally=True)
-        r = self.client.post("/api/rallies/", json=t.model_dump())
-        t = RallyBaseSchema(**r.json())
+        match = self.create_match()
+        rally = self.create_rally(
+            match=match,
+            clip_path='/mnt/disk1/video1.mp4',
+            start_frame=100,
+            end_frame=200,
+            order=1
+        )
 
-        f = self.client.delete(f"/api/rallies/{t.id}")
+        f = self.client.delete(f"/api/rallies/{rally.id}")
         self.assertEqual(f.status_code, 200)
 
-        r = self.client.get(f"/api/rallies/{t.id}")
+        r = self.client.get(f"/api/rallies/{rally.id}")
         self.assertEqual(r.status_code, 404)
 
-    def test_get_all_rallies(self):
+    def test_get_all_rallies_check_rally_orders_in_output(self):
         # Testing rally creation and fetching for multiple rally.
-        t = RallyBaseSchema(name='canada', is_national_rally=True)
-        e = RallyBaseSchema(name='usa', is_national_rally=True)
-        response = self.client.post(f"/api/rallies/", json=e.model_dump())
-        response = self.client.post(f"/api/rallies/", json=t.model_dump())
+        # Test rally order
+        match = self.create_match()
+        rally1 = self.create_rally(
+            match=match,
+            clip_path='/mnt/disk1/video1.mp4',
+            start_frame=100,
+            end_frame=200,
+            order=1
+        )
+
+        rally3 = self.create_rally(
+            match=match,
+            clip_path='/mnt/disk1/video1.mp4',
+            start_frame=500,
+            end_frame=1000,
+            order=3
+        )
+
+        rally2 = self.create_rally(
+            match=match,
+            clip_path='/mnt/disk1/video1.mp4',
+            start_frame=250,
+            end_frame=400,
+            order=2
+        )
 
         response = self.client.get(f"/api/rallies/")
         js = response.json()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(js), 2)
+        self.assertEqual(len(js), 3)
+        a, b, c = js
+        self.assertTrue(a['order'] < b['order'] < c['order'])

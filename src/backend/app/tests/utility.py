@@ -1,11 +1,11 @@
 import unittest
-
-from fastapi.encoders import jsonable_encoder as jsonify
-
+from datetime import datetime
 from src.backend.app.app import app
 from fastapi.testclient import TestClient
+from fastapi.encoders import jsonable_encoder as jsonify
+
 from src.backend.app.db.engine import engine, Base, get_db
-from src.backend.app.schemas import teams, videos, series, players, nations, cameras, services, rallies
+from src.backend.app.schemas import teams, videos, series, players, nations, cameras, services, matches, rallies
 
 
 class UnitTestMain(unittest.TestCase):
@@ -53,8 +53,23 @@ class UnitTestMain(unittest.TestCase):
         nation = nations.NationBaseSchema(**r.json())
         return nation
 
-    def create_rallies(self, **kwargs) -> rallies.RallyBaseSchema:
-        rally = rallies.RallyCreateSchema(**kwargs)
+    def create_rally(self, match: matches.MatchBaseSchema, **kwargs) -> rallies.RallyBaseSchema:
+        rally = rallies.RallyCreateSchema(match_id=match.id, **kwargs)
         r = self.client.post("/api/rallies/", json=rally.model_dump())
         rally = rallies.RallyBaseSchema(**r.json())
         return rally
+
+    def create_match(self):
+        cam = self.create_camera(angle_name='behind_1')
+        vid = self.create_video(camera_type_id=cam.id, path='ss.mp4')
+        team1 = self.create_team(name='usa')
+        team2 = self.create_team(name='canada')
+        tournament = self.create_series(host='netherlands', start_date=datetime.now(), end_date=datetime.now())
+        match = matches.MatchCreateSchema(
+            video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
+        )
+        response = self.client.post("/api/matches/", json=match.model_dump())
+        self.assertEqual(response.status_code, 201, msg="match creation error")
+        match_output = response.json()
+        match = matches.MatchBaseSchema(**match_output)
+        return match

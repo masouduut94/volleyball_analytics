@@ -8,28 +8,18 @@ from src.backend.app.models.models import Rally
 from src.backend.app.schemas.rallies import RallyBaseSchema
 
 router = APIRouter()
-
 rally_crud = CRUDBase(Rally)
-
-"""
-GET: /rallies/
-GET | POST | PATCH | DELETE: /rallies/{rally_id} 
-
-POST: /rallies/
-
-
-
-"""
 
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=List[RallyBaseSchema])
 async def get_all_rallies(db: Session = Depends(get_db)):
-    rallies = rally_crud.get_all(db)
+    rallies: List[Rally] = rally_crud.get_all(db)
     if not rallies:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No Rally found.."
         )
+    rallies = sorted(rallies, key=lambda x: x.order)
     return rallies
 
 
@@ -47,6 +37,9 @@ async def get_rally(rally_id: int, db: Session = Depends(get_db)):
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=RallyBaseSchema)
 async def create_rally(payload: RallyBaseSchema, db: Session = Depends(get_db)):
     new_rally = Rally(**payload.model_dump())
+    if new_rally.end_frame < new_rally.start_frame:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                            detail="rally start frame should be less than end frame...")
     db.add(new_rally)
     db.commit()
     db.refresh(new_rally)
@@ -63,6 +56,9 @@ async def update_rally(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No Rally with this id: {rally_id} found .....",
         )
+    if payload.end_frame < payload.start_frame:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                            detail="rally start frame should be less than end frame...")
     updated_rally = rally_crud.update(db=db, db_obj=db_rally, obj_in=payload)
     return updated_rally
 
@@ -77,4 +73,3 @@ async def delete_rally(rally_id: int, db: Session = Depends(get_db)):
         )
     rally_crud.remove(db=db, id=rally_id)
     return {"status": "success", "message": "Item removed successfully"}
-

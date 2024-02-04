@@ -182,7 +182,7 @@ class Rally(Base):
     clip_path: Mapped[str] = Column(String(200))
     start_frame: Mapped[int] = Column(Integer)
     end_frame: Mapped[int] = Column(Integer)
-    rally_order: Mapped[int] = Column(Integer)
+    order: Mapped[int] = Column(Integer, unique=True)
     sets: Mapped[dict] = Column(JSON)
     spikes: Mapped[dict] = Column(JSON)
     blocks: Mapped[dict] = Column(JSON)
