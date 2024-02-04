@@ -1,5 +1,5 @@
 from datetime import datetime
-from src.backend.app.tests.utility import UnitTestMain
+from src.backend.app.tests.utility import VBTest
 from src.backend.app.schemas.series import SeriesBaseSchema, SeriesCreateSchema
 from fastapi.encoders import jsonable_encoder as jsonify
 
@@ -11,7 +11,7 @@ Testing Match
 """
 
 
-class SeriesTest(UnitTestMain):
+class SeriesTest(VBTest):
 
     def test_get_one_series(self):
         # Testing series creation and fetching for one series.

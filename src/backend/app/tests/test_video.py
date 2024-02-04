@@ -1,9 +1,9 @@
 from src.backend.app.schemas.videos import VideoBaseSchema
-from src.backend.app.tests.utility import UnitTestMain
+from src.backend.app.tests.utility import VBTest
 from src.backend.app.schemas.cameras import CameraCreateSchema, CameraBaseSchema
 
 
-class VideoTest(UnitTestMain):
+class VideoTest(VBTest):
     def test_post_video_with_no_camera_inserted(self):
         # Testing video creation and fetching for one video.
         v = VideoBaseSchema(camera_type=1, path='/videos/file.mp4')

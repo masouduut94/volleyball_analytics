@@ -1,6 +1,6 @@
 from pydantic import ValidationError
 
-from src.backend.app.tests.utility import UnitTestMain
+from src.backend.app.tests.utility import VBTest
 from src.backend.app.schemas import rallies
 from src.backend.app.schemas import matches
 from fastapi import status
@@ -25,7 +25,7 @@ clip_path
 """
 
 
-class RallyTest(UnitTestMain):
+class RallyTest(VBTest):
     def test_get_one_rally(self):
         # Testing rally creation and fetching for one rally.
         cam = self.create_camera(angle_name='behind_1')

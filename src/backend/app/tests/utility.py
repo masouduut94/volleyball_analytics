@@ -8,7 +8,7 @@ from src.backend.app.db.engine import engine, Base, get_db
 from src.backend.app.schemas import teams, videos, series, players, nations, cameras, services, matches, rallies
 
 
-class UnitTestMain(unittest.TestCase):
+class VBTest(unittest.TestCase):
     def setUp(self):
         Base.metadata.create_all(bind=engine)
         app.dependency_overrides[get_db] = get_db

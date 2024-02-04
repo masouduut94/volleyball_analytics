@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from src.backend.app.schemas import matches
-from src.backend.app.tests.utility import UnitTestMain
+from src.backend.app.tests.utility import VBTest
 
 """
 Testing Match
@@ -12,7 +12,7 @@ Testing Match
 """
 
 
-class MatchTest(UnitTestMain):
+class MatchTest(VBTest):
     def test_post_get_match(self):
         cam = self.create_camera(angle_name='behind_1')
         vid = self.create_video(camera_type_id=cam.id, path='ss.mp4')

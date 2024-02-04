@@ -1,8 +1,8 @@
 from src.backend.app.schemas.cameras import CameraBaseSchema, CameraCreateSchema
-from src.backend.app.tests.utility import UnitTestMain
+from src.backend.app.tests.utility import VBTest
 
 
-class CameraTest(UnitTestMain):
+class CameraTest(VBTest):
     def test_get_one_camera(self):
         # Testing camera creation and fetching for one camera.
         t = CameraCreateSchema(angle_name='behind_team1')

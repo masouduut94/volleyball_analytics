@@ -1,8 +1,8 @@
 from src.backend.app.schemas.nations import NationBaseSchema
-from src.backend.app.tests.utility import UnitTestMain
+from src.backend.app.tests.utility import VBTest
 
 
-class NationTest(UnitTestMain):
+class NationTest(VBTest):
     def test_get_one_team(self):
         # Testing team creation and fetching for one team.
         t = NationBaseSchema(name='canada', display_name="canada")
