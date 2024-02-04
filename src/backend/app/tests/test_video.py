@@ -1,21 +1,9 @@
-import unittest
-
-from src.backend.app.schemas.cameras import CameraCreateSchema, CameraBaseSchema
 from src.backend.app.schemas.videos import VideoBaseSchema
-from fastapi.testclient import TestClient
-from src.backend.app.db.engine import Base, engine, get_db
-from src.backend.app.app import app
+from src.backend.app.tests.utility import UnitTestMain
+from src.backend.app.schemas.cameras import CameraCreateSchema, CameraBaseSchema
 
 
-class VideoTest(unittest.TestCase):
-    def setUp(self):
-        Base.metadata.create_all(bind=engine)
-        app.dependency_overrides[get_db] = get_db
-        self.client = TestClient(app)
-
-    def tearDown(self):
-        Base.metadata.drop_all(bind=engine)
-
+class VideoTest(UnitTestMain):
     def test_post_video_with_no_camera_inserted(self):
         # Testing video creation and fetching for one video.
         v = VideoBaseSchema(camera_type=1, path='/videos/file.mp4')

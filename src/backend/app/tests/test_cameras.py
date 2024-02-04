@@ -1,20 +1,8 @@
-import unittest
-
 from src.backend.app.schemas.cameras import CameraBaseSchema, CameraCreateSchema
-from src.backend.app.db.engine import Base, engine, get_db
-from fastapi.testclient import TestClient
-from src.backend.app.app import app
+from src.backend.app.tests.utility import UnitTestMain
 
 
-class CameraTest(unittest.TestCase):
-    def setUp(self):
-        Base.metadata.create_all(bind=engine)
-        app.dependency_overrides[get_db] = get_db
-        self.client = TestClient(app)
-
-    def tearDown(self):
-        Base.metadata.drop_all(bind=engine)
-
+class CameraTest(UnitTestMain):
     def test_get_one_camera(self):
         # Testing camera creation and fetching for one camera.
         t = CameraCreateSchema(angle_name='behind_team1')

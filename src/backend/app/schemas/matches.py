@@ -2,7 +2,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 # Properties to receive on item update
-class MatchBaseSchema(BaseModel):
+class MatchCreateSchema(BaseModel):
     """
     Stores the information for a specific match.
     """
@@ -14,7 +14,7 @@ class MatchBaseSchema(BaseModel):
     video_id: int
 
 
-class MatchCreateSchema(MatchBaseSchema):
+class MatchBaseSchema(MatchCreateSchema):
     """
     Stores the information for a specific match.
     """

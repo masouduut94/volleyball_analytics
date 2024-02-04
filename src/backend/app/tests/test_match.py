@@ -1,9 +1,7 @@
-import unittest
+from datetime import datetime
 
-from src.backend.app.schemas.matches import MatchBaseSchema
-from src.backend.app.db.engine import Base, engine, get_db
-from fastapi.testclient import TestClient
-from src.backend.app.app import app
+from src.backend.app.schemas import matches
+from src.backend.app.tests.utility import UnitTestMain
 
 """
 Testing Match
@@ -14,59 +12,91 @@ Testing Match
 """
 
 
-class MatchTest(unittest.TestCase):
-    def setUp(self):
-        Base.metadata.create_all(bind=engine)
-        app.dependency_overrides[get_db] = get_db
-        self.client = TestClient(app)
-
-    def tearDown(self):
-        Base.metadata.drop_all(bind=engine)
-
-    def test_get_one_match(self):
+class MatchTest(UnitTestMain):
+    def test_post_get_match(self):
+        cam = self.create_camera(angle_name='behind_1')
+        vid = self.create_video(camera_type_id=cam.id, path='ss.mp4')
+        team1 = self.create_team(name='usa')
+        team2 = self.create_team(name='canada')
+        tournament = self.create_series(host='netherlands', start_date=datetime.now(), end_date=datetime.now())
+        match = matches.MatchCreateSchema(
+            video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
+        )
         # Testing match creation and fetching for one match.
-        t = MatchBaseSchema(name='canada', is_national_match=True)
-        response = self.client.post("/api/matches/", json=t.model_dump())
+        response = self.client.post("/api/matches/", json=match.model_dump())
         self.assertEqual(response.status_code, 201)
 
         match_output = response.json()
-        match_output = MatchBaseSchema(**match_output)
+        match_output = matches.MatchBaseSchema(**match_output)
         response = self.client.get(f"/api/matches/{match_output.id}")
         self.assertEqual(response.status_code, 200)
 
-    def test_update_match(self):
-        # Testing match creation and fetching for one match.
-        t = MatchBaseSchema(name='canada', is_national_match=True)
-        r = self.client.post("/api/matches/", json=t.model_dump())
-        t = MatchBaseSchema(**r.json())
-
-        t.name = 'IRAN'
-        _ = self.client.put(f"/api/matches/{t.id}", json=t.model_dump())
-        r = self.client.get(f"/api/matches/{t.id}")
-        output = r.json()
-        self.assertEqual(output['name'], t.name)
-        self.assertEqual(r.status_code, 200)
-
-    def test_delete_match(self):
-        # Testing match creation and fetching for one match.
-        t = MatchBaseSchema(name='canada', is_national_match=True)
-        r = self.client.post("/api/matches/", json=t.model_dump())
-        t = MatchBaseSchema(**r.json())
-
-        f = self.client.delete(f"/api/matches/{t.id}")
-        self.assertEqual(f.status_code, 200)
-
-        r = self.client.get(f"/api/matches/{t.id}")
-        self.assertEqual(r.status_code, 404)
-
     def test_get_all_matches(self):
         # Testing match creation and fetching for multiple match.
-        t = MatchBaseSchema(name='canada', is_national_match=True)
-        e = MatchBaseSchema(name='usa', is_national_match=True)
-        response = self.client.post(f"/api/matches/", json=e.model_dump())
-        response = self.client.post(f"/api/matches/", json=t.model_dump())
+        cam = self.create_camera(angle_name='behind_1')
+        vid = self.create_video(camera_type_id=cam.id, path='ss.mp4')
+        team1 = self.create_team(name='usa')
+        team2 = self.create_team(name='canada')
+        tournament = self.create_series(host='netherlands', start_date=datetime.now(), end_date=datetime.now())
+        match1 = matches.MatchCreateSchema(
+            video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
+        )
+
+        cam = self.create_camera(angle_name='behind_1')
+        vid = self.create_video(camera_type_id=cam.id, path='22.mp4')
+        team1 = self.create_team(name='iran')
+        team2 = self.create_team(name='china')
+        tournament = self.create_series(host='germany', start_date=datetime.now(), end_date=datetime.now())
+        match2 = matches.MatchCreateSchema(
+            video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
+        )
+
+        _ = self.client.post(f"/api/matches/", json=match1.model_dump())
+        _ = self.client.post(f"/api/matches/", json=match2.model_dump())
 
         response = self.client.get(f"/api/matches/")
         js = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(js), 2)
+
+    def test_update_match(self):
+        # Testing match creation and fetching for one match.
+        cam = self.create_camera(angle_name='behind_1')
+        vid = self.create_video(camera_type_id=cam.id, path='ss.mp4')
+        team1 = self.create_team(name='usa')
+        team2 = self.create_team(name='canada')
+        tournament = self.create_series(host='netherlands', start_date=datetime.now(), end_date=datetime.now())
+        match = matches.MatchCreateSchema(
+            video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
+        )
+        r = self.client.post("/api/matches/", json=match.model_dump())
+        match = matches.MatchBaseSchema(**r.json())
+
+        match.team2_id = team1.id
+        _ = self.client.put(f"/api/matches/{match.id}", json=match.model_dump())
+        r = self.client.get(f"/api/matches/{match.id}")
+        output = matches.MatchBaseSchema(**r.json())
+        self.assertEqual(output.team2_id, team1.id)
+        self.assertEqual(r.status_code, 200)
+
+    def test_delete_match(self):
+        # Testing match creation and fetching for one match.
+        cam = self.create_camera(angle_name='behind_1')
+        vid = self.create_video(camera_type_id=cam.id, path='ss.mp4')
+        team1 = self.create_team(name='usa')
+        team2 = self.create_team(name='canada')
+        tournament = self.create_series(host='netherlands', start_date=datetime.now(), end_date=datetime.now())
+        match = matches.MatchCreateSchema(
+            video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
+        )
+        r = self.client.post("/api/matches/", json=match.model_dump())
+        match = matches.MatchBaseSchema(**r.json())
+
+        f = self.client.delete(f"/api/matches/{match.id}")
+        self.assertEqual(f.status_code, 200)
+
+        r = self.client.get(f"/api/matches/{match.id}")
+        self.assertEqual(r.status_code, 404)
+
+    def test_get_rallies(self):
+        pass

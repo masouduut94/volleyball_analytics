@@ -1,20 +1,8 @@
-import unittest
-
 from src.backend.app.schemas.nations import NationBaseSchema
-from fastapi.testclient import TestClient
-from src.backend.app.db.engine import Base, engine, get_db
-from src.backend.app.app import app
+from src.backend.app.tests.utility import UnitTestMain
 
 
-class NationTest(unittest.TestCase):
-    def setUp(self):
-        Base.metadata.create_all(bind=engine)
-        app.dependency_overrides[get_db] = get_db
-        self.client = TestClient(app)
-
-    def tearDown(self):
-        Base.metadata.drop_all(bind=engine)
-
+class NationTest(UnitTestMain):
     def test_get_one_team(self):
         # Testing team creation and fetching for one team.
         t = NationBaseSchema(name='canada', display_name="canada")

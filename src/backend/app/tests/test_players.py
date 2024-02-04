@@ -1,16 +1,22 @@
 import unittest
 
-from src.backend.app.schemas.players import PlayerBaseSchema
+from src.backend.app.schemas.players import PlayerBaseSchema, PlayerCreateSchema
+from src.backend.app.schemas import teams, nations
 from src.backend.app.db.engine import Base, engine, get_db
 from fastapi.testclient import TestClient
 from src.backend.app.app import app
 
 """
-Testing Match
-    team1_id
-    team2_id
-    series_id
-    video_id
+Testing Players
+first_name
+last_name
+is_male
+is_right_handed
+role
+height
+weight
+nation_id
+club_id
 """
 
 
@@ -20,53 +26,80 @@ class PlayerTest(unittest.TestCase):
         app.dependency_overrides[get_db] = get_db
         self.client = TestClient(app)
 
+    def create_team(self) -> teams.TeamCreateSchema:
+        team = teams.TeamCreateSchema(name='USA national team', is_national_team=True)
+        r = self.client.post('/api/teams/', json=team.model_dump())
+        team = teams.TeamBaseSchema(**r.json())
+        return team
+
+    def create_nation(self) -> nations.NationBaseSchema:
+        nation = nations.NationCreateSchema(name='United States of America', display_name='USA')
+        r = self.client.post('/api/nations/', json=nation.model_dump())
+        nation = nations.NationBaseSchema(**r.json())
+        return nation
+
     def tearDown(self):
         Base.metadata.drop_all(bind=engine)
 
-    def test_get_one_match(self):
-        # Testing match creation and fetching for one match.
-        t = MatchBaseSchema()
-        response = self.client.post("/api/matches/", json=t.model_dump())
+    def test_get_one_player(self):
+        # Testing player creation and fetching for one player.
+        nation = self.create_nation()
+        team = self.create_team()
+        player = PlayerCreateSchema(first_name='Benjamin', last_name='Patch', role='OH', height=202, weight=84,
+                                    nation_id=nation.id, team_id=team.id)
+        response = self.client.post("/api/players/", json=player.model_dump())
         self.assertEqual(response.status_code, 201)
 
-        match_output = response.json()
-        match_output = MatchBaseSchema(**match_output)
-        response = self.client.get(f"/api/matches/{match_output.id}")
+        player_output = response.json()
+        player_output = PlayerBaseSchema(**player_output)
+        response = self.client.get(f"/api/players/{player_output.id}")
         self.assertEqual(response.status_code, 200)
 
-    def test_update_match(self):
-        # Testing match creation and fetching for one match.
-        t = MatchBaseSchema()
-        r = self.client.post("/api/matches/", json=t.model_dump())
-        t = MatchBaseSchema(**r.json())
+    def test_get_all_players(self):
+        # Testing player creation and fetching for multiple player.
+        nation = self.create_nation()
+        team = self.create_team()
+        benjamin = PlayerCreateSchema(first_name='Benjamin', last_name='Patch', role='OH', height=202, weight=84,
+                                      nation_id=nation.id, team_id=team.id)
+        tony = PlayerCreateSchema(first_name='Tony', last_name='Defalco', role='OH', height=202, weight=84,
+                                  nation_id=nation.id, team_id=team.id)
 
-        t.name = 'IRAN'
-        _ = self.client.put(f"/api/matches/{t.id}", json=t.model_dump())
-        r = self.client.get(f"/api/matches/{t.id}")
-        output = r.json()
-        self.assertEqual(output['name'], t.name)
-        self.assertEqual(r.status_code, 200)
+        _ = self.client.post(f"/api/players/", json=benjamin.model_dump())
+        _ = self.client.post(f"/api/players/", json=tony.model_dump())
 
-    def test_delete_match(self):
-        # Testing match creation and fetching for one match.
-        t = MatchBaseSchema()
-        r = self.client.post("/api/matches/", json=t.model_dump())
-        t = MatchBaseSchema(**r.json())
-
-        f = self.client.delete(f"/api/matches/{t.id}")
-        self.assertEqual(f.status_code, 200)
-
-        r = self.client.get(f"/api/matches/{t.id}")
-        self.assertEqual(r.status_code, 404)
-
-    def test_get_all_matches(self):
-        # Testing match creation and fetching for multiple match.
-        t = MatchBaseSchema()
-        e = MatchBaseSchema()
-        response = self.client.post(f"/api/matches/", json=e.model_dump())
-        response = self.client.post(f"/api/matches/", json=t.model_dump())
-
-        response = self.client.get(f"/api/matches/")
+        response = self.client.get(f"/api/players/")
         js = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(js), 2)
+
+    def test_update_player(self):
+        # Testing player creation and fetching for one player.
+        nation = self.create_nation()
+        team = self.create_team()
+        player = PlayerCreateSchema(first_name='Benjamin', last_name='Patch', role='OH', height=202, weight=84,
+                                    nation_id=nation.id, team_id=team.id)
+        resp = self.client.post("/api/players/", json=player.model_dump())
+        player = PlayerBaseSchema(**resp.json())
+
+        player.first_name = 'Tony'
+        player.last_name = 'Defalco'
+        _ = self.client.put(f"/api/players/{player.id}", json=player.model_dump())
+        resp = self.client.get(f"/api/players/{player.id}")
+        output = resp.json()
+        self.assertEqual(output['first_name'], player.first_name)
+        self.assertEqual(resp.status_code, 200)
+
+    def test_delete_player(self):
+        # Testing player creation and fetching for one player.
+        nation = self.create_nation()
+        team = self.create_team()
+        player = PlayerCreateSchema(first_name='Benjamin', last_name='Patch', role='OH', height=202, weight=84,
+                                    nation_id=nation.id, team_id=team.id)
+        resp = self.client.post("/api/players/", json=player.model_dump())
+        player = PlayerBaseSchema(**resp.json())
+
+        f = self.client.delete(f"/api/players/{player.id}")
+        self.assertEqual(f.status_code, 200)
+
+        resp = self.client.get(f"/api/players/{player.id}")
+        self.assertEqual(resp.status_code, 404)
