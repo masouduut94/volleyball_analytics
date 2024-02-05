@@ -6,24 +6,6 @@ from src.backend.app.schemas import matches
 from fastapi import status
 from datetime import datetime
 
-"""
-match_id
-sets
-spikes
-blocks
-receives
-service
-ball_positions
-team1_positions
-team2_positions
-rally_states
-result
-start_frame
-end_frame
-clip_path
-
-"""
-
 
 class RallyTest(VBTest):
     def test_get_one_rally(self):

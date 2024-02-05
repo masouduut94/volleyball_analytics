@@ -10,6 +10,23 @@ class VideoTest(VBTest):
         response = self.client.post("/api/videos/", json=v.model_dump())
         self.assertEqual(response.status_code, 406)
 
+    def test_get_all_videos(self):
+        # Testing video creation and fetching for multiple video.
+        c = CameraCreateSchema(angle_name="behind_team_1")
+        response = self.client.post("/api/cameras/", json=c.model_dump())
+        c = CameraBaseSchema(**response.json())
+
+        v1 = VideoBaseSchema(camera_type_id=c.id, path='/videos/file.mp4')
+        v2 = VideoBaseSchema(camera_type_id=c.id, path='/videos/file1.mp4')
+
+        response = self.client.post(f"/api/videos/", json=v1.model_dump())
+        response = self.client.post(f"/api/videos/", json=v2.model_dump())
+
+        response = self.client.get(f"/api/videos/")
+        js = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(js), 2)
+
     def test_get_one_video(self):
         # Testing video creation and fetching for one video.
         c = CameraCreateSchema(angle_name="behind_team_1")
@@ -58,19 +75,3 @@ class VideoTest(VBTest):
         r = self.client.get(f"/api/videos/{v.id}")
         self.assertEqual(r.status_code, 404)
 
-    def test_get_all_videos(self):
-        # Testing video creation and fetching for multiple video.
-        c = CameraCreateSchema(angle_name="behind_team_1")
-        response = self.client.post("/api/cameras/", json=c.model_dump())
-        c = CameraBaseSchema(**response.json())
-
-        v1 = VideoBaseSchema(camera_type_id=c.id, path='/videos/file.mp4')
-        v2 = VideoBaseSchema(camera_type_id=c.id, path='/videos/file1.mp4')
-
-        response = self.client.post(f"/api/videos/", json=v1.model_dump())
-        response = self.client.post(f"/api/videos/", json=v2.model_dump())
-
-        response = self.client.get(f"/api/videos/")
-        js = response.json()
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(js), 2)

@@ -14,6 +14,18 @@ class TeamTest(VBTest):
         response = self.client.get(f"/api/teams/{team_output.id}")
         self.assertEqual(response.status_code, 200)
 
+    def test_get_all_teams(self):
+        # Testing team creation and fetching for multiple team.
+        t = TeamBaseSchema(name='canada', is_national_team=True)
+        e = TeamBaseSchema(name='usa', is_national_team=True)
+        response = self.client.post(f"/api/teams/", json=e.model_dump())
+        response = self.client.post(f"/api/teams/", json=t.model_dump())
+
+        response = self.client.get(f"/api/teams/")
+        js = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(js), 2)
+
     def test_update_team(self):
         # Testing team creation and fetching for one team.
         t = TeamBaseSchema(name='canada', is_national_team=True)
@@ -38,15 +50,3 @@ class TeamTest(VBTest):
 
         r = self.client.get(f"/api/teams/{t.id}")
         self.assertEqual(r.status_code, 404)
-
-    def test_get_all_teams(self):
-        # Testing team creation and fetching for multiple team.
-        t = TeamBaseSchema(name='canada', is_national_team=True)
-        e = TeamBaseSchema(name='usa', is_national_team=True)
-        response = self.client.post(f"/api/teams/", json=e.model_dump())
-        response = self.client.post(f"/api/teams/", json=t.model_dump())
-
-        response = self.client.get(f"/api/teams/")
-        js = response.json()
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(js), 2)

@@ -3,14 +3,6 @@ from datetime import datetime
 from src.backend.app.schemas import matches
 from src.backend.app.tests.utility import VBTest
 
-"""
-Testing Match
-    team1_id
-    team2_id
-    series_id
-    video_id
-"""
-
 
 class MatchTest(VBTest):
     def test_post_get_match(self):
@@ -97,6 +89,3 @@ class MatchTest(VBTest):
 
         r = self.client.get(f"/api/matches/{match.id}")
         self.assertEqual(r.status_code, 404)
-
-    def test_get_rallies(self):
-        pass

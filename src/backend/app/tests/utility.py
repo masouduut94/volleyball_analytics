@@ -47,7 +47,7 @@ class VBTest(unittest.TestCase):
         video = videos.VideoBaseSchema(**r.json())
         return video
 
-    def create_nations(self, **kwargs) -> nations.NationBaseSchema:
+    def create_nation(self, **kwargs) -> nations.NationBaseSchema:
         nation = nations.NationCreateSchema(**kwargs)
         r = self.client.post('/api/nations/', json=nation.model_dump())
         nation = nations.NationBaseSchema(**r.json())
