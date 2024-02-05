@@ -24,7 +24,7 @@ class RallyCreateSchema(BaseModel):
     ball_positions: Dict[int, Dict[str, List[int | float]]] = Field(default={})
     team1_positions: dict = Field(default={})
     team2_positions: dict = Field(default={})
-    order: int
+    order: int = Field(gt=-1)
     rally_states: str = Field(default="")
     result: dict = Field(default={})
     start_frame: int

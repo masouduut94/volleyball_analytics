@@ -113,7 +113,7 @@ class RallyTest(VBTest):
             clip_path='/mnt/disk1/video1.mp4',
             start_frame=100,
             end_frame=200,
-            order=1
+            order=0
         )
 
         rally3 = self.create_rally(
@@ -121,7 +121,7 @@ class RallyTest(VBTest):
             clip_path='/mnt/disk1/video1.mp4',
             start_frame=500,
             end_frame=1000,
-            order=3
+            order=2
         )
 
         rally2 = self.create_rally(
@@ -129,12 +129,23 @@ class RallyTest(VBTest):
             clip_path='/mnt/disk1/video1.mp4',
             start_frame=250,
             end_frame=400,
-            order=2
+            order=1
         )
 
-        response = self.client.get(f"/api/rallies/")
-        js = response.json()
-        self.assertEqual(response.status_code, 200)
+        # test if the outputs come in order of occurrence in game...
+        resp = self.client.get(f"/api/rallies/")
+        js = resp.json()
+        self.assertEqual(resp.status_code, 200)
         self.assertEqual(len(js), 3)
         a, b, c = js
         self.assertTrue(a['order'] < b['order'] < c['order'])
+
+        # check if we retrieve the sorted rallies in the matches/rallies endpoint.
+        resp = self.client.get(f"/api/matches/{match.id}/rallies/")
+        js = resp.json()
+        a, b, c = js
+        self.assertTrue(a['order'] < b['order'] < c['order'])
+
+        resp = self.client.get(f"/api/matches/{match.id}/rallies/{a['order']}")
+        rally_with_order = rallies.RallyBaseSchema(**resp.json())
+        self.assertEqual(rally_with_order.start_frame, a['start_frame'])
