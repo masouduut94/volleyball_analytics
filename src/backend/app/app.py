@@ -9,9 +9,9 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 
-@app.get("/api/healthchecker")
+@app.get("/api/check")
 def root():
-    return {"message": "The API is LIVE!!"}
+    return {"message": "API is ok."}
 
 
 app.include_router(cameras.router, prefix="/api/cameras", tags=["cameras"])

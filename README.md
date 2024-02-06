@@ -6,6 +6,7 @@ Sports Data Analytics.
 # tasks done:
 
 1. volleyball actions/objects detection :
+
 - sets
 - spikes
 - blocks
@@ -13,21 +14,25 @@ Sports Data Analytics.
 - ball
 
 2. volleyball game-state detection:
+
 - in-play scenes
 - no-play scenes
 - service scenes
 
 3. Integrated the project with DB.
 
-
 # Todo:
 
 ## Video Analysis
+
 - [ ] Setter sets distribution.
 - [ ] Ball trajectories for:
-- - [ ] sets
-- - [ ] receives
-- - [ ] serves
+-
+    - [ ] sets
+-
+    - [ ] receives
+-
+    - [ ] serves
 - [ ] receives distribution for setters.
 - [ ] spike zones and distributions.
 - [ ] blocks and sets and how they are related with successful spikes.
@@ -35,24 +40,31 @@ Sports Data Analytics.
 - [ ] Objects Visualizations
 - [ ] Find bounce points.
 
-
 ## ML:
+
 - [ ] Try Intel OpenVino...
 - [ ] Add object detection results to the DB.
 - [ ] Use batch prediction for 30 frames.
 - [ ] Add ball detection and its results to DB.
 
-
 ## BackEnd:
 
 - Integrate video clipping:
-- - [x] Add AI-based video-clipper.
-- - [x] add DB integration for video storage.
-- - [ ] Add RabbitMQ for job scheduling.
-- - [ ] Integrate it with flask for backend processes.
-- - [ ] Integrate FastAPI for API calls.
-- - [ ] Work with decord for faster video reading/writing.
-- - https://github.com/dmlc/decord
+-
+    - [x] Add AI-based video-clipper.
+-
+    - [x] add DB integration for video storage.
+-
+    - [ ] Add RabbitMQ for job scheduling.
+-
+    - [ ] Integrate it with flask for backend processes.
+-
+    - [ ] Integrate FastAPI for API calls.
+-
+    - [ ] Work with decord for faster video reading/writing.
+-
+    - https://github.com/dmlc/decord
+
 # Readme file:
 
 - [ ] Add datasets ...
@@ -61,7 +73,7 @@ Sports Data Analytics.
 - [ ] Add gif from game-state detection model.
 - [ ] Add gif from volleyball objects detection model.
 - [ ] Add gif from volleyball ball segmentation model.
-- [ ] Add descriptions about accuracy/recall/ ... 
+- [ ] Add descriptions about accuracy/recall/ ...
 - [ ] Add description about how to run each model and get a demo.
 - [ ] Add notes about how to improve.
 - [ ] Add notes about how to setup the postgres/mysql.
