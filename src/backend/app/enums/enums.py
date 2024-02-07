@@ -2,9 +2,9 @@ import enum
 
 
 class GameState(enum.IntEnum):
-    SERVICE = 0
-    PLAY = 1
-    NO_PLAY = 2
+    SERVICE = 1
+    PLAY = 2
+    NO_PLAY = 3
 
 
 class ServiceType(enum.IntEnum):

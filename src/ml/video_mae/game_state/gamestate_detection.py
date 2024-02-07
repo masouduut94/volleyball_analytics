@@ -63,5 +63,4 @@ class GameStateDetector:
         softmax_scores = torch.nn.functional.softmax(logits, dim=-1).squeeze(0)
         confidences = {self.labels[i]: float(softmax_scores[i]) for i in range(len(self.labels))}
         label = max(confidences, key=confidences.get)
-        print(label)
         return self.label2state[label]

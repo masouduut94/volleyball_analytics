@@ -16,11 +16,11 @@ class RallyCreateSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     match_id: int
-    sets: Dict[int, List[Dict[str, int | float]]] = Field(default={})
-    spikes: Dict[int, List[Dict[str, int | float]]] = Field(default={})
-    blocks: Dict[int, List[Dict[str, int | float]]] = Field(default={})
-    receives: Dict[int, List[Dict[str, int | float]]] = Field(default={})
-    ball_positions: Dict[int, Dict[str, List[int | float]]] = Field(default={})
+    sets: Dict[int, List] = Field(default={})
+    spikes: Dict[int, List] = Field(default={})
+    blocks: Dict[int, List] = Field(default={})
+    receives: Dict[int, List] = Field(default={})
+    ball_positions: Dict[int, List] = Field(default={})
     service: dict = Field(default={})
     team1_positions: dict = Field(default={})
     team2_positions: dict = Field(default={})
