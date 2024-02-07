@@ -1,4 +1,4 @@
-from urllib.parse import urljoin as join
+from urllib.parse import urljoin
 from fastapi import status
 import requests as rq
 from typing_extensions import List
@@ -9,26 +9,26 @@ from src.backend.app.schemas import cameras, matches, rallies, nations, players,
 class APIInterface:
     def __init__(self, url):
         self.base_url = url
-        self.camera_url = join(self.base_url, '/api/cameras/')
-        self.match_url = join(self.base_url, '/api/matches/')
-        self.nation_url = join(self.base_url, '/api/nations/')
-        self.player_url = join(self.base_url, '/api/players/')
-        self.rally_url = join(self.base_url, '/api/rallies/')
-        self.series_url = join(self.base_url, '/api/series/')
-        self.team_url = join(self.base_url, '/api/teams/')
-        self.video_url = join(self.base_url, '/api/videos/')
+        self.camera_url = urljoin(self.base_url, '/api/cameras/')
+        self.match_url = urljoin(self.base_url, '/api/matches/')
+        self.nation_url = urljoin(self.base_url, '/api/nations/')
+        self.player_url = urljoin(self.base_url, '/api/players/')
+        self.rally_url = urljoin(self.base_url, '/api/rallies/')
+        self.series_url = urljoin(self.base_url, '/api/series/')
+        self.team_url = urljoin(self.base_url, '/api/teams/')
+        self.video_url = urljoin(self.base_url, '/api/videos/')
         print(f"connection status: {self.connected()}")
 
     def connected(self) -> bool:
-        resp = rq.get(url=join(self.base_url, '/api/check/'))
+        resp = rq.get(url=urljoin(self.base_url, '/api/check/'))
         return resp.status_code == status.HTTP_200_OK
 
     def get_camera(self, camera_id: int = None) -> cameras.CameraBaseSchema | List[cameras.CameraBaseSchema]:
         if camera_id is None:
-            resp = rq.get(url=join(self.camera_url, str(camera_id)))
+            resp = rq.get(url=urljoin(self.camera_url, str(camera_id)))
             camera = cameras.CameraBaseSchema(**resp.json())
             return camera
-        resp = rq.get(url=join(self.camera_url, str(camera_id)))
+        resp = rq.get(url=urljoin(self.camera_url, str(camera_id)))
         all_cameras = []
         for c in resp.json():
             camera = cameras.CameraBaseSchema(**c.json())
@@ -41,15 +41,15 @@ class APIInterface:
         return camera
 
     def remove_camera(self, camera_id) -> bool:
-        resp = rq.delete(url=join(self.camera_url, str(camera_id)))
+        resp = rq.delete(url=urljoin(self.camera_url, str(camera_id)))
         return True if resp.status_code == status.HTTP_200_OK else False
 
     def get_video(self, video_id: int = None) -> videos.VideoBaseSchema | List[videos.VideoBaseSchema]:
         if video_id is None:
-            resp = rq.get(url=join(self.video_url, str(video_id)))
+            resp = rq.get(url=urljoin(self.video_url, str(video_id)))
             video = videos.VideoBaseSchema(**resp.json())
             return video
-        resp = rq.get(url=join(self.video_url, str(video_id)))
+        resp = rq.get(url=urljoin(self.video_url, str(video_id)))
         all_videos = []
         for v in resp.json():
             video = videos.VideoBaseSchema(**v.json())
@@ -61,15 +61,15 @@ class APIInterface:
         return videos.VideoBaseSchema(**resp.json())
 
     def remove_video(self, video_id) -> bool:
-        resp = rq.delete(url=join(self.video_url, str(video_id)))
+        resp = rq.delete(url=urljoin(self.video_url, str(video_id)))
         return True if resp.status_code == status.HTTP_200_OK else False
 
     def get_player(self, player_id: int = None) -> players.PlayerBaseSchema | List[players.PlayerBaseSchema]:
         if player_id is None:
-            resp = rq.get(url=join(self.player_url, str(player_id)))
+            resp = rq.get(url=urljoin(self.player_url, str(player_id)))
             player = players.PlayerBaseSchema(**resp.json())
             return player
-        resp = rq.get(url=join(self.player_url, str(player_id)))
+        resp = rq.get(url=urljoin(self.player_url, str(player_id)))
         all_players = []
         for p in resp.json():
             player = players.PlayerBaseSchema(**p.json())
@@ -81,15 +81,15 @@ class APIInterface:
         return players.PlayerBaseSchema(**resp.json())
 
     def remove_player(self, player_id) -> bool:
-        resp = rq.delete(url=join(self.player_url, str(player_id)))
+        resp = rq.delete(url=urljoin(self.player_url, str(player_id)))
         return True if resp.status_code == status.HTTP_200_OK else False
 
     def get_team(self, team_id: int = None) -> teams.TeamBaseSchema | List[teams.TeamBaseSchema]:
         if team_id is None:
-            resp = rq.get(url=join(self.team_url, str(team_id)))
+            resp = rq.get(url=urljoin(self.team_url, str(team_id)))
             team = teams.TeamBaseSchema(**resp.json())
             return team
-        resp = rq.get(url=join(self.team_url, str(team_id)))
+        resp = rq.get(url=urljoin(self.team_url, str(team_id)))
         all_teams = []
         for p in resp.json():
             team = teams.TeamBaseSchema(**p.json())
@@ -101,15 +101,15 @@ class APIInterface:
         return teams.TeamBaseSchema(**resp.json())
 
     def remove_team(self, team_id) -> bool:
-        resp = rq.delete(url=join(self.team_url, str(team_id)))
+        resp = rq.delete(url=urljoin(self.team_url, str(team_id)))
         return True if resp.status_code == status.HTTP_200_OK else False
 
     def get_match(self, match_id: int = None) -> matches.MatchBaseSchema | List[matches.MatchBaseSchema]:
         if match_id is None:
-            resp = rq.get(url=join(self.match_url, str(match_id)))
+            resp = rq.get(url=urljoin(self.match_url, str(match_id)))
             match = matches.MatchBaseSchema(**resp.json())
             return match
-        resp = rq.get(url=join(self.match_url, str(match_id)))
+        resp = rq.get(url=urljoin(self.match_url, str(match_id)))
         all_matches = []
         for p in resp.json():
             match = matches.MatchBaseSchema(**p.json())
@@ -121,15 +121,15 @@ class APIInterface:
         return matches.MatchBaseSchema(**resp.json())
 
     def remove_match(self, match_id) -> bool:
-        resp = rq.delete(url=join(self.match_url, str(match_id)))
+        resp = rq.delete(url=urljoin(self.match_url, str(match_id)))
         return True if resp.status_code == status.HTTP_200_OK else False
 
     def get_nation(self, nation_id: int = None) -> nations.NationBaseSchema | List[nations.NationBaseSchema]:
         if nation_id is None:
-            resp = rq.get(url=join(self.nation_url, str(nation_id)))
+            resp = rq.get(url=urljoin(self.nation_url, str(nation_id)))
             nation = nations.NationBaseSchema(**resp.json())
             return nation
-        resp = rq.get(url=join(self.nation_url, str(nation_id)))
+        resp = rq.get(url=urljoin(self.nation_url, str(nation_id)))
         all_nations = []
         for n in resp.json():
             nation = nations.NationBaseSchema(**n.json())
@@ -141,15 +141,15 @@ class APIInterface:
         return nations.NationBaseSchema(**resp.json())
 
     def remove_nation(self, nation_id) -> bool:
-        resp = rq.delete(url=join(self.nation_url, str(nation_id)))
+        resp = rq.delete(url=urljoin(self.nation_url, str(nation_id)))
         return True if resp.status_code == status.HTTP_200_OK else False
 
     def get_series(self, series_id: int = None) -> series.SeriesBaseSchema | list[series.SeriesBaseSchema]:
         if series_id is None:
-            resp = rq.get(url=join(self.series_url, str(series_id)))
+            resp = rq.get(url=urljoin(self.series_url, str(series_id)))
             series_ = series.SeriesBaseSchema(**resp.json())
             return series_
-        resp = rq.get(url=join(self.series_url, str(series_id)))
+        resp = rq.get(url=urljoin(self.series_url, str(series_id)))
         all_series = []
         for s in resp.json():
             series_ = series.SeriesBaseSchema(**s.json())
@@ -161,7 +161,7 @@ class APIInterface:
         return series.SeriesBaseSchema(**resp.json())
 
     def remove_series(self, series_id) -> bool:
-        resp = rq.delete(url=join(self.series_url, str(series_id)))
+        resp = rq.delete(url=urljoin(self.series_url, str(series_id)))
         return True if resp.status_code == status.HTTP_200_OK else False
 
     def get_rallies(self, match_id: int = None, rally_order: int = None) -> (
@@ -172,12 +172,12 @@ class APIInterface:
             return []
 
         if rally_order is None:
-            url = join(self.match_url, str(match_id), "rallies")
+            url = urljoin(self.match_url, str(match_id), "rallies")
             resp = rq.get(url=url)
             rally = rallies.RallyBaseSchema(**resp.json())
             return rally
 
-        url = join(self.match_url, str(match_id), "rallies", str(rally_order))
+        url = urljoin(self.match_url, str(match_id), "rallies", str(rally_order))
         resp = rq.get(url=url)
         all_rallies = []
         for ra in resp.json():
@@ -186,7 +186,7 @@ class APIInterface:
         return all_rallies
 
     def get_rally_by_id(self, rally_id: int = None) -> rallies.RallyBaseSchema:
-        resp = rq.get(url=join(self.rally_url, str(rally_id)))
+        resp = rq.get(url=urljoin(self.rally_url, str(rally_id)))
         rally = rallies.RallyBaseSchema(**resp.json())
         return rally
 
@@ -195,7 +195,7 @@ class APIInterface:
         return rallies.RallyBaseSchema(**resp.json())
 
     def remove_rally(self, rally_id) -> bool:
-        resp = rq.delete(url=join(self.rally_url, str(rally_id)))
+        resp = rq.delete(url=urljoin(self.rally_url, str(rally_id)))
         return True if resp.status_code == status.HTTP_200_OK else False
 
 
