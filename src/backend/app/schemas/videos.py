@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
 
@@ -8,6 +9,9 @@ class VideoCreateSchema(BaseModel):
 
     camera_type_id: Optional[int] = None
     path: str
+
+    def video_name(self):
+        return Path(self.path).name
 
 
 class VideoBaseSchema(VideoCreateSchema):

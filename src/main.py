@@ -7,33 +7,42 @@ Then the statistics and outputs are stored on the db to get ready for visualizat
 """
 
 import cv2
+import numpy as np
 import yaml
 from tqdm import tqdm
 from pathlib import Path
 
-from api.models import Match
-from api.enums import GameState
+from typing_extensions import List
+
+from src.backend.app.api_interface import APIInterface
+from src.backend.app.enums.enums import GameState
+
 from src.ml.video_mae.game_state.utils import Manager
 
 
 def main():
+    """
+    team1_id=7 team2_id=8 series_id=2 video_id=4 id=1
+
+    Returns
+    -------
+
+    """
     match_id = 1
     ml_config = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
     setup_config = "/home/masoud/Desktop/projects/volleyball_analytics/conf/setup.yaml"
+    api_base_url = "http://localhost:8000"
     cfg: dict = yaml.load(open(ml_config), Loader=yaml.SafeLoader)
     temp: dict = yaml.load(open(setup_config), Loader=yaml.SafeLoader)
     cfg.update(temp)
-
-    match = Match.get(match_id)
-    src = match.video()
-    series_id = match.series().id
-    video_path = src.path
-    video_name = Path(video_path).name
-    cap = cv2.VideoCapture(video_path)
+    state_manager = Manager(cfg=cfg, buffer_size=30, url=api_base_url)
+    cap = cv2.VideoCapture(state_manager.video.path)
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
     assert cap.isOpened(), "file is not accessible..."
     n_frames = int(cap.get(7))
     pbar = tqdm(list(range(n_frames)))
-    state_manager = Manager(cfg=cfg, series_id=series_id, cap=cap, buffer_size=30, video_name=video_name)
 
     for fno in pbar:
         pbar.update(1)
@@ -65,13 +74,21 @@ def main():
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
                     elif prev == GameState.NO_PLAY:
                         if prev_prev == GameState.PLAY or prev_prev == GameState.SERVICE:
-                            all_labels = state_manager.get_labels()
-                            all_frames = state_manager.get_long_buffer()
-                            all_fnos = state_manager.get_long_buffer_fno()
+                            all_labels: List[int] = state_manager.get_labels()
+                            all_frames: List[np.ndarray] = state_manager.get_long_buffer()
+                            all_fnos: List[int] = state_manager.get_long_buffer_fno()
                             start_frame = all_fnos[0]
-                            rally_name = state_manager.get_path(start_frame, video_type='rally')
-                            state_manager.write_video(rally_name, all_labels, all_frames, all_fnos,
-                                                      draw_label=True)
+                            rally_name: Path = state_manager.get_path(start_frame, video_type='rally')
+                            state_manager.write_video(
+                                path=rally_name,
+                                width=width,
+                                height=height,
+                                fps=fps,
+                                labels=all_labels,
+                                long_buffer=all_frames,
+                                long_buffer_fno=all_fnos,
+                                draw_label=True
+                            )
                             # TODO: Try process optimization:
                             #  - parallel processing
                             #  - cython, jit
@@ -81,12 +98,12 @@ def main():
                             #  - Select the best model from YOLO models.
                             #  - Create TEST SET for yolo model.
                             #  - Create demo for your work.
-                            rally_db = state_manager.db_store(
+                            rally_schema = state_manager.db_store(
                                 rally_name, all_fnos, state_manager.service_last_frame, all_labels
                             )
                             vb_objects = state_manager.predict_objects(all_frames)
-                            state_manager.save_objects(rally_db, vb_objects)
-                            print(f'{rally_name} saved ...')
+                            done = state_manager.save_objects(rally_schema, vb_objects)
+                            print(f'{rally_name} saved: {done} ...')
                             state_manager.rally_counter += 1
                             state_manager.reset_long_buffer()
                         elif prev_prev == GameState.NO_PLAY:

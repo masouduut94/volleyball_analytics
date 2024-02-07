@@ -24,7 +24,7 @@ class APIInterface:
         return resp.status_code == status.HTTP_200_OK
 
     def get_camera(self, camera_id: int = None) -> cameras.CameraBaseSchema | List[cameras.CameraBaseSchema]:
-        if camera_id is None:
+        if camera_id is not None:
             resp = rq.get(url=urljoin(self.camera_url, str(camera_id)))
             camera = cameras.CameraBaseSchema(**resp.json())
             return camera
@@ -45,7 +45,7 @@ class APIInterface:
         return True if resp.status_code == status.HTTP_200_OK else False
 
     def get_video(self, video_id: int = None) -> videos.VideoBaseSchema | List[videos.VideoBaseSchema]:
-        if video_id is None:
+        if video_id is not None:
             resp = rq.get(url=urljoin(self.video_url, str(video_id)))
             video = videos.VideoBaseSchema(**resp.json())
             return video
@@ -65,7 +65,7 @@ class APIInterface:
         return True if resp.status_code == status.HTTP_200_OK else False
 
     def get_player(self, player_id: int = None) -> players.PlayerBaseSchema | List[players.PlayerBaseSchema]:
-        if player_id is None:
+        if player_id is not None:
             resp = rq.get(url=urljoin(self.player_url, str(player_id)))
             player = players.PlayerBaseSchema(**resp.json())
             return player
@@ -85,7 +85,7 @@ class APIInterface:
         return True if resp.status_code == status.HTTP_200_OK else False
 
     def get_team(self, team_id: int = None) -> teams.TeamBaseSchema | List[teams.TeamBaseSchema]:
-        if team_id is None:
+        if team_id is not None:
             resp = rq.get(url=urljoin(self.team_url, str(team_id)))
             team = teams.TeamBaseSchema(**resp.json())
             return team
@@ -105,7 +105,7 @@ class APIInterface:
         return True if resp.status_code == status.HTTP_200_OK else False
 
     def get_match(self, match_id: int = None) -> matches.MatchBaseSchema | List[matches.MatchBaseSchema]:
-        if match_id is None:
+        if match_id is not None:
             resp = rq.get(url=urljoin(self.match_url, str(match_id)))
             match = matches.MatchBaseSchema(**resp.json())
             return match
@@ -125,7 +125,7 @@ class APIInterface:
         return True if resp.status_code == status.HTTP_200_OK else False
 
     def get_nation(self, nation_id: int = None) -> nations.NationBaseSchema | List[nations.NationBaseSchema]:
-        if nation_id is None:
+        if nation_id is not None:
             resp = rq.get(url=urljoin(self.nation_url, str(nation_id)))
             nation = nations.NationBaseSchema(**resp.json())
             return nation
@@ -145,7 +145,7 @@ class APIInterface:
         return True if resp.status_code == status.HTTP_200_OK else False
 
     def get_series(self, series_id: int = None) -> series.SeriesBaseSchema | list[series.SeriesBaseSchema]:
-        if series_id is None:
+        if series_id is not None:
             resp = rq.get(url=urljoin(self.series_url, str(series_id)))
             series_ = series.SeriesBaseSchema(**resp.json())
             return series_
@@ -164,14 +164,13 @@ class APIInterface:
         resp = rq.delete(url=urljoin(self.series_url, str(series_id)))
         return True if resp.status_code == status.HTTP_200_OK else False
 
-    def get_rallies(self, match_id: int = None, rally_order: int = None) -> (
-            rallies.RallyBaseSchema | List[rallies.RallyBaseSchema]
-    ):
+    def get_rallies(self, match_id: int = None, rally_order: int = None) -> \
+            rallies.RallyBaseSchema | List[rallies.RallyBaseSchema]:
         match = self.get_match(match_id)
         if match is None:
             return []
 
-        if rally_order is None:
+        if rally_order is not None:
             url = urljoin(self.match_url, str(match_id), "rallies")
             resp = rq.get(url=url)
             rally = rallies.RallyBaseSchema(**resp.json())
@@ -197,6 +196,11 @@ class APIInterface:
     def remove_rally(self, rally_id) -> bool:
         resp = rq.delete(url=urljoin(self.rally_url, str(rally_id)))
         return True if resp.status_code == status.HTTP_200_OK else False
+
+    def rally_update(self, rally: rallies.RallyBaseSchema):
+        url = urljoin(self.rally_url, str(rally.id))
+        resp = rq.put(url, json=rally.model_dump(exclude={'id'}))
+        return True if resp.status_code == status.HTTP_202_ACCEPTED else False
 
 
 if __name__ == '__main__':

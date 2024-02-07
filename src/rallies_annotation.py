@@ -27,11 +27,11 @@ Also you can develop the FastAPI and get help from them to get items.
 if __name__ == '__main__':
     match_id = 1
     match: Match = Match.get(match_id)
-    video: Video = match.video()
+    video: Video = match.new_video()
     rallies: List[Rally] = match.get_rallies()
     # TODO: Check if you can add asyncIO
     for rally in tqdm(rallies):
-        cap = cv2.VideoCapture(rally.video.path)
+        cap = cv2.VideoCapture(rally.new_video.path)
         # rally_data = RallyData.from_instance(rally)
         w, h, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
 

@@ -7,39 +7,42 @@ from pathlib import Path
 from os.path import join
 from typing_extensions import List, Dict, Tuple
 
-# from unsync import unsync
-
-from api.models import Rally
-from api.enums import ServiceType, GameState
+from src.backend.app.api_interface import APIInterface
+from src.backend.app.enums.enums import GameState, ServiceType
 from src.utilities.utils import timeit, BoundingBox, state_changes
-from api.schemas import ServiceBaseSchema, RallyBaseSchema
+from src.backend.app.schemas import services, rallies, matches, series, videos
 from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
 from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 
 
 class Manager:
-    def __init__(self, cfg: dict, series_id: int, cap: cv2.VideoCapture, buffer_size: int, video_name: str):
+    def __init__(self, cfg: dict, url: str, buffer_size: int):
         """
 
         Parameters
         ----------
         cfg(dict): dictionary of configs for the project.
-        series_id: It's the tournament series id from database.
-        cap: OpenCV videoCapture object
         buffer_size: It's the size of the buffer that keeps the video frames for ML operations.
-        video_name: It is used for finding the court corners on the court.json file.
         """
+        self.api_interface = APIInterface(url=url)
         self.state_detector = GameStateDetector(cfg=cfg['video_mae']['game_state_3'])
-        self.vb_object_detector = VolleyBallObjectDetector(config=cfg, video_name=video_name, use_player_detection=True)
-        self.base_dir = cfg['base_dir']
-        self.match_id = cfg['match_id']
-        self.series_id = series_id
 
-        self.rally_base_dir = f'{self.base_dir}/{self.series_id}/{self.match_id}/rallies/'
+        self.match: matches.MatchCreateSchema = self.api_interface.get_match(match_id=int(cfg['match_id']))
+        self.video: videos.VideoCreateSchema = self.api_interface.get_video(video_id=self.match.video_id)
+        self.tournament: series.SeriesBaseSchema = self.api_interface.get_series(series_id=self.match.series_id)
+
+        video_name = self.video.video_name()
+        self.vb_object_detector = VolleyBallObjectDetector(
+            config=cfg, video_name=video_name, use_player_detection=True
+        )
+
+        self.base_dir = cfg['base_dir']
+        self.rally_base_dir = f'{self.base_dir}/{self.tournament.id}/{self.match.id}/rallies/'
         makedirs(self.rally_base_dir, exist_ok=True)
 
         self.buffer_size = buffer_size
         self.states = [GameState.NO_PLAY, GameState.NO_PLAY, GameState.NO_PLAY]
+
         # Buffers
         self.temp_buffer = []
         self.temp_buffer_fno = []
@@ -47,11 +50,6 @@ class Manager:
         self.long_buffer_fno = []
         self.labels = []
         self.service_last_frame = None
-
-        self.codec = cv2.VideoWriter_fourcc(*'mp4v')
-        self.width = int(cap.get(3))
-        self.height = int(cap.get(4))
-        self.fps = int(cap.get(5))
         self.rally_counter = 0
 
     # @timeit
@@ -213,12 +211,18 @@ class Manager:
         self.labels.clear()
         self.service_last_frame = None
 
-    def write_video(self, path: Path, labels: List[int], long_buffer: List[np.ndarray],
-                    long_buffer_fno: List[int], draw_label: bool = False):
+    @staticmethod
+    def write_video(
+            path: Path, width, height, fps, labels: List[int], long_buffer: List[np.ndarray],
+            long_buffer_fno: List[int], draw_label: bool = False
+    ):
         """
         It handles the creation of rally video along with the attaching the labels...
         Parameters
         ----------
+        width
+        height
+        fps
         path: path to save the file.
         labels: list of the output labels for the video frames...
         long_buffer: list of frames to be written
@@ -229,7 +233,8 @@ class Manager:
         -------
 
         """
-        writer = cv2.VideoWriter(path.as_posix(), self.codec, self.fps, (self.width, self.height))
+        codec = cv2.VideoWriter_fourcc(*'mp4v')
+        writer = cv2.VideoWriter(path.as_posix(), codec, fps, (width, height))
         if draw_label:
             for label, frame, fno in zip(labels, long_buffer, long_buffer_fno):
                 match label:
@@ -243,7 +248,7 @@ class Manager:
                         string = 'no-play'
                         color = (255, 0, 0)
                 frame = cv2.putText(frame, string, (100, 50), cv2.FONT_HERSHEY_PLAIN, 2, color, 2)
-                frame = cv2.putText(frame, str(fno), (self.width - 400, 50), cv2.FONT_HERSHEY_PLAIN, 2,
+                frame = cv2.putText(frame, str(fno), (width - 400, 50), cv2.FONT_HERSHEY_PLAIN, 2,
                                     (255, 0, 0), 2)
                 writer.write(frame)
         else:
@@ -252,9 +257,19 @@ class Manager:
         writer.release()
 
     def db_store(self, rally_name: Path, frame_numbers: List[int], service_ending_index: int = None,
-                 labels: List[int] = None):
+                 labels: List[int] = None) -> rallies.RallyBaseSchema:
         """
         Saves a video of the rally, and also creates DB-related items. (video, and rally)
+
+        Parameters
+        ----------
+        rally_name
+        frame_numbers: List of the frame numbers accumulated by the manager.
+        service_ending_index: The index of the frame where the serve beginning is detected.
+        labels: The list of the detected game status for each frame.
+
+        Returns
+        -------
 
         """
         rally_1st_frame = frame_numbers[0]
@@ -264,15 +279,15 @@ class Manager:
         # rally_video_db = Video.save(rally_vdata.model_dump())
         service_end_frame = rally_1st_frame + service_ending_index if service_ending_index is not None else None
 
-        service_data = ServiceBaseSchema(
+        service_data = services.ServiceCreateSchema(
             end_frame=service_end_frame, end_index=service_ending_index, hitter="Igor Kliuka",
             hitter_bbox={}, bounce_point=[120, 200], target_zone=5, type=ServiceType.HIGH_TOSS
         )
-        rally_data = RallyBaseSchema(
-            match_id=self.match_id, start_frame=rally_1st_frame, end_frame=rally_last_frame,
+        rally_data = rallies.RallyCreateSchema(
+            match_id=self.match.id, start_frame=rally_1st_frame, end_frame=rally_last_frame, order=self.rally_counter,
             rally_states=str(labels), service=service_data.model_dump(), clip_path=str(rally_name)
         )
-        rally = Rally.save(rally_data.model_dump())
+        rally: rallies.RallyBaseSchema = self.api_interface.insert_rally(**rally_data.model_dump())
         return rally
 
     @property
@@ -290,14 +305,13 @@ class Manager:
     def reset(self):
         self.states = [GameState.NO_PLAY, GameState.NO_PLAY, GameState.NO_PLAY]
 
-    @staticmethod
-    def save_objects(rally_db: Rally, batch_vb_objects: List[Dict[str, List[BoundingBox]]]):
+    def save_objects(self, rally_schema: rallies.RallyBaseSchema, batch_vb_objects: List[Dict[str, List[BoundingBox]]]):
         """
         It converts the Yolo detected objects into Json-serializable objects and saves it in DB.
 
         Parameters
         ----------
-        rally_db: rally table ORM object that is going to attach the yolo objects to it.
+        rally_schema: rally table ORM object that is going to attach the yolo objects to it.
         batch_vb_objects: yolo objects for all frames in a rally.
 
         Returns
@@ -327,8 +341,14 @@ class Manager:
             if len(receives):
                 receives_js[i] = receives
 
-        rally_db.update({"blocks": blocks_js, 'sets': sets_js, "spikes": spikes_js, "ball_positions": balls_js,
-                         "receives": receives_js})
+        rally_schema.blocks = blocks_js
+        rally_schema.sets = sets_js
+        rally_schema.spikes = spikes_js
+        rally_schema.ball_positions = balls_js
+        rally_schema.receives = receives_js
+
+        updated = self.api_interface.rally_update(rally_schema)
+        return updated
 
 
 def annotate_service(serve_detection_model: GameStateDetector, video_path: str, output_path: str,
