@@ -1,5 +1,5 @@
 from typing import Optional
-
+from src.backend.app.enums.enums import ServiceType, CourtZone
 from pydantic import BaseModel, Field, ConfigDict
 
 
@@ -13,10 +13,10 @@ class ServiceCreateSchema(BaseModel):
     """
     model_config = ConfigDict(from_attributes=True)
 
-    end_frame: int = Field(default=None)
-    end_index: int = Field(default=None)
-    hitter_name: str = Field(default='Igor Kliuka', max_length=100)
-    hitter_bbox: dict = Field(default={})
-    bounce_point: list = Field(default=None)
-    target_zone: int = Field(default=None)
-    type: int = Field(default=None)
+    end_frame: Optional[int] = None
+    end_index: Optional[int] = None
+    hitter_name: Optional[str] = Field(default='Igor Kliuka', max_length=100)
+    hitter_bbox: Optional[dict] = {}
+    bounce_point: Optional[dict] = {}
+    target_zone: Optional[int] = CourtZone.BACK_LEFT_Z1
+    type: Optional[int] = ServiceType.FLOAT_SERVE
