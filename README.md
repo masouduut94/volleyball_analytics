@@ -10,35 +10,30 @@ Helpful links:
 - https://dev.to/mfts/how-to-write-a-perfect-readme-for-your-github-project-59f2
 - https://www.freecodecamp.org/news/how-to-write-a-good-readme-file/
 
-# tasks done:
+# tasks:
 
 1. volleyball actions/objects detection :
 
-- sets
-- spikes
-- blocks
-- receives
-- ball
+- [x] sets
+- [x] spikes
+- [x] blocks
+- [x] receives
+- [x] ball
 
 2. volleyball game-state detection:
 
-- in-play scenes
-- no-play scenes
-- service scenes
+- [x] in-play scenes
+- [x] no-play scenes
+- [x] service scenes
 
 3. Integrated the project with DB.
-
-# Todo:
 
 ## Video Analysis
 
 - [ ] Setter sets distribution.
-- [ ] Ball trajectories for:
--
+- Ball trajectories for:
     - [ ] sets
--
     - [ ] receives
--
     - [ ] serves
 - [ ] receives distribution for setters.
 - [ ] spike zones and distributions.
@@ -49,32 +44,24 @@ Helpful links:
 
 ## ML:
 
-- [ ] Try Intel OpenVino...
-- [ ] Add object detection results to the DB.
-- [ ] Use batch prediction for 30 frames.
-- [ ] Add ball detection and its results to DB.
+- [x] Try Intel OpenVino...
+- [x] Add object detection results to the DB.
+- [x] Use batch prediction for 30 frames.
+- [x] Add ball detection and its results to DB.
 
 ## BackEnd:
 
 - Integrate video clipping:
--
     - [x] Add AI-based video-clipper.
--
     - [x] add DB integration for video storage.
--
+    - [x] Integrate FastAPI for API calls.
     - [ ] Add RabbitMQ for job scheduling.
--
-    - [ ] Integrate it with flask for backend processes.
--
-    - [ ] Integrate FastAPI for API calls.
--
     - [ ] Work with decord for faster video reading/writing.
--
 
 # Readme file:
 
-- [ ] Add datasets ...
-- [ ] Add model weights ...
+- [ ] Publish datasets ...
+- [ ] Publish model weights ...
 - [ ] Add notes about how to generate videos.(description about notebooks)
 - [ ] Add gif from game-state detection model.
 - [ ] Add gif from volleyball objects detection model.
