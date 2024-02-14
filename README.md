@@ -3,6 +3,13 @@
 This project is designed to use deep learning methods in Volleyball
 Sports Data Analytics.
 
+Helpful links:
+
+- https://github.com/dmlc/decord
+- https://dev.to/mfts/how-to-write-a-perfect-readme-for-your-github-project-59f2
+- https://dev.to/mfts/how-to-write-a-perfect-readme-for-your-github-project-59f2
+- https://www.freecodecamp.org/news/how-to-write-a-good-readme-file/
+
 # tasks done:
 
 1. volleyball actions/objects detection :
@@ -63,7 +70,6 @@ Sports Data Analytics.
 -
     - [ ] Work with decord for faster video reading/writing.
 -
-    - https://github.com/dmlc/decord
 
 # Readme file:
 
@@ -76,4 +82,4 @@ Sports Data Analytics.
 - [ ] Add descriptions about accuracy/recall/ ...
 - [ ] Add description about how to run each model and get a demo.
 - [ ] Add notes about how to improve.
-- [ ] Add notes about how to setup the postgres/mysql.
+- [ ] Add notes about how to set up the postgres/mysql.

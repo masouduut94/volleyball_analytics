@@ -1,5 +1,6 @@
 from src.backend.app.schemas.players import PlayerBaseSchema, PlayerCreateSchema
 from src.backend.app.tests.utility import VBTest
+from src.backend.app.enums.enums import VolleyBallPositions as pos
 
 
 class PlayerTest(VBTest):
@@ -8,8 +9,8 @@ class PlayerTest(VBTest):
         # Testing player creation and fetching for one player.
         nation = self.create_nation(name="United States of America", display_name="USA")
         team = self.create_team(name='USA')
-        player = PlayerCreateSchema(first_name='Benjamin', last_name='Patch', role='OH', height=202, weight=84,
-                                    nation_id=nation.id, team_id=team.id)
+        player = PlayerCreateSchema(first_name='Benjamin', last_name='Patch', role=pos.OPPOSITE_HITTER, height=202,
+                                    weight=84, nation_id=nation.id, team_id=team.id)
         response = self.client.post("/api/players/", json=player.model_dump())
         self.assertEqual(response.status_code, 201)
 
@@ -22,10 +23,10 @@ class PlayerTest(VBTest):
         # Testing player creation and fetching for multiple player.
         nation = self.create_nation(name="United States of America", display_name="USA")
         team = self.create_team(name='USA')
-        benjamin = PlayerCreateSchema(first_name='Benjamin', last_name='Patch', role='OH', height=202, weight=84,
-                                      nation_id=nation.id, team_id=team.id)
-        tony = PlayerCreateSchema(first_name='Tony', last_name='Defalco', role='OH', height=202, weight=84,
-                                  nation_id=nation.id, team_id=team.id)
+        benjamin = PlayerCreateSchema(first_name='Benjamin', last_name='Patch', role=pos.OUTSIDE_HITTER, height=202,
+                                      weight=84, nation_id=nation.id, team_id=team.id)
+        tony = PlayerCreateSchema(first_name='Tony', last_name='Defalco', role=pos.OPPOSITE_HITTER, height=202,
+                                  weight=84, nation_id=nation.id, team_id=team.id)
 
         _ = self.client.post(f"/api/players/", json=benjamin.model_dump())
         _ = self.client.post(f"/api/players/", json=tony.model_dump())
@@ -39,8 +40,8 @@ class PlayerTest(VBTest):
         # Testing player creation and fetching for one player.
         nation = self.create_nation(name="United States of America", display_name="USA")
         team = self.create_team(name='USA')
-        player = PlayerCreateSchema(first_name='Benjamin', last_name='Patch', role='OH', height=202, weight=84,
-                                    nation_id=nation.id, team_id=team.id)
+        player = PlayerCreateSchema(first_name='Benjamin', last_name='Patch', role=pos.OPPOSITE_HITTER, height=202,
+                                    weight=84, nation_id=nation.id, team_id=team.id)
         resp = self.client.post("/api/players/", json=player.model_dump())
         player = PlayerBaseSchema(**resp.json())
 
@@ -56,8 +57,8 @@ class PlayerTest(VBTest):
         # Testing player creation and fetching for one player.
         nation = self.create_nation(name="United States of America", display_name="USA")
         team = self.create_team(name='USA')
-        player = PlayerCreateSchema(first_name='Benjamin', last_name='Patch', role='OH', height=202, weight=84,
-                                    nation_id=nation.id, team_id=team.id)
+        player = PlayerCreateSchema(first_name='Benjamin', last_name='Patch', role=pos.OPPOSITE_HITTER, height=202,
+                                    weight=84, nation_id=nation.id, team_id=team.id)
         resp = self.client.post("/api/players/", json=player.model_dump())
         player = PlayerBaseSchema(**resp.json())
 
