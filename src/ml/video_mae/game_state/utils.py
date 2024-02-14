@@ -281,7 +281,7 @@ class Manager:
 
         service_data = services.ServiceCreateSchema(
             end_frame=service_end_frame, end_index=service_ending_index, hitter="Igor Kliuka",
-            hitter_bbox={}, bounce_point=[120, 200], target_zone=5, type=ServiceType.HIGH_TOSS
+            hitter_bbox={}, bounce_point={'x': 120, 'y': 200}, target_zone=5, type=ServiceType.HIGH_TOSS
         )
         rally_data = rallies.RallyCreateSchema(
             match_id=self.match.id, start_frame=rally_1st_frame, end_frame=rally_last_frame, order=self.rally_counter,
