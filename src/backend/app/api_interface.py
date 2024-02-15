@@ -169,14 +169,16 @@ class APIInterface:
         match = self.get_match(match_id)
         if match is None:
             return []
+        url_items = [self.match_url, str(match_id), 'rallies']
 
         if rally_order is not None:
-            url = urljoin(self.match_url, str(match_id), "rallies")
+            url = "/".join(url_items)
             resp = rq.get(url=url)
             rally = rallies.RallyBaseSchema(**resp.json())
             return rally
 
-        url = urljoin(self.match_url, str(match_id), "rallies", str(rally_order))
+        url_items.append(str(rally_order))
+        url = '/'.join(url_items)
         resp = rq.get(url=url)
         all_rallies = []
         for ra in resp.json():
