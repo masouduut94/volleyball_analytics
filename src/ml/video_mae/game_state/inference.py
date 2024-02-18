@@ -38,9 +38,9 @@ if __name__ == '__main__':
             current_state = model.predict(current_frames)
             state_manager._set_current_state(current_state)
             pbar.set_description(f"state: {current_state}")
-            current = state_manager.current
-            prev = state_manager.prev
-            prev_prev = state_manager.prev_prev
+            current = state_manager.current_state
+            prev = state_manager.previous_state
+            prev_prev = state_manager.before_previous_state
 
             match current:
                 case 'service':

@@ -52,20 +52,17 @@ class Manager:
         self.rally_counter = 0
 
     # @timeit
-    def predict_state(self, frames: List[np.ndarray]):
+    def update_state(self, frames: List[np.ndarray]):
         """This function gets a list (with constant number) of frames for
-        1 second, and outputs the label of the game state. It's important
-        to note that. we currently work on videos with 30 fps.
+        1 second, and updates the game state. It's important
+        to note that we currently work on videos with 30-50 fps.
 
         Args:
             frames:
 
-        Returns:
-
         """
         current_state = self.state_detector.predict(frames)
         self._set_current_state(current_state)
-        return current_state
 
     @timeit
     def predict_objects(self, frames: List[np.ndarray]) -> List[Dict[str, List[BoundingBox]]]:
@@ -268,15 +265,15 @@ class Manager:
         return rally
 
     @property
-    def current(self) -> int:
+    def current_state(self) -> int:
         return self.states[-1]
 
     @property
-    def prev(self) -> int:
+    def previous_state(self) -> int:
         return self.states[-2]
 
     @property
-    def prev_prev(self) -> int:
+    def before_previous_state(self) -> int:
         """ Returns the value of 3rd state before the current state."""
         return self.states[-3]
 

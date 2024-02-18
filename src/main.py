@@ -53,28 +53,31 @@ def main():
 
         if state_manager.is_full():
             current_frames, current_fnos = state_manager.get_current_frames_and_fnos()
-            current_state = state_manager.predict_state(current_frames)
-            pbar.set_description(f"state: {current_state}")
-            current = state_manager.current
-            prev = state_manager.prev
-            prev_prev = state_manager.prev_prev
+            state_manager.update_state(current_frames)
+
+            current = state_manager.current_state
+            previous = state_manager.previous_state
+            previous2 = state_manager.before_previous_state
+            pbar.set_description(f"state: {current}")
 
             match current:
                 case GameState.SERVICE:
-                    if prev in [GameState.NO_PLAY, GameState.SERVICE, GameState.PLAY]:
+                    if previous in [GameState.NO_PLAY, GameState.SERVICE, GameState.PLAY]:
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
+
                 case GameState.PLAY:
-                    if prev == GameState.SERVICE:
+                    if previous == GameState.SERVICE:
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
                         if state_manager.service_last_frame is None:
                             state_manager.service_last_frame = len(state_manager.long_buffer_fno) - 1
-                    elif prev == GameState.PLAY or prev == GameState.NO_PLAY:
+                    elif previous == GameState.PLAY or previous == GameState.NO_PLAY:
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
+
                 case GameState.NO_PLAY:
-                    if prev == GameState.SERVICE or prev == GameState.PLAY:
+                    if previous == GameState.SERVICE or previous == GameState.PLAY:
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
-                    elif prev == GameState.NO_PLAY:
-                        if prev_prev == GameState.PLAY or prev_prev == GameState.SERVICE:
+                    elif previous == GameState.NO_PLAY:
+                        if previous2 == GameState.PLAY or previous2 == GameState.SERVICE:
                             all_labels: List[int] = state_manager.get_labels()
                             all_frames: List[np.ndarray] = state_manager.get_long_buffer()
                             all_fnos: List[int] = state_manager.get_long_buffer_fno()
@@ -90,15 +93,6 @@ def main():
                                 long_buffer_fno=all_fnos,
                                 draw_label=True
                             )
-                            # TODO: Try process optimization:
-                            #  - parallel processing
-                            #  - cython, jit
-                            #  - asyncio, asyncio.Queue
-                            #  - Keep the results in RabbitMQ and then create analytics from them on a async process.
-                            #  - Create KPIs based on outputs.
-                            #  - Select the best model from YOLO models.
-                            #  - Create TEST SET for yolo model.
-                            #  - Create demo for your work.
                             rally_schema = state_manager.db_store(
                                 rally_name, all_fnos, state_manager.service_last_frame, all_labels
                             )
@@ -107,7 +101,7 @@ def main():
                             print(f'{rally_name} saved: {done} ...')
                             state_manager.rally_counter += 1
                             state_manager.reset_long_buffer()
-                        elif prev_prev == GameState.NO_PLAY:
+                        elif previous2 == GameState.NO_PLAY:
                             state_manager.reset_long_buffer()
                     state_manager.reset_temp_buffer()
         else:
