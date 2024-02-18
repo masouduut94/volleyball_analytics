@@ -18,11 +18,10 @@ from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 class Manager:
     def __init__(self, cfg: dict, url: str, buffer_size: int):
         """
-
-        Parameters
-        ----------
-        cfg(dict): dictionary of configs for the project.
-        buffer_size: It's the size of the buffer that keeps the video frames for ML operations.
+        Args:
+            cfg(dict): dictionary of configs for the project.
+            buffer_size: buffer size that keeps the frames for
+                         ML operations.
         """
         self.api_interface = APIInterface(url=url)
         self.state_detector = GameStateDetector(cfg=cfg['video_mae']['game_state_3'])
@@ -54,16 +53,14 @@ class Manager:
 
     # @timeit
     def predict_state(self, frames: List[np.ndarray]):
-        """
-        It gets a list of frames and outputs the label of the game state.
-        It's important to note that we currently work on videos with 30 fps,
-        so the input is a list of 30 frames.
-        Parameters
-        ----------
-        frames
+        """This function gets a list (with constant number) of frames for
+        1 second, and outputs the label of the game state. It's important
+        to note that. we currently work on videos with 30 fps.
 
-        Returns
-        -------
+        Args:
+            frames:
+
+        Returns:
 
         """
         current_state = self.state_detector.predict(frames)
@@ -72,17 +69,16 @@ class Manager:
 
     @timeit
     def predict_objects(self, frames: List[np.ndarray]) -> List[Dict[str, List[BoundingBox]]]:
-        """
-        Runs the yolo model object detection on the frames. (batch inference)
-        Parameters
-        ----------
-        frames: List of numpy.ndarray
+        """Runs the yolo model object detection on the frames. (batch inference)
 
-        Returns
-        -------
+        Args:
+            frames: List of numpy.ndarray
+
+        Returns:
+            List of dictionaries indicating objects found in each frame (frame numbers are the keys).
 
         """
-        batch_size = 30
+        batch_size = 50
         d = len(frames) // batch_size
         results = []
         for i in range(d + 1):
@@ -98,10 +94,11 @@ class Manager:
         return results
 
     def is_full(self) -> bool:
-        """
-        Checks if the size of temporary buffer is equal to size of 30 frames in a second or not.
-        Returns
-        -------
+        """Checks if the size of temporary buffer is equal to size of 30 frames
+        in a second or not.
+
+        Returns:
+            True if buffer is full.
 
         """
         return len(self.temp_buffer) == self.buffer_size
@@ -116,29 +113,26 @@ class Manager:
         return self.labels
 
     def get_path(self, fno: int, video_type: str = 'rally') -> Path:
-        """
-        Given the frame number, and the video type, outputs a storage directory for clipped videos.
-        Parameters
-        ----------
-        fno
-        video_type
+        """Given the frame number, and the video type, outputs a storage
+        directory for clipped videos.
 
-        Returns
+        Args:
+            fno:
+            video_type:
+
+        Returns:
+            The path to output rally clip.
         -------
 
         """
         return Path(self.rally_base_dir) / f'{video_type}_{self.rally_counter}_start_frame_{fno}.mp4'
 
     def _set_current_state(self, curr_state: int):
-        """
-        substitute the 3 consecutive states after getting the current state.(each state consists
-        of 30 frames.)
-        Parameters
-        ----------
-        curr_state
+        """substitute the 3 consecutive states after getting the current
+         state.(each state consists of 30 frames.)
 
-        Returns
-        -------
+        Args:
+            curr_state
 
         """
         prev = self.states[-1]
@@ -148,15 +142,13 @@ class Manager:
         self.states[-1] = curr_state
 
     def keep(self, frames: List[np.ndarray], fnos: List[int], states: List[int]):
-        """
-        Attach the current frames, frame numbers and states to the end of the long buffer.
-        Parameters
-        ----------
-        frames: list of frames
-        fnos: list of frame numbers.
-        states: list of states.
+        """Attach the current frames, frame numbers and states to
+        the end of the long buffer.
 
-        -------
+        Args:
+            frames: list of frames
+            fnos: list of frame numbers.
+            states: list of states.
 
         """
         self.long_buffer.extend(frames)
@@ -165,12 +157,11 @@ class Manager:
         self.reset_temp_buffer()
 
     def append_frame(self, frame: np.ndarray, fno: int):
-        """
-        Appends the video frames and frame numbers to the temporary buffer.
-        Parameters
-        ----------
-        frame
-        fno
+        """Appends the video frames and frame numbers to the temporary buffer.
+
+        Args:
+            frame:
+            fno:
 
         Returns
         -------
@@ -180,32 +171,23 @@ class Manager:
         self.temp_buffer_fno.append(fno)
 
     def get_current_frames_and_fnos(self) -> Tuple[List[np.ndarray], List[int]]:
-        """
-        Just a getter method for getting frames and frame numbers together.
-        Returns
-        -------
+        """Just a getter method for getting currently buffered frames and frame
+        numbers together.
 
+        Returns:
+            list of frames, and list of frame numbers.
         """
         return self.temp_buffer, self.temp_buffer_fno
 
     def reset_temp_buffer(self):
-        """
-        Reset the frame buffers that keep the current frames.
+        """Reset the frame buffers that keep the current frames."""
 
-        Returns
-        -------
-
-        """
         self.temp_buffer.clear()
         self.temp_buffer_fno.clear()
 
     def reset_long_buffer(self):
-        """
-        Resets the video frame storage that saves the rally videos.
-        Returns
-        -------
+        """Resets the video frame storage that saves the rally videos."""
 
-        """
         self.long_buffer.clear()
         self.long_buffer_fno.clear()
         self.labels.clear()
@@ -213,24 +195,23 @@ class Manager:
 
     @staticmethod
     def write_video(
-            path: Path, width, height, fps, labels: List[int], long_buffer: List[np.ndarray],
-            long_buffer_fno: List[int], draw_label: bool = False
+            path: Path, width: int, height: int, fps: int, labels: List[int],
+            long_buffer: List[np.ndarray], long_buffer_fno: List[int], draw_label: bool = False
     ):
-        """
-        It handles the creation of rally video along with the attaching the labels...
-        Parameters
-        ----------
-        width
-        height
-        fps
-        path: path to save the file.
-        labels: list of the output labels for the video frames...
-        long_buffer: list of frames to be written
-        long_buffer_fno: List of the frame numbers.
-        draw_label: Whether to write the video labels or not...
+        """It handles the creation of rally video along with the attaching the labels...
 
-        Returns true after work is done.
-        -------
+        Args:
+            width: output width
+            height: output height
+            fps: output video fps
+            path: path to save the video.
+            labels: list of the output labels for the video frames...
+            long_buffer: list of frames to be written
+            long_buffer_fno: List of the frame numbers.
+            draw_label: Whether to write the video labels or not...
+
+        Returns:
+             true if it finishes without problem.
 
         """
         codec = cv2.VideoWriter_fourcc(*'mp4v')
@@ -258,25 +239,21 @@ class Manager:
 
     def db_store(self, rally_name: Path, frame_numbers: List[int], service_ending_index: int = None,
                  labels: List[int] = None) -> rallies.RallyBaseSchema:
-        """
-        Saves a video of the rally, and also creates DB-related items. (video, and rally)
+        """Saves rally information on DB and returns the object.
 
-        Parameters
-        ----------
-        rally_name
-        frame_numbers: List of the frame numbers accumulated by the manager.
-        service_ending_index: The index of the frame where the serve beginning is detected.
-        labels: The list of the detected game status for each frame.
+        Args:
+            rally_name: The name of the video.
+            frame_numbers: List of the frame numbers accumulated by the manager.
+            service_ending_index: The index of the frame where the serve beginning is detected.
+            labels: The list of the detected game status for each frame.
 
-        Returns
-        -------
+        Returns:
+            The rally object that is stored in the DB.
 
         """
         rally_1st_frame = frame_numbers[0]
         rally_last_frame = frame_numbers[-1]
-        labels = state_changes(labels)
-        # rally_vdata = VideoData(path=rally_name.as_posix(), camera_type=1)
-        # rally_video_db = Video.save(rally_vdata.model_dump())
+        labels = state_changes(labels, prediction_length=30)
         service_end_frame = rally_1st_frame + service_ending_index if service_ending_index is not None else None
 
         service_data = services.ServiceCreateSchema(
@@ -300,22 +277,22 @@ class Manager:
 
     @property
     def prev_prev(self) -> int:
+        """ Returns the value of 3rd state before the current state."""
         return self.states[-3]
 
     def reset(self):
         self.states = [GameState.NO_PLAY, GameState.NO_PLAY, GameState.NO_PLAY]
 
     def save_objects(self, rally_schema: rallies.RallyBaseSchema, batch_vb_objects: List[Dict[str, List[BoundingBox]]]):
-        """
-        It converts the Yolo detected objects into Json-serializable objects and saves it in DB.
+        """It converts the Yolo detected objects into Json-serializable
+        objects and saves it in DB.
 
-        Parameters
-        ----------
-        rally_schema: rally table ORM object that is going to attach the yolo objects to it.
-        batch_vb_objects: yolo objects for all frames in a rally.
+        Args:
+            rally_schema: rally table ORM object that is going to attach the yolo objects to it.
+            batch_vb_objects: yolo objects for all frames in a rally.
 
-        Returns
-        -------
+        Returns:
+            True if all done without problem.
 
         """
         balls_js = {}
@@ -353,17 +330,13 @@ class Manager:
 
 def annotate_service(serve_detection_model: GameStateDetector, video_path: str, output_path: str,
                      buffer_size: int = 30):
-    """
-    Annotates the video frames based on the game-state detector detections.
-    Parameters
-    ----------
-    serve_detection_model: The initialized game-state detection model.
-    video_path: Path to the input video.
-    output_path: path to save the output video.
-    buffer_size: Size of the game-state detection model input.
+    """Annotates the video frames based on the game-state detector detections.
 
-    Returns
-    -------
+    Args:
+        serve_detection_model: The initialized game-state detection model.
+        video_path: Path to the input video.
+        output_path: path to save the output video.
+        buffer_size: Size of the game-state detection model input.
 
     """
     video_path = Path(video_path)

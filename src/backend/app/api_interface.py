@@ -28,7 +28,7 @@ class APIInterface:
         self.video_url = urljoin(self.base_url, '/api/videos/')
         try:
             r = rq.get(url=urljoin(self.base_url, '/api/check/'), timeout=0.001)
-        except:
+        except ConnectionError:
             print(f"Connection Failure. make sure API is up! ")
         else:
             print("API connection established.")

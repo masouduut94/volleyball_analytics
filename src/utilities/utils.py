@@ -1,13 +1,11 @@
-from pathlib import Path
-
 import cv2
-import numpy as np
 import math
-from numpy.typing import NDArray
-from tqdm import tqdm
-
-from functools import wraps
+import numpy as np
 from time import time
+from tqdm import tqdm
+from pathlib import Path
+from functools import wraps
+from numpy.typing import NDArray
 
 
 def video_write(input: str, output_path: str, yolo_model, config):
@@ -34,6 +32,7 @@ def video_write(input: str, output_path: str, yolo_model, config):
 
 
 def timeit(f):
+    """A wrapper around function f that measures the execution time."""
     @wraps(f)
     def wrap(*args, **kw):
         ts = time()
@@ -211,7 +210,7 @@ class BoundingBox:
         Args:
 
         Returns:
-
+            the distance between bounding box and the given coordination
         """
 
         return np.round(np.linalg.norm(np.array(self.center) - coordination), 3)
@@ -416,8 +415,7 @@ class BoundingBox:
 
 class KeyPointBox:
     def __init__(self, keypoints: NDArray, conf: float = 0, name: str = None):
-        """
-        Single players keypoints from single yolo. A frame will have a list of these objects.
+        """Single players keypoints from single yolo. A frame will have a list of these objects.
         Args:
             keypoints:
             name:
@@ -436,6 +434,7 @@ class KeyPointBox:
         self.box = self.get_bbox()
 
     def get_bbox(self):
+        """Generates the BoundingBox for keypoints."""
         height_margin = 10
         width_margin = 10
         xs = self.keypoints[:, 0]
@@ -612,10 +611,24 @@ class KeyPointBox:
         return js
 
 
-def state_changes(states: list):
-    curr: int = states[0]
-    temp = [curr]
-    for item in states:
-        if item != curr:
-            curr = item
-            temp.append(curr)
+def state_changes(states: list, prediction_length: int = 30):
+    """
+    This function simply gets 30 (`prediction_length`) labels for 30
+    frames of video, and keeps 1 label for these 30 frames.
+    it is designed for removing redundancy on DB storage (it's
+    not a big deal!).
+
+    Args:
+        states:
+        prediction_length:
+
+    Returns:
+
+    """
+    p = len(states) // prediction_length
+    partitions = np.split(np.array(states), p)
+    new_states = []
+    for p in partitions:
+        c = p[1]  # Any value between 0 - 30 would be the same for each state.
+        new_states.append(c)
+    return new_states
