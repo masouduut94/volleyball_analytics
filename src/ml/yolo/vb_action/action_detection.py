@@ -18,8 +18,8 @@ class ActionDetector:
         self.labels2ids = {v: k for k, v in self.labels.items()}
 
     def predict(self, inputs: NDArray, verbose=False, exclude=None) -> dict[str, List[BoundingBox]]:
-        detect_ids = self.labels2ids[exclude] if exclude is not None else self.labels.keys()
-        outputs = self.model.predict(inputs, verbose=verbose, classes=detect_ids)
+        detect_ids = {k: v for k, v in self.labels2ids.items() if k != exclude}
+        outputs = self.model.predict(inputs, verbose=verbose, classes=list(detect_ids.values()))
 
         confs = outputs[0].boxes.conf.cpu().detach().numpy().tolist()
         boxes = outputs[0].boxes.xyxy.cpu().detach().numpy().tolist()
@@ -46,7 +46,6 @@ class ActionDetector:
             confs = output.boxes.conf.cpu().detach().numpy().tolist()
             boxes = output.boxes.xyxy.cpu().detach().numpy().tolist()
             classes = output.boxes.cls.cpu().detach().numpy().astype(int).tolist()
-            # detections = []
             temp = {v: [] for v in self.labels.values()}
             for box, conf, cl in zip(boxes, confs, classes):
                 name = self.labels[cl]
@@ -55,7 +54,6 @@ class ActionDetector:
                     temp[name].append(b)
                 except KeyError:
                     temp[name] = [b]
-                # detections.append(b)
             results.append(temp)
         return results
 

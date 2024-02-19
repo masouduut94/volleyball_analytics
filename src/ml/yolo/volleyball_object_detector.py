@@ -16,6 +16,7 @@ class VolleyBallObjectDetector:
     def __init__(self, config: dict, video_name: str = None, use_player_detection=True):
         self.config = config
         court_dict = None
+        # TODO: make it work even if there is no court json for the specific match....
         if video_name is not None:
             court_dict = json.load(open(self.config['court_json']))[video_name]
         if use_player_detection:

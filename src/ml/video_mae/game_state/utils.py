@@ -325,8 +325,9 @@ class Manager:
         return updated
 
 
-def annotate_service(serve_detection_model: GameStateDetector, video_path: str, output_path: str,
-                     buffer_size: int = 30):
+def annotate_service(
+        serve_detection_model: GameStateDetector, video_path: str, output_path: str, buffer_size: int = 30
+):
     """Annotates the video frames based on the game-state detector detections.
 
     Args:
@@ -346,9 +347,7 @@ def annotate_service(serve_detection_model: GameStateDetector, video_path: str, 
     buffer = []
     buffer2 = []
     w, h, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
-
     pbar = tqdm(total=n_frames, desc=f'writing 0/{n_frames}')
-
     codec = cv2.VideoWriter_fourcc(*'mp4v')
     w, h, fps = [int(cap.get(i)) for i in range(3, 6)]
     output_name = join(output_path, Path(video_path).stem + f'_visualization.mp4')

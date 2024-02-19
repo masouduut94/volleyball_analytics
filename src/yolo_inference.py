@@ -84,8 +84,6 @@ if __name__ == '__main__':
             pbar.update(1)
             cap.set(1, fno)
             status, frame = cap.read()
-            # TODO: Combine scene detection with yolo batch inference and add db integration...
-            #   Create a demo together. and save the gif file...
             batch_fno.append(fno)
             batch.append(frame)
             if len(batch) == batch_size:
