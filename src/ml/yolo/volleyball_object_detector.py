@@ -18,7 +18,10 @@ class VolleyBallObjectDetector:
         court_dict = None
         # TODO: make it work even if there is no court json for the specific match....
         if video_name is not None:
-            court_dict = json.load(open(self.config['court_json']))[video_name]
+            try:
+                court_dict = json.load(open(self.config['court_json']))[video_name]
+            except KeyError:
+                court_dict = None
         if use_player_detection:
             self.player_detector = PlayerDetector(self.config['yolo']['player_detection'], court_dict=court_dict)
         else:

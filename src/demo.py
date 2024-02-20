@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument(
         '--video_path',
         type=str,
-        default="/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/22.mp4"
+        default="/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/16.mp4"
     )
     parser.add_argument(
         '--output_path',
@@ -44,7 +44,6 @@ def parse_args():
 
 
 if __name__ == '__main__':
-
     args = parse_args()
 
     video_path = Path(args.video_path)
@@ -101,22 +100,24 @@ if __name__ == '__main__':
                     color = (255, 255, 255)
 
             for i, f in enumerate(buffer):
-                buffer[i] = cv2.putText(buffer[i], state_detector.state2label[label].upper(), (w // 2, 50),
+                game_state = state_detector.state2label[label].upper()
+                frame_info = f"Frame #{fno_buffer[i]}/{n_frames}".upper()
+
+                buffer[i] = cv2.putText(buffer[i], f"Game Status: {game_state}", (150, 50),
                                         cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2)
-                buffer[i] = cv2.putText(buffer[i], f"Frame # {fno_buffer}/{n_frames}".upper(), (w - 200, 50),
-                                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+                buffer[i] = cv2.putText(buffer[i], frame_info, (w - 350, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                                        0.6, (255, 0, 0), 2)
 
                 if label != GameState.NO_PLAY:
+                    # YOLO Object detection
                     balls = vb_object_detector.detect_balls(f)
-                    vb_objects = vb_object_detector.detect_actions(f, exclude='ball')
+                    vb_objects = vb_object_detector.detect_actions(f, exclude=('ball',))
                     blocks = vb_objects['block']
                     sets = vb_objects['set']
                     spikes = vb_objects['spike']
                     receives = vb_objects['receive']
                     services = vb_objects['serve']
                     objects = balls + blocks + sets + receives + spikes + services
-                    # if len(spikes) or len(receives) or len(sets) or len(blocks):
-                    #     print("found!!!")
                     buffer[i] = vb_object_detector.draw_bboxes(buffer[i], objects)
 
                 writer.write(buffer[i])

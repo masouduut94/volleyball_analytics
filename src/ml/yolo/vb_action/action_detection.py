@@ -15,8 +15,8 @@ class ActionDetector:
         self.labels = cfg['labels']
         self.labels2ids = {v: k for k, v in self.labels.items()}
 
-    def predict(self, inputs: NDArray, verbose=False, exclude=None) -> dict[str, List[BoundingBox]]:
-        detect_ids = {k: v for k, v in self.labels2ids.items() if k != exclude}
+    def predict(self, inputs: NDArray, verbose=False, exclude=()) -> dict[str, List[BoundingBox]]:
+        detect_ids = {k: v for k, v in self.labels2ids.items() if k not in exclude}
         outputs = self.model.predict(inputs, verbose=verbose, classes=list(detect_ids.values()))
 
         confs = outputs[0].boxes.conf.cpu().detach().numpy().tolist()
@@ -33,8 +33,8 @@ class ActionDetector:
 
         return temp
 
-    def batch_predict(self, inputs: List[NDArray], verbose=False, exclude=None) -> List[dict[str, List[BoundingBox]]]:
-        detect_ids = {k: v for k, v in self.labels2ids.items() if k != exclude}
+    def batch_predict(self, inputs: List[NDArray], verbose=False, exclude=()) -> List[dict[str, List[BoundingBox]]]:
+        detect_ids = {k: v for k, v in self.labels2ids.items() if k not in exclude}
         # TODO: Add exclude to the init function to reduce latency.
         # TODO: Split the list into a list of dictionaries for actions. by try except
         outputs = self.model.predict(inputs, verbose=verbose, classes=list(detect_ids.values()))
