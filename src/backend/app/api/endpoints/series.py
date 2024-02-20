@@ -18,7 +18,7 @@ async def get_all_series(db: Session = Depends(get_db)):
     if not series:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No Series found.."
+            detail="No Series found.."
         )
     return series
 

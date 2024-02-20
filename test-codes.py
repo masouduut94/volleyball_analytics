@@ -4,7 +4,7 @@ from time import time
 from pathlib import Path
 from argparse import ArgumentParser
 
-from src.ml.yolo.players.segmentation import PlayerSegmentor
+# from src.ml.yolo.players.segmentation import PlayerSegmentor
 from src.utilities.utils import CourtCoordinates
 from src.ml.yolo.ball.ball_detection import BallSegmentor
 from src.ml.yolo.players.detection import PlayerDetector

@@ -1,12 +1,10 @@
 import os
-from pathlib import Path
-from typing import List, Any
-
 import cv2
-import numpy as np
-from numpy.typing import ArrayLike, NDArray
 from tqdm import tqdm
+from typing import List
+from pathlib import Path
 from ultralytics import YOLO
+from numpy.typing import NDArray
 
 from src.utilities.utils import BoundingBox, Meta, KeyPointBox
 

@@ -7,16 +7,13 @@ Then the statistics and outputs are stored on the db to get ready for visualizat
 """
 
 import cv2
-import numpy as np
 import yaml
+import numpy as np
 from tqdm import tqdm
 from pathlib import Path
-
 from typing_extensions import List
 
-from src.backend.app.api_interface import APIInterface
 from src.backend.app.enums.enums import GameState
-
 from src.ml.video_mae.game_state.utils import Manager
 
 
@@ -28,7 +25,7 @@ def main():
     -------
 
     """
-    match_id = 1
+    # match_id = 1
     ml_config = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
     setup_config = "/home/masoud/Desktop/projects/volleyball_analytics/conf/setup.yaml"
     api_base_url = "http://localhost:8000"

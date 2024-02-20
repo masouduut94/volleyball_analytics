@@ -18,10 +18,10 @@ class TeamTest(VBTest):
         # Testing team creation and fetching for multiple team.
         t = TeamBaseSchema(name='canada', is_national_team=True)
         e = TeamBaseSchema(name='usa', is_national_team=True)
-        response = self.client.post(f"/api/teams/", json=e.model_dump())
-        response = self.client.post(f"/api/teams/", json=t.model_dump())
+        response = self.client.post("/api/teams/", json=e.model_dump())
+        response = self.client.post("/api/teams/", json=t.model_dump())
 
-        response = self.client.get(f"/api/teams/")
+        response = self.client.get("/api/teams/")
         js = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(js), 2)

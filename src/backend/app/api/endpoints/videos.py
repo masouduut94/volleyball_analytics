@@ -18,7 +18,7 @@ async def get_all_videos(db: Session = Depends(get_db)):
     if not videos:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"no video found.."
+            detail="no video found.."
         )
     return videos
 

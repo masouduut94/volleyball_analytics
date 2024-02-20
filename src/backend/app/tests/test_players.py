@@ -28,10 +28,10 @@ class PlayerTest(VBTest):
         tony = PlayerCreateSchema(first_name='Tony', last_name='Defalco', role=pos.OPPOSITE_HITTER, height=202,
                                   weight=84, nation_id=nation.id, team_id=team.id)
 
-        _ = self.client.post(f"/api/players/", json=benjamin.model_dump())
-        _ = self.client.post(f"/api/players/", json=tony.model_dump())
+        _ = self.client.post("/api/players/", json=benjamin.model_dump())
+        _ = self.client.post("/api/players/", json=tony.model_dump())
 
-        response = self.client.get(f"/api/players/")
+        response = self.client.get("/api/players/")
         js = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(js), 2)

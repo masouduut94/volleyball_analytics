@@ -18,7 +18,7 @@ async def get_all_teams(db: Session = Depends(get_db)):
     if not teams:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No Team found.."
+            detail="No Team found.."
         )
     return teams
 

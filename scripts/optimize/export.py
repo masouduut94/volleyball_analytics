@@ -25,9 +25,6 @@ tfjs | yolov8n_web_model/ => imgsz, half, int8
 yolov8n_paddle_model/ => imgsz
 yolov8n_ncnn_model/ => imgsz, half
 """
-import sys
-from pathlib import Path
-from subprocess import call
 
 from ultralytics import YOLO
 

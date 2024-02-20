@@ -1,11 +1,8 @@
-from typing import Union
-
 import cv2
-from pathlib import Path
-from os.path import join
 import numpy as np
 import pandas as pd
-from time import time
+from os.path import join
+from pathlib import Path
 
 """
 Data must be like this:
@@ -168,9 +165,7 @@ def click_and_crop(event, x, y, flags, param):
 
 
 def init_message(df, index, columns, custom_msg=None):
-    # data = df.iloc[index]
     st = ''
-
     for col in columns:
         if df.at[index, col]:
             st += f'| {col}'
@@ -180,17 +175,7 @@ def init_message(df, index, columns, custom_msg=None):
     return st
 
 
-def init(df: pd.DataFrame, cols_dtype: dict, with_fake_values: bool = False):
-    """
-    cols_dtype = {
-        'bool': ['toss', 'end_toss', 'exclude', 'end_exclude']
-    }
-
-    :param df:
-    :param cols_dtype:
-    :param with_fake_values:
-    :return:
-    """
+def init(dataframe: pd.DataFrame, columns_dtype: dict, with_fake_values: bool = False):
     frames = np.arange(0, n_frames)
     fake_positions = [-1] * n_frames
     fake_bool = [False] * n_frames
@@ -209,28 +194,28 @@ def init(df: pd.DataFrame, cols_dtype: dict, with_fake_values: bool = False):
                 'x': fake_positions,
                 'y': fake_positions
             }
-        df = pd.DataFrame(data=data)
+        dataframe = pd.DataFrame(data=data)
 
     if BBOX_ANNOTATION:
         for col in ['frame', 'x1', 'y1', 'x2', 'y2']:
-            df[col] = df[col].astype('int32')
+            dataframe[col] = dataframe[col].astype('int32')
     else:
         for col in ['frame', 'x', 'y']:
-            df[col] = df[col].astype('int32')
+            dataframe[col] = dataframe[col].astype('int32')
 
-    for dtype, columns in cols_dtype.items():
+    for dtype, columns in columns_dtype.items():
         if dtype == 'int32':
             fake = np.array([-1] * n_frames)
             for col in columns:
                 if with_fake_values:
-                    df[col] = fake
-                df[col] = df[col].astype('int')
+                    dataframe[col] = fake
+                dataframe[col] = dataframe[col].astype('int')
         elif dtype == 'bool':
             for col in columns:
                 if with_fake_values:
-                    df[col] = fake_bool
-                df[col] = df[col].astype(bool)
-    return df
+                    dataframe[col] = fake_bool
+                dataframe[col] = dataframe[col].astype(bool)
+    return dataframe
 
 
 def save_data(df, save_path):
@@ -271,17 +256,14 @@ if __name__ == '__main__':
     cv2.setMouseCallback("image", click_and_crop)
 
     while True:
-        # frame = cv2.resize(frame, (w, h))
         cv2.imshow("image", frame)
-        key = cv2.waitKeyEx(1)  # & 0xFF
-        # if key != -1:
-        #     print(key)
-        if key == 27:  # ESC
+        key = cv2.waitKeyEx(1)
+        if key == 27:
             df = save_data(df, save_path)
             custom_msg = "Data is saved ..."
             frame = to_frame(cap, df, current, n_frames, custom_msg=custom_msg)
             break
-        if key == 3014656:  # DEL
+        if key == 3014656:
             if BBOX_ANNOTATION:
                 df.at[current, "x1"] = -1
                 df.at[current, "x2"] = -1

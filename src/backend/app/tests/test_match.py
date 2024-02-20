@@ -43,10 +43,10 @@ class MatchTest(VBTest):
             video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
         )
 
-        _ = self.client.post(f"/api/matches/", json=match1.model_dump())
-        _ = self.client.post(f"/api/matches/", json=match2.model_dump())
+        _ = self.client.post("/api/matches/", json=match1.model_dump())
+        _ = self.client.post("/api/matches/", json=match2.model_dump())
 
-        response = self.client.get(f"/api/matches/")
+        response = self.client.get("/api/matches/")
         js = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(js), 2)

@@ -1,9 +1,7 @@
-from urllib.parse import urljoin
-
-from os.path import join
-from pathlib import Path
-from fastapi import status
 import requests as rq
+from os.path import join
+from fastapi import status
+from urllib.parse import urljoin
 from typing_extensions import List
 
 from src.backend.app.schemas import cameras, matches, rallies, nations, players, series, teams, videos
@@ -27,9 +25,9 @@ class APIInterface:
         self.team_url = urljoin(self.base_url, '/api/teams/')
         self.video_url = urljoin(self.base_url, '/api/videos/')
         try:
-            r = rq.get(url=urljoin(self.base_url, '/api/check/'), timeout=0.001)
+            rq.get(url=urljoin(self.base_url, '/api/check/'), timeout=0.001)
         except ConnectionError:
-            print(f"Connection Failure. make sure API is up! ")
+            print("Connection Failure. make sure API is up! ")
         else:
             print("API connection established.")
 

@@ -1,8 +1,8 @@
+from shutil import move
 from os import makedirs
 from pathlib import Path
 from os.path import join
 from random import shuffle
-from shutil import copy2, move
 
 dataset_root = '/home/masoud/Desktop/projects/volleyball_analytics/data/preprocessed/game-state-3-classes'
 new_path = '/home/masoud/Desktop/projects/volleyball_analytics/data/processed/game-status'

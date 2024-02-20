@@ -72,7 +72,7 @@ if __name__ == '__main__':
     w, h, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
     pbar = tqdm(total=n_frames, desc=f'writing 0/{n_frames}')
     codec = cv2.VideoWriter_fourcc(*'mp4v')
-    output_name = join(args.output_path, Path(video_path).stem + f'_DEMO.mp4')
+    output_name = join(args.output_path, f'{Path(video_path).stem}_DEMO.mp4')
     writer = cv2.VideoWriter(output_name, codec, fps, (w, h))
 
     while status:

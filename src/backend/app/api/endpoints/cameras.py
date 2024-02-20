@@ -1,13 +1,13 @@
-from fastapi import Depends, HTTPException, status, APIRouter
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from typing_extensions import List
+from fastapi import Depends, HTTPException, status, APIRouter
 
-from src.backend.app.crud.base import CRUDBase
 from src.backend.app.db.engine import get_db
+from src.backend.app.crud.base import CRUDBase
 from src.backend.app.models.models import Camera
 from src.backend.app.schemas.cameras import CameraBaseSchema
 
+# from fastapi.encoders import jsonable_encoder
 router = APIRouter()
 
 camera_crud = CRUDBase(Camera)
@@ -19,7 +19,7 @@ async def get_all_cameras(db: Session = Depends(get_db)):
     if not cameras:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"no cameras found.."
+            detail="no cameras found.."
         )
     return cameras
 

@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from fastapi.encoders import jsonable_encoder as jsonify
 
 from src.backend.app.db.engine import engine, Base, get_db
-from src.backend.app.schemas import teams, videos, series, players, nations, cameras, services, matches, rallies
+from src.backend.app.schemas import teams, videos, series, players, nations, cameras, matches, rallies
 
 
 class VBTest(unittest.TestCase):

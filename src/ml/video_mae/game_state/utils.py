@@ -61,6 +61,7 @@ class Manager:
             frames:
 
         """
+        # TODO: Update the state detection to operate in more complex situations like 5 states.
         current_state = self.state_detector.predict(frames)
         self._set_current_state(current_state)
 
@@ -350,7 +351,7 @@ def annotate_service(
     pbar = tqdm(total=n_frames, desc=f'writing 0/{n_frames}')
     codec = cv2.VideoWriter_fourcc(*'mp4v')
     w, h, fps = [int(cap.get(i)) for i in range(3, 6)]
-    output_name = join(output_path, Path(video_path).stem + f'_visualization.mp4')
+    output_name = join(output_path, f'{Path(video_path).stem}_visualization.mp4')
     writer = cv2.VideoWriter(output_name, codec, fps, (w, h))
 
     while status:

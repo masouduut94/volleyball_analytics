@@ -50,10 +50,10 @@ class SeriesTest(VBTest):
         # Testing series creation and fetching for multiple series.
         t = series.SeriesCreateSchema(start_date=datetime.now(), end_date=datetime.now(), host='F')
         e = series.SeriesCreateSchema(start_date=datetime.now(), end_date=datetime.now(), host='F')
-        response = self.client.post(f"/api/series/", json=jsonify(t))
-        response = self.client.post(f"/api/series/", json=jsonify(e))
+        response = self.client.post("/api/series/", json=jsonify(t))
+        response = self.client.post("/api/series/", json=jsonify(e))
 
-        response = self.client.get(f"/api/series/")
+        response = self.client.get("/api/series/")
         js = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(js), 2)

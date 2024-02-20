@@ -1,8 +1,7 @@
 import cv2
 import yaml
 from tqdm import tqdm
-from api.models import Service, Rally, Video
-# from api.data_classes import SourceData, ServiceData
+from src.backend.app.models.models import Video
 from gamestate_detection import GameStateDetector
 from src.ml.video_mae.game_state.utils import Manager
 

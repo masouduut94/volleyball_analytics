@@ -18,7 +18,7 @@ async def get_all_nations(db: Session = Depends(get_db)):
     if not nations:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No Nation found.."
+            detail="No Nation found.."
         )
     return nations
 

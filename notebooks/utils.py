@@ -1,13 +1,12 @@
-import matplotlib.pyplot as plt
-import numpy as np
-from os import makedirs
-from os.path import isfile, join
-from pathlib import Path, PosixPath
 import cv2
+import numpy as np
+from typing import List
+from os import makedirs
 from shutil import copy2
+from os.path import join
+from pathlib import Path
 
 from numpy.typing import ArrayLike
-from typing import Any, List, Tuple
 
 
 class Bbox:
@@ -24,13 +23,12 @@ class Bbox:
         self.height = abs(self.y2 - self.y1)
 
     def to_yolo(self, img_width: int, img_height: int) -> str:
-        l = self.label
         x_cen = (self.x1 + self.width/2) / img_width
         y_cen = (self.y1 + self.height/2) / img_height
         width = (self.width / img_width)
         height = (self.height / img_height)
         
-        return f"{l} {x_cen} {y_cen} {width} {height}"
+        return f"{self.label} {x_cen} {y_cen} {width} {height}"
 
     def draw(self, img: ArrayLike, color: tuple = (255, 0, 0)) -> ArrayLike:
         img = cv2.rectangle(img, self.pt1, self.pt2, color, 2)

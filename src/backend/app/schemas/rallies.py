@@ -1,12 +1,7 @@
-from typing import Optional, Any
-
-from pydantic import BaseModel, ConfigDict, Field, model_validator, ValidationError
-from typing_extensions import Dict, List
-
-from src.backend.app.schemas.services import ServiceCreateSchema
+from typing_extensions import Dict, List, Any
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
-# Shared properties
 class RallyCreateSchema(BaseModel):
     """
     Stores the data for each rally. all the dict-type items are
@@ -33,7 +28,7 @@ class RallyCreateSchema(BaseModel):
 
     @model_validator(mode='before')
     @classmethod
-    def check_card_number_omitted(cls, data: Any) -> Any:
+    def check_date(cls, data: Any) -> Any:
         if isinstance(data, dict):
             if data['start_frame'] >= data['end_frame']:
                 raise ValueError("The start_frame must be less than end_frame...")
@@ -41,7 +36,7 @@ class RallyCreateSchema(BaseModel):
 
     @model_validator(mode='after')
     @classmethod
-    def check_card_number_omitted(cls, data: Any) -> Any:
+    def check_start_date(cls, data: Any) -> Any:
         if isinstance(data, dict):
             if data['start_frame'] >= data['end_frame']:
                 raise ValueError("The start_frame must be less than end_frame...")

@@ -43,10 +43,10 @@ class NationTest(VBTest):
         # Testing team creation and fetching for multiple team.
         t = NationBaseSchema(name='canada', display_name="canada")
         e = NationBaseSchema(name='canada', display_name="canada")
-        response = self.client.post(f"/api/nations/", json=e.model_dump())
-        response = self.client.post(f"/api/nations/", json=t.model_dump())
+        response = self.client.post("/api/nations/", json=e.model_dump())
+        response = self.client.post("/api/nations/", json=t.model_dump())
 
-        response = self.client.get(f"/api/nations/")
+        response = self.client.get("/api/nations/")
         js = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(js), 2)

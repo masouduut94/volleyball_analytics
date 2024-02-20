@@ -21,7 +21,9 @@ videos = [vid for vid in videos if vid.stem in [annot.stem for annot in annotati
 
 pairs = list(zip(videos, annotations))
 
-get_label = lambda annots, label_name: [f.get('name') for f in annots if f.find('tag').get('label') == label_name]
+
+def get_label(annots, label_name):
+    return [f.get('name') for f in annots if f.find('tag').get('label') == label_name]
 
 
 def get_frame_nos(annot_path, label='serving-start'):

@@ -1,6 +1,6 @@
 from typing import List
 from ultralytics import YOLO
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 from src.utilities.utils import BoundingBox, Meta, CourtCoordinates
 

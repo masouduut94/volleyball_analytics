@@ -2,7 +2,7 @@ from os import makedirs
 from pathlib import Path
 from os.path import join
 from random import shuffle
-from shutil import copy2, move
+from shutil import move
 
 from natsort import natsorted
 

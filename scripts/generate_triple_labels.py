@@ -4,13 +4,13 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from os import makedirs
+from shutil import move
 from pathlib import Path
+from os.path import join
+from random import shuffle
 from natsort import natsorted
 import matplotlib.pyplot as plt
 import xml.etree.ElementTree as ET
-from os.path import join
-from random import shuffle
-from shutil import copy2, move
 
 plt.rcParams['figure.figsize'] = [15, 10]
 
@@ -23,7 +23,9 @@ videos = natsorted(list(video_path.glob('*')), key=lambda x: x.stem)
 videos = [vid for vid in videos if vid.stem in [annot.stem for annot in annotations]]
 pairs = list(zip(videos, annotations))
 
-get_label = lambda annots, label_name: [f.get('name') for f in annots if f.find('tag').get('label') == label_name]
+
+def get_label(annots, label_name):
+    return [f.get('name') for f in annots if f.find('tag').get('label') == label_name]
 
 
 def get_frame_nos(annot_path, label='serving-start'):

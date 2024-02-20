@@ -17,7 +17,7 @@ async def get_all_rallies(db: Session = Depends(get_db)):
     if not rallies:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No Rally found.."
+            detail="No Rally found.."
         )
     rallies = sorted(rallies, key=lambda x: x.order)
     return rallies

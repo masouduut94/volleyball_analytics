@@ -90,7 +90,7 @@ class RallyTest(VBTest):
         # Testing rally creation and fetching for multiple rally.
         # Test rally order
         match = self.create_match()
-        rally1 = self.create_rally(
+        _ = self.create_rally(
             match=match,
             clip_path='/mnt/disk1/video1.mp4',
             start_frame=100,
@@ -98,7 +98,7 @@ class RallyTest(VBTest):
             order=0
         )
 
-        rally3 = self.create_rally(
+        _ = self.create_rally(
             match=match,
             clip_path='/mnt/disk1/video1.mp4',
             start_frame=500,
@@ -106,7 +106,7 @@ class RallyTest(VBTest):
             order=2
         )
 
-        rally2 = self.create_rally(
+        _ = self.create_rally(
             match=match,
             clip_path='/mnt/disk1/video1.mp4',
             start_frame=250,
@@ -115,7 +115,7 @@ class RallyTest(VBTest):
         )
 
         # test if the outputs come in order of occurrence in game...
-        resp = self.client.get(f"/api/rallies/")
+        resp = self.client.get("/api/rallies/")
         js = resp.json()
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(len(js), 3)

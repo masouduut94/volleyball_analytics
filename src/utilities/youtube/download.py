@@ -25,9 +25,9 @@ v_links = [
     ]
 
 
-for l in tqdm(v_links):
-    yt = YouTube(l)
-    print(l)
+for link in tqdm(v_links):
+    yt = YouTube(link)
+    print(link)
     stream = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
     # stream = yt.streams.first()
     stream.download('./')

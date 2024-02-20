@@ -1,4 +1,3 @@
-import argparse
 import cv2
 import pandas as pd
 
@@ -20,7 +19,7 @@ def click_and_crop(event, x, y, flags, param):
 
     elif event == cv2.EVENT_LBUTTONUP:
         drag = 0
-        
+
         ref_pt.append((x, y))
         cv2.rectangle(image, ref_pt[0], ref_pt[-1], (0, 255, 0), 2)
         cv2.imshow("image", image)

@@ -19,10 +19,10 @@ class VideoTest(VBTest):
         v1 = VideoBaseSchema(camera_type_id=c.id, path='/videos/file.mp4')
         v2 = VideoBaseSchema(camera_type_id=c.id, path='/videos/file1.mp4')
 
-        response = self.client.post(f"/api/videos/", json=v1.model_dump())
-        response = self.client.post(f"/api/videos/", json=v2.model_dump())
+        response = self.client.post("/api/videos/", json=v1.model_dump())
+        response = self.client.post("/api/videos/", json=v2.model_dump())
 
-        response = self.client.get(f"/api/videos/")
+        response = self.client.get("/api/videos/")
         js = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(js), 2)

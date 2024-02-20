@@ -18,10 +18,10 @@ class CameraTest(VBTest):
         # Testing camera creation and fetching for multiple camera.
         t = CameraCreateSchema(angle_name='behind_team1')
         e = CameraCreateSchema(angle_name='behind_team2')
-        response = self.client.post(f"/api/cameras/", json=e.model_dump())
-        response = self.client.post(f"/api/cameras/", json=t.model_dump())
+        response = self.client.post("/api/cameras/", json=e.model_dump())
+        response = self.client.post("/api/cameras/", json=t.model_dump())
 
-        response = self.client.get(f"/api/cameras/")
+        response = self.client.get("/api/cameras/")
         js = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(js), 2)

@@ -2,7 +2,7 @@ from typing import List
 from numpy.typing import NDArray
 from ultralytics import YOLO
 
-from src.utilities.utils import BoundingBox, KeyPointBox, Meta
+from src.utilities.utils import KeyPointBox, Meta
 
 # weights = 'yolov8n-pose.pt'
 __all__ = ['PoseEstimator']

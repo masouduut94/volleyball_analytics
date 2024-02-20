@@ -18,7 +18,7 @@ async def get_all_players(db: Session = Depends(get_db)):
     if not players:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No Player found.."
+            detail="No Player found.."
         )
     return players
 

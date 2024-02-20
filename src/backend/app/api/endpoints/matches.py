@@ -18,7 +18,7 @@ async def get_all_matches(db: Session = Depends(get_db)):
     if not matches:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"no match found.."
+            detail="no match found.."
         )
     return matches
 

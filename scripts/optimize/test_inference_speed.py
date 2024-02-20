@@ -3,8 +3,6 @@ from pathlib import Path
 from ultralytics import YOLO
 import cv2
 from time import time
-import numpy as np
-# from subprocess import call
 """
 command:
 $TRT = /home/masoud/TensorRT-8.6.1.6/bin/trtexec 
