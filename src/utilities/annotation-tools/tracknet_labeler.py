@@ -246,7 +246,7 @@ if __name__ == '__main__':
         df = pd.read_csv(save_path)
         df = init(df, cols_dtype)
         print(f"loading from csv file {save_path}")
-    except:
+    except KeyError:
         df = init(None, cols_dtype, with_fake_values=True)
         print(f"failed to load {save_path}. initializing ......")
 
@@ -328,7 +328,7 @@ if __name__ == '__main__':
         elif key == ord("f"):
             try:
                 check = int(input('Enter your frame:'))
-            except:
+            except KeyError:
                 print("not a valid number.")
                 check = current
             frame = to_frame(cap, df, check, n_frames)
