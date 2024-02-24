@@ -1,5 +1,6 @@
+import pendulum
 import unittest
-from datetime import datetime
+
 from src.backend.app.app import app
 from fastapi.testclient import TestClient
 from fastapi.encoders import jsonable_encoder as jsonify
@@ -64,7 +65,15 @@ class VBTest(unittest.TestCase):
         vid = self.create_video(camera_type_id=cam.id, path='ss.mp4')
         team1 = self.create_team(name='usa')
         team2 = self.create_team(name='canada')
-        tournament = self.create_series(host='netherlands', start_date=datetime.now(), end_date=datetime.now())
+        st_date = pendulum.now().subtract(weeks=2, days=3)
+        end_date = pendulum.now()
+
+        tournament = self.create_series(
+            host='netherlands',
+            start_date=st_date.to_iso8601_string(),
+            end_date=end_date.to_iso8601_string()
+        )
+        # tournament = self.create_series(host='netherlands', start_date=datetime.now(), end_date=datetime.now())
         match = matches.MatchCreateSchema(
             video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
         )

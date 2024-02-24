@@ -1,5 +1,6 @@
-from datetime import datetime
+# from datetime import datetime
 
+import pendulum
 from fastapi.encoders import jsonable_encoder
 
 from src.backend.app.api_interface import APIInterface
@@ -25,7 +26,14 @@ if __name__ == '__main__':
     video = api.insert_video(**new_video.model_dump())
 
     # Insert series
-    new_tournament = series.SeriesCreateSchema(start_date=datetime.now(), end_date=datetime.now(), host='JAPAN')
+    st_date = pendulum.now().subtract(weeks=2, days=3)
+    end_date = pendulum.now()
+
+    new_tournament = series.SeriesCreateSchema(
+        start_date=st_date.to_iso8601_string(),
+        end_date=end_date.to_iso8601_string(),
+        host='JAPAN'
+    )
     tournament = api.insert_series(**jsonable_encoder(new_tournament))
 
     # insert matches

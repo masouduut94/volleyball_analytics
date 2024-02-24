@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import pendulum
+
 from src.backend.app.schemas import matches
 from src.backend.app.tests.utility import VBTest
 
@@ -10,7 +12,15 @@ class MatchTest(VBTest):
         vid = self.create_video(camera_type_id=cam.id, path='ss.mp4')
         team1 = self.create_team(name='usa')
         team2 = self.create_team(name='canada')
-        tournament = self.create_series(host='netherlands', start_date=datetime.now(), end_date=datetime.now())
+        st_date = pendulum.now().subtract(weeks=2, days=3)
+        end_date = pendulum.now()
+
+        tournament = self.create_series(
+            host='netherlands',
+            start_date=st_date.to_iso8601_string(),
+            end_date=end_date.to_iso8601_string()
+        )
+        # tournament = self.create_series(host='netherlands', start_date=datetime.now(), end_date=datetime.now())
         match = matches.MatchCreateSchema(
             video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
         )
@@ -29,7 +39,14 @@ class MatchTest(VBTest):
         vid = self.create_video(camera_type_id=cam.id, path='ss.mp4')
         team1 = self.create_team(name='usa')
         team2 = self.create_team(name='canada')
-        tournament = self.create_series(host='netherlands', start_date=datetime.now(), end_date=datetime.now())
+        st_date = pendulum.now().subtract(weeks=2, days=3)
+        end_date = pendulum.now()
+
+        tournament = self.create_series(
+            host='netherlands',
+            start_date=st_date.to_iso8601_string(),
+            end_date=end_date.to_iso8601_string()
+        )
         match1 = matches.MatchCreateSchema(
             video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
         )
@@ -38,7 +55,14 @@ class MatchTest(VBTest):
         vid = self.create_video(camera_type_id=cam.id, path='22.mp4')
         team1 = self.create_team(name='iran')
         team2 = self.create_team(name='china')
-        tournament = self.create_series(host='germany', start_date=datetime.now(), end_date=datetime.now())
+        st_date = pendulum.now().subtract(months=2, weeks=4, days=3)
+        end_date = pendulum.now()
+
+        tournament = self.create_series(
+            host='netherlands',
+            start_date=st_date.to_iso8601_string(),
+            end_date=end_date.to_iso8601_string()
+        )
         match2 = matches.MatchCreateSchema(
             video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
         )
@@ -57,7 +81,14 @@ class MatchTest(VBTest):
         vid = self.create_video(camera_type_id=cam.id, path='ss.mp4')
         team1 = self.create_team(name='usa')
         team2 = self.create_team(name='canada')
-        tournament = self.create_series(host='netherlands', start_date=datetime.now(), end_date=datetime.now())
+        st_date = pendulum.now().subtract(weeks=4, days=3)
+        end_date = pendulum.now()
+
+        tournament = self.create_series(
+            host='netherlands',
+            start_date=st_date.to_iso8601_string(),
+            end_date=end_date.to_iso8601_string()
+        )
         match = matches.MatchCreateSchema(
             video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
         )
@@ -77,7 +108,14 @@ class MatchTest(VBTest):
         vid = self.create_video(camera_type_id=cam.id, path='ss.mp4')
         team1 = self.create_team(name='usa')
         team2 = self.create_team(name='canada')
-        tournament = self.create_series(host='netherlands', start_date=datetime.now(), end_date=datetime.now())
+        st_date = pendulum.now().subtract(years=1, weeks=2, days=3)
+        end_date = pendulum.now()
+
+        tournament = self.create_series(
+            host='netherlands',
+            start_date=st_date.to_iso8601_string(),
+            end_date=end_date.to_iso8601_string()
+        )
         match = matches.MatchCreateSchema(
             video_id=vid.id, series_id=tournament.id, team1_id=team1.id, team2_id=team2.id
         )

@@ -1,15 +1,24 @@
 from datetime import datetime
+
+import pendulum
+
 from src.backend.app.tests.utility import VBTest
 from src.backend.app.schemas import series, matches
 from fastapi.encoders import jsonable_encoder as jsonify
 from fastapi import status
 
+
 class SeriesTest(VBTest):
 
     def test_get_one_series(self):
         # Testing series creation and fetching for one series.
+        st_date = pendulum.now().subtract(weeks=2, days=3)
+        end_date = pendulum.now()
+
         s = series.SeriesCreateSchema(
-            start_date=datetime.now(), end_date=datetime.now(), host='Europe - Finland'
+            start_date=st_date.to_iso8601_string(),
+            end_date=end_date.to_iso8601_string(),
+            host='Europe - Finland'
         )
 
         response = self.client.post("/api/series/", json=jsonify(s))
@@ -22,7 +31,14 @@ class SeriesTest(VBTest):
 
     def test_update_series(self):
         # Testing series creation and fetching for one series.
-        t = series.SeriesCreateSchema(start_date=datetime.now(), end_date=datetime.now(), host='F')
+        st_date = pendulum.now().subtract(weeks=2, days=3)
+        end_date = pendulum.now()
+
+        t = series.SeriesCreateSchema(
+            start_date=st_date.to_iso8601_string(),
+            end_date=end_date.to_iso8601_string(),
+            host='Europe - Finland'
+        )
         r = self.client.post("/api/series/", json=jsonify(t))
         t = series.SeriesBaseSchema(**r.json())
 
@@ -36,7 +52,14 @@ class SeriesTest(VBTest):
 
     def test_delete_series(self):
         # Testing series creation and fetching for one series.
-        t = series.SeriesCreateSchema(start_date=datetime.now(), end_date=datetime.now(), host='F')
+        st_date = pendulum.now().subtract(weeks=2, days=3)
+        end_date = pendulum.now()
+
+        t = series.SeriesCreateSchema(
+            start_date=st_date.to_iso8601_string(),
+            end_date=end_date.to_iso8601_string(),
+            host='Europe - Finland'
+        )
         r = self.client.post("/api/series/", json=jsonify(t))
         t = series.SeriesBaseSchema(**r.json())
 
@@ -48,8 +71,22 @@ class SeriesTest(VBTest):
 
     def test_get_all_series(self):
         # Testing series creation and fetching for multiple series.
-        t = series.SeriesCreateSchema(start_date=datetime.now(), end_date=datetime.now(), host='F')
-        e = series.SeriesCreateSchema(start_date=datetime.now(), end_date=datetime.now(), host='F')
+        st_date = pendulum.now().subtract(weeks=2, days=3)
+        end_date = pendulum.now()
+
+        st_date2 = pendulum.now().subtract(weeks=5, days=3)
+        end_date2 = pendulum.now().add(years=1)
+
+        t = series.SeriesCreateSchema(
+            start_date=st_date.to_iso8601_string(),
+            end_date=end_date.to_iso8601_string(),
+            host='Europe - Finland'
+        )
+        e = series.SeriesCreateSchema(
+            start_date=st_date2.to_iso8601_string(),
+            end_date=end_date2.to_iso8601_string(),
+            host='Europe - Finland'
+        )
         response = self.client.post("/api/series/", json=jsonify(t))
         response = self.client.post("/api/series/", json=jsonify(e))
 
@@ -87,5 +124,3 @@ class SeriesTest(VBTest):
         self.assertEqual(len(resp3.json()), 2)
         self.assertIn(resp1.json()['id'], [item['id'] for item in resp3.json()])
         self.assertIn(resp2.json()['id'], [item['id'] for item in resp3.json()])
-
-
