@@ -43,7 +43,7 @@ class RallyTest(VBTest):
 
         # Start frame must be less than end frame...
         with self.assertRaises(ValidationError):
-            rally = self.create_rally(
+            _ = self.create_rally(
                 match=match,
                 clip_path='/mnt/disk1/video1.mp4',
                 start_frame=500,

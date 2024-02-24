@@ -26,21 +26,21 @@ class RallyCreateSchema(BaseModel):
     end_frame: int
     clip_path: str = Field(max_length=100)
 
-    @model_validator(mode='before')
-    @classmethod
-    def check_date(cls, data: Any) -> Any:
-        if isinstance(data, dict):
-            if data['start_frame'] >= data['end_frame']:
-                raise ValueError("The start_frame must be less than end_frame...")
-        return data
+    # @model_validator(mode='before')
+    # @classmethod
+    # def check_date(cls, data: Any) -> Any:
+    #     if isinstance(data, dict):
+    #         if data['start_frame'] >= data['end_frame']:
+    #             raise ValueError("The start_frame must be less than end_frame...")
+    #     return data
 
-    @model_validator(mode='after')
-    @classmethod
-    def check_start_date(cls, data: Any) -> Any:
-        if isinstance(data, dict):
-            if data['start_frame'] >= data['end_frame']:
-                raise ValueError("The start_frame must be less than end_frame...")
-        return data
+    # @model_validator(mode='after')
+    # @classmethod
+    # def check_start_date(cls, data: Any) -> Any:
+    #     if isinstance(data, dict):
+    #         if data['start_frame'] >= data['end_frame']:
+    #             raise ValueError("The start_frame must be less than end_frame...")
+    #     return data
 
 
 class RallyBaseSchema(RallyCreateSchema):

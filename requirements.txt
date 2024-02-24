@@ -22,3 +22,4 @@ psycopg2
 sqlalchemy~=2.0.24
 pydantic~=2.5.2
 fastapi~=0.109.2
+ruff~=0.2.2

@@ -36,8 +36,7 @@ async def get_video(video_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=VideoBaseSchema)
 async def create_video(payload: VideoCreateSchema, db: Session = Depends(get_db)):
-    # camera = db.query(Camera).filter(Camera.id == id).first()
-    camera = db.query(Camera).get(payload.camera_type_id)
+    camera = db.get(entity=Camera, ident=payload.camera_type_id)
     if not camera:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,

@@ -22,7 +22,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.model = model
 
     def get(self, db: Session, id: Any) -> Optional[ModelType]:
-        return db.query(self.model).filter(self.model.id == id).first()
+        # db.get(entity=self.model, ident=id)
+        # return db.query(self.model).filter(self.model.id == id).first()
+        return db.get(entity=self.model, ident=id)
 
     def get_all(self, db: Session) -> List[Optional[ModelType]]:
         return db.query(self.model).all()
@@ -50,7 +52,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_obj
 
     def remove(self, db: Session, *, id: int) -> ModelType:
-        obj = db.query(self.model).get(id)
+        obj = db.get(entity=self.model, ident=id)
         db.delete(obj)
         db.commit()
         return obj
