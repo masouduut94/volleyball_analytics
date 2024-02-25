@@ -9,7 +9,7 @@ from typing_extensions import List, Dict, Tuple
 
 from src.backend.app.api_interface import APIInterface
 from src.backend.app.enums.enums import GameState, ServiceType
-from src.utilities.utils import timeit, BoundingBox, state_changes
+from src.utilities.utils import timeit, BoundingBox, state_changes, ProjectLogger
 from src.backend.app.schemas import services, rallies, matches, series, videos
 from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
 from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
@@ -338,10 +338,11 @@ def annotate_service(
         buffer_size: Size of the game-state detection model input.
 
     """
+    logger = ProjectLogger()
     video_path = Path(video_path)
     cap = cv2.VideoCapture(video_path.as_posix())
-    assert video_path.is_file(), f'file {video_path.as_posix()} not found...'
-    assert cap.isOpened(), f'the video file is not opening {video_path}'
+    assert video_path.is_file(), logger.critical(f'file {video_path.as_posix()} not found...')
+    assert cap.isOpened(), logger.critical(f'the video file is not opening {video_path}')
     makedirs(output_path, exist_ok=True)
 
     status = True
@@ -353,6 +354,7 @@ def annotate_service(
     w, h, fps = [int(cap.get(i)) for i in range(3, 6)]
     output_name = join(output_path, f'{Path(video_path).stem}_visualization.mp4')
     writer = cv2.VideoWriter(output_name, codec, fps, (w, h))
+    logger.success("process initialized successfully...")
 
     while status:
         status, frame = cap.read()
@@ -394,4 +396,4 @@ def annotate_service(
     writer.release()
     cap.release()
     pbar.close()
-    print(f"Done. Saved as {output_name} ...")
+    logger.success(f"Done. Saved as {output_name} ...")

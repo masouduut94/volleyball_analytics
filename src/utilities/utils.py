@@ -1,5 +1,8 @@
+import sys
+
 import cv2
 import math
+from loguru import logger
 import numpy as np
 from time import time
 from tqdm import tqdm
@@ -33,6 +36,7 @@ def video_write(input: str, output_path: str, yolo_model, config):
 
 def timeit(f):
     """A wrapper around function f that measures the execution time."""
+
     @wraps(f)
     def wrap(*args, **kw):
         ts = time()
@@ -611,24 +615,29 @@ class KeyPointBox:
         return js
 
 
-def state_changes(states: list, prediction_length: int = 30):
-    """
-    This function simply gets 30 (`prediction_length`) labels for 30
-    frames of video, and keeps 1 label for these 30 frames.
-    it is designed for removing redundancy on DB storage (it's
-    not a big deal!).
+class ProjectLogger:
+    def __init__(self, filename: str = "logs.log"):
+        self.logger = logger
+        self.logger.add(sink=filename, format="{time:MMMM D, YYYY > HH:mm:ss!UTC} | {level} | {message}",
+                        serialize=True)
+        # if show:
+        #     self.logger.add(sink=sys.stderr, format="{time:MMMM D, YYYY > HH:mm:ss!UTC} | {level} | {message}")
 
-    Args:
-        states:
-        prediction_length:
+    def debug(self, msg):
+        self.logger.debug(msg)
 
-    Returns:
+    def info(self, msg):
+        self.logger.info(msg)
 
-    """
-    p = len(states) // prediction_length
-    partitions = np.split(np.array(states), p)
-    new_states = []
-    for p in partitions:
-        c = p[1]  # Any value between 0 - 30 would be the same for each state.
-        new_states.append(c)
-    return new_states
+    def success(self, msg):
+        self.logger.success(msg)
+
+    def warning(self, msg):
+        self.logger.warning(msg)
+
+    def error(self, msg):
+        self.logger.error(msg)
+
+    def critical(self, msg):
+        self.logger.critical(msg)
+

@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import pendulum
 
 from src.backend.app.schemas import matches

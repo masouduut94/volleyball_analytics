@@ -1,13 +1,13 @@
-from argparse import ArgumentParser
-from os import makedirs
-from os.path import join
-from pathlib import Path
-from time import time
-
 import cv2
 import yaml
 from tqdm import tqdm
+from time import time
+from os import makedirs
+from pathlib import Path
+from os.path import join
+from argparse import ArgumentParser
 
+from src.utilities.utils import ProjectLogger
 from src.backend.app.enums.enums import GameState
 from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
@@ -44,6 +44,7 @@ def parse_args():
 
 
 if __name__ == '__main__':
+    logger = ProjectLogger(filename="logs.log")
     args = parse_args()
 
     video_path = Path(args.video_path)
@@ -53,16 +54,18 @@ if __name__ == '__main__':
     setup_cfg: dict = yaml.load(open(args.setup_cfg), Loader=yaml.SafeLoader)
 
     model_cfg.update(setup_cfg)
+    logger.info("Configs initialized successfully.")
     state_detector = GameStateDetector(cfg=model_cfg['video_mae']['game_state_3'])
     vb_object_detector = VolleyBallObjectDetector(
         model_cfg,
         use_player_detection=True,
         video_name=video_path.name
     )
+    logger.info("Yolo detector initialized.")
 
     cap = cv2.VideoCapture(video_path.as_posix())
-    assert video_path.is_file(), f'file {video_path.as_posix()} not found...'
-    assert cap.isOpened(), f'the video file is not opening {video_path}'
+    assert video_path.is_file(), logger.info(f'file {video_path.as_posix()} not found...')
+    assert cap.isOpened(), logger.info(f'the video file is not opening {video_path}')
     makedirs(args.output_path, exist_ok=True)
 
     status = True
@@ -73,6 +76,7 @@ if __name__ == '__main__':
     codec = cv2.VideoWriter_fourcc(*'mp4v')
     output_name = join(args.output_path, f'{Path(video_path).stem}_DEMO.mp4')
     writer = cv2.VideoWriter(output_name, codec, fps, (w, h))
+    logger.success("Process initialization completed...")
 
     while status:
         status, frame = cap.read()
@@ -118,16 +122,17 @@ if __name__ == '__main__':
                     receives = vb_objects['receive']
                     services = vb_objects['serve']
                     objects = balls + blocks + sets + receives + spikes + services
+                    # logger.info(f"Detected {len(objects)} objects...")
                     buffer[i] = vb_object_detector.draw_bboxes(buffer[i], objects)
 
                 writer.write(buffer[i])
             t2 = time()
-            pbar.set_description(f'processing {fno}/{n_frames} | p-time: {abs(t2 - t1): .3f}')
+            pbar.set_description(f'processing {fno}/{n_frames} | process time: {abs(t2 - t1): .3f}')
 
         buffer.clear()
         fno_buffer.clear()
+    logger.success(f"Process finished. Saved output as {output_name}. ")
 
     writer.release()
     cap.release()
     pbar.close()
-    print(f"Done. Saved as {output_name} ...")

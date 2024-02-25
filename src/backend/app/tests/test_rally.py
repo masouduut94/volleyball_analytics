@@ -4,7 +4,6 @@ from src.backend.app.tests.utility import VBTest
 from src.backend.app.schemas import rallies
 from src.backend.app.schemas import matches
 from fastapi import status
-from datetime import datetime
 import pendulum
 
 
