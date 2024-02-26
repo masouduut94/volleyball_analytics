@@ -1,6 +1,6 @@
 
 <h1 align="center">
-    <center><h4>Volleyball Analytics</h4></center>
+    <h2>Volleyball Analytics</h2>
     <img src="data/wiki/images/coach2.jpg">
 </h1>
 
