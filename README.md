@@ -1,8 +1,12 @@
 
 <h1 align="center">
-    <h2>Volleyball Analytics</h2>
+    Volleyball Analytics
+</h1>
+<h1 align="center">
     <img src="data/wiki/images/coach2.jpg">
 </h1>
+    
+
 
 # What is Volleyball Analytics?
 
