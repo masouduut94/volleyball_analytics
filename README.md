@@ -71,6 +71,7 @@ is utilized. This model is trained on a custom dataset that consists of 3 labels
 
 This is the VideoMAE architecture.
 ![videomae architecture](assets/readme/videomae_architecture.jpeg)
+
 [image source](https://huggingface.co/docs/transformers/model_doc/videomae)
 #### Yolov8 model: 
 This state-of-the-art model is an object detection model that is trained on a dataset which includes 
@@ -78,6 +79,7 @@ This state-of-the-art model is an object detection model that is trained on a da
 
 This is yolov8 architecture:
 ![Yolov8](assets/readme/t.webp)
+
 [image source](https://medium.com/@syedzahidali969/principles-of-yolov8-6a90564e16c3)
 
 The yolov8n is chosen for fine-tuning on 6 different objects (actions). In demos,
@@ -89,29 +91,22 @@ you can see 6 colors for bounding boxes.
 - Purple box: volleyball blocking action.
 - Orange box: volleyball spike action.
 
-These are the outputs indicating the video classification + object detection results.
+These are the outputs indicating the video classification + object detection results. 
+The video classification model results can be seen in the top-left corner of video, and the object detection 
+results can be seen as bounding boxes with mentioned colors. please note that the object detection is running
+on the frames that are labeled as **SERVICE** and **PLAY**.
 
 ### Demo 1: FRANCE - POLAND
-
 ![demo1](assets/readme/11_f1.gif)
-
 ### Demo 2: USA - CANADA
-
 ![demo2](assets/readme/20_2_demo.gif)
-
 ### Demo 3: USA - POLAND
-
 ![demo3](assets/readme/22_2_DEMO.gif)
 
-The video classification model results can be seen in the top-left corner of video.
-
-
-
-the third step is to use the generated data to find insights about the game. 
+The third step is to use the generated data to find insights about the game. 
 for example, in the below gif, one of the ace points is extracted. 
 
 ### Demo 4: FRANCE - POLAND Ace score.
-
 ![demo2](assets/readme/ace.gif)
 
 Development
