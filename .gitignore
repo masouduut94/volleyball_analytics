@@ -5,7 +5,6 @@
 *.mkv
 *.csv
 *.png
-*.jpeg
 *.ipynb_checkpoints
 *.pyc
 *.xml

@@ -45,7 +45,7 @@ Video analysis can help identify movement patterns and techniques that may contr
 injuries. Coaches and sports scientists can use this information to design training programs 
 focused on injury prevention and optimize players' biomechanics.
 
-#### Video Assistant Referee
+#### Decision Review System
 Video analysis can assist the referee by reviewing decisions using video footage. This technology can be 
 utilized in several occasions in volleyball. For example, Hawk eye technology can check if the ball bounced 
 inside the court or not. Something like this:
@@ -64,16 +64,32 @@ This machine learning project runs in real-time on top of 2 deep learning models
 In a live broadcast game, it is important to run processes only when game is on. To extract the periods that 
 game is on, [HuggingFace VideoMAE](https://huggingface.co/docs/transformers/en/tasks/video_classification) 
 is utilized. This model is trained on a custom dataset that consists of 3 labels **service**, **play**, 
-**no-play**. This model gets 30 frames as input, and it detects if it's **service**, **play**, **no-play**.
+**no-play**. This model gets 30 frames as input, and outputs the label. it's **service**, **play**, **no-play**.
   - **service** indicates the start of the play when a player tosses the ball to serve it.
   - **play** indicates the periods of game where the players are playing and the game is on.
   - **no-play** indicates the periods of the game where the players are not playing.
 
+This is the VideoMAE architecture.
+![videomae architecture](assets/readme/videomae_architecture.jpeg)
+[image source](https://huggingface.co/docs/transformers/model_doc/videomae)
 #### Yolov8 model: 
 This state-of-the-art model is an object detection model that is trained on a dataset which includes 
    several objects along with several volleyball actions.
 
-Let's see some demos to get some idea:
+This is yolov8 architecture:
+![Yolov8](assets/readme/t.webp)
+[image source](https://medium.com/@syedzahidali969/principles-of-yolov8-6a90564e16c3)
+
+The yolov8n is chosen for fine-tuning on 6 different objects (actions). In demos,
+you can see 6 colors for bounding boxes. 
+- Red box: volleyball ball
+- Brown box: volleyball service action
+- Green box: volleyball reception action.
+- Blue box: volleyball setting action.
+- Purple box: volleyball blocking action.
+- Orange box: volleyball spike action.
+
+These are the outputs indicating the video classification + object detection results.
 
 ### Demo 1: FRANCE - POLAND
 
@@ -89,13 +105,7 @@ Let's see some demos to get some idea:
 
 The video classification model results can be seen in the top-left corner of video.
 
-The output of object detection comes in 6 colors indicating 6 different objects:
-- Red box: volleyball ball
-- Brown box: volleyball service action
-- Green box: volleyball reception action.
-- Blue box: volleyball setting action.
-- Purple box: volleyball blocking action.
-- Orange box: volleyball spike action.
+
 
 the third step is to use the generated data to find insights about the game. 
 for example, in the below gif, one of the ace points is extracted. 
@@ -106,9 +116,10 @@ for example, in the below gif, one of the ace points is extracted.
 
 Development
 ---------
-The whole project is developed with python 3.11. 
+The whole project is developed with python 3.11. The requirements can be
+found in `requirements.txt`.
 
-The running scripts to make demos are listed here:
+There are several scripts that can run the models and output demos that are listed here:
 
 - `src/demo.py`: It uses both video classification + yolo in the inference code and 
     outputs the demos just like the ones shared here.
