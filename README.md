@@ -69,5 +69,40 @@ for example, in the below gif, one of the ace points is fetched
 
 ![demo2](data/wiki/gifs/ace.gif)
 
+Development
+---------
 
+The whole project is developed with python 3.11. 
 
+The running scripts to make demos are listed here:
+
+- `src/demo.py`: It uses both video classification + yolo in the inference code and 
+    outputs the demos just like the ones shared here.
+- `src/VideoMAE_inference.py`: Only runs inference with video classification.
+- `src/yolo_inferece.py`: Runs inference with yolo v8 object detection.
+
+To run models along with data storage, you must install some dependencies:
+
+- install Postgres sql.
+- create a yaml file on `conf` directory named `db_conf.yaml`, and put these values on it.
+  - development:
+  - - user: "user"
+  - - password: "something"
+  - - db: "volleyball_development"
+  - - host: "some_ip"
+  - - port: 5432
+  - - dialect: 'postgresql'
+  - - driver: 'psycopg2'
+  - test:
+  - - user: "user2"
+  - - password: "something"
+  - - db: "volleyball_test"
+  - - host: "some_ip"
+  - - port: 5432
+  - - dialect: 'postgresql'
+  - - driver: 'psycopg2'
+
+- After that run `make install`, `make test` to install dependencies 
+   and run the backend tests.
+- Then run this on root directory: `uvicorn src.backend.app.app:app`
+- Now you can run the `src/main.py`
