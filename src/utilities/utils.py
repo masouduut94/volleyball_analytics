@@ -1,5 +1,3 @@
-import sys
-
 import cv2
 import math
 from loguru import logger

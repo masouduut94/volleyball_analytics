@@ -46,16 +46,16 @@ class BallSegmentor:
         return results
 
     @staticmethod
-    def draw(frame: NDArray, bboxes: List[BoundingBox], use_ellipse: bool = False, use_marker=False, color=Meta.green,
-             use_bbox=True, use_title: bool = True):
+    def draw(input_frame: NDArray, bboxes: List[BoundingBox], use_ellipse: bool = False, use_marker=False,
+             color=Meta.green, use_bbox=True, use_title: bool = True):
         for bb in bboxes:
             if use_marker:
-                frame = bb.draw_marker(frame, color)
+                input_frame = bb.draw_marker(input_frame, color)
             if use_ellipse:
-                frame = bb.draw_ellipse(frame, color)
+                input_frame = bb.draw_ellipse(input_frame, color)
             if use_bbox:
-                frame = bb.plot(frame, color, title=bb.name if use_title else '')
-        return frame
+                input_frame = bb.plot(input_frame, color, title=bb.name if use_title else '')
+        return input_frame
 
 
 if __name__ == '__main__':
