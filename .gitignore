@@ -4,7 +4,6 @@
 *.webm
 *.mkv
 *.csv
-*.jpg
 *.png
 *.jpeg
 *.ipynb_checkpoints

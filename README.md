@@ -1,72 +1,69 @@
-# volleyball_project
 
-This project is designed to use deep learning methods in Volleyball
-Sports Data Analytics.
+<h1 align="center">
+    <center><h4>Volleyball Analytics</h4></center>
+    <img src="data/wiki/images/coach2.jpg">
+</h1>
 
-Helpful links:
+# What is Volleyball Analytics?
 
-- https://github.com/dmlc/decord
-- https://dev.to/mfts/how-to-write-a-perfect-readme-for-your-github-project-59f2
-- https://dev.to/mfts/how-to-write-a-perfect-readme-for-your-github-project-59f2
-- https://www.freecodecamp.org/news/how-to-write-a-good-readme-file/
+Volleyball analytics involves the use of statistical data and 
+advanced metrics to analyze and evaluate various aspects of 
+volleyball performance. The goal is to gain insights into player 
+and team performance, identify strengths and weaknesses, 
+and make informed decisions to improve overall efficiency and effectiveness 
+on the court.
 
-# tasks:
+Volleyball analytics leverages technology, such as sensors and video
+analysis, to collect and process data, offering valuable insights 
+for coaches, players, and teams to enhance their training, 
+strategy, and overall performance.
 
-1. volleyball actions/objects detection :
+# Introduction
+This machine learning project consists of a 3-step process which is able to get live broadcast feed as input, 
+and outputs statistical data.
 
-- [x] sets
-- [x] spikes
-- [x] blocks
-- [x] receives
-- [x] ball
+These are the ML components that made this MLOps possible:
 
-2. volleyball game-state detection:
+- VideoMAE model: This is a module that can classify videos in real-time. This model is trained on a 
+    custom dataset and it gets 30 frames as input, and outputs `service`, `play`, `no-play` as output.
+  - service indicates the start of the play when a player tosses the ball to serve it.
+  - play indicates the periods of game where the players are playing and the game is on.
+  - no-play indicates the periods of the game where the players are not playing.
+- Yolov8 model: This state-of-the-art model for object detection is trained on a dataset which includes 
+   several objects along with several volleyball actions.
 
-- [x] in-play scenes
-- [x] no-play scenes
-- [x] service scenes
+Let's see some demos to get some idea:
 
-3. Integrated the project with DB.
+### Demo 1: FRANCE - POLAND
 
-## Video Analysis
+![demo1](data/wiki/gifs/11_f1.gif)
 
-- [ ] Setter sets distribution.
-- Ball trajectories for:
-    - [ ] sets
-    - [ ] receives
-    - [ ] serves
-- [ ] receives distribution for setters.
-- [ ] spike zones and distributions.
-- [ ] blocks and sets and how they are related with successful spikes.
-- [ ] umpire/referee gesture recognition for score detection.
-- [ ] Objects Visualizations
-- [ ] Find bounce points.
+### Demo 2: USA - CANADA
 
-## ML:
+![demo2](data/wiki/gifs/20_2_demo.gif)
 
-- [x] Try Intel OpenVino...
-- [x] Add object detection results to the DB.
-- [x] Use batch prediction for 30 frames.
-- [x] Add ball detection and its results to DB.
+### Demo 3: USA - POLAND
 
-## BackEnd:
+![demo3](data/wiki/gifs/22_2_DEMO.gif)
 
-- Integrate video clipping:
-    - [x] Add AI-based video-clipper.
-    - [x] add DB integration for video storage.
-    - [x] Integrate FastAPI for API calls.
-    - [ ] Add RabbitMQ for job scheduling.
-    - [ ] Work with decord for faster video reading/writing.
+There is a text on the left top corner of video that indicates the output of 
+video classification output.
 
-# Readme file:
+The annotated objects in these videos are:
 
-- [ ] Publish datasets ...
-- [ ] Publish model weights ...
-- [ ] Add notes about how to generate videos.(description about notebooks)
-- [ ] Add gif from game-state detection model.
-- [ ] Add gif from volleyball objects detection model.
-- [ ] Add gif from volleyball ball segmentation model.
-- [ ] Add descriptions about accuracy/recall/ ...
-- [ ] Add description about how to run each model and get a demo.
-- [ ] Add notes about how to improve.
-- [ ] Add notes about how to set up the postgres/mysql.
+- Red box: volleyball ball
+- Brown box: volleyball service action
+- Green box: volleyball reception action.
+- Blue box: volleyball setting action.
+- Purple box: volleyball blocking action.
+- Orange box: volleyball spike action.
+
+the third step is to use the generated data to find insights about the game. 
+for example, in the below gif, one of the ace points is fetched 
+
+### Demo 4: FRANCE - POLAND
+
+![demo2](data/wiki/gifs/ace.gif)
+
+
+
