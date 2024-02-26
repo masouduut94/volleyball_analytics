@@ -9,43 +9,43 @@
 [image source](https://sportsedtv.com/blog/what-to-pack-on-a-volleyball-trip-volleyball)
 
 
-# What is Sports Analytics?
-
+# Introduction to Sports Analytics
 The use of Artificial Intelligence (AI) in sports analytics has become 
 increasingly prevalent, offering teams and athletes valuable insights 
 to enhance performance, strategy, and decision-making.
 
-**Video analysis** is a crucial component of sports analytics, including volleyball 
-analytics. It involves the use of video footage of games or training sessions to 
+**Video analysis** is a crucial component of sports analytics, individually in volleyball.
+It involves the use of video footage of games or training sessions to 
 gather detailed insights into player and team performance, identify strengths and 
 weaknesses, and make informed decisions to improve overall efficiency and effectiveness 
 on the court.
+This can be useful in many aspects:
 
-#### Real-Time Feedback:
+#### Real-Time Feedback
 Some advanced video analysis tools provide real-time feedback during matches or training sessions. 
 Coaches can use this information to make immediate adjustments to tactics, substitutions, or 
 strategies based on the ongoing performance.
 
-#### Scouting Opponents:
+#### Scouting Opponents
 Teams use video analysis to scout upcoming opponents. By studying their playing style, key players, 
 and preferred strategies, teams can prepare more effectively for upcoming matches.
 
-#### Performance Evaluation:
+#### Performance Evaluation
 Coaches and analysts can review match footage to evaluate player techniques, strategies, and 
 overall performance. This includes aspects such as serving, passing, setting, attacking, and 
 defensive plays.
 
-#### Statistical Tracking:
+#### Statistical Tracking
 Video analysis software often integrates with statistical tracking systems. This enables the 
 extraction of key performance metrics, such as hitting percentages, passing accuracy, and 
 blocking effectiveness, directly from the video footage.
 
-#### Injury Prevention:
+#### Injury Prevention
 Video analysis can help identify movement patterns and techniques that may contribute to 
 injuries. Coaches and sports scientists can use this information to design training programs 
 focused on injury prevention and optimize players' biomechanics.
 
-#### Video Assistant Referee:
+#### Video Assistant Referee
 Video analysis can assist the referee by reviewing decisions using video footage. This technology can be 
 utilized in several occasions in volleyball. For example, Hawk eye technology can check if the ball bounced 
 inside the court or not. Something like this:
@@ -57,14 +57,14 @@ team performance in volleyball and many other sports. The combination of video f
 provides a comprehensive understanding of the game, enabling teams to make data-driven decisions for 
 success.
 
-# Introduction
+# About Project
 This machine learning project runs in real-time on top of 2 deep learning models.
 
 #### Video Classification model: 
 In a live broadcast game, it is important to run processes only when game is on. To extract the periods that 
-game is on, HuggingFace VideoMAE is utilized.
-This model is trained on a custom dataset that consists of 3 labels **service**, **play**, **no-play**.
-This model gets 30 frames as input, and it detects if it's **service**, **play**, **no-play**.
+game is on, [HuggingFace VideoMAE](https://huggingface.co/docs/transformers/en/tasks/video_classification) 
+is utilized. This model is trained on a custom dataset that consists of 3 labels **service**, **play**, 
+**no-play**. This model gets 30 frames as input, and it detects if it's **service**, **play**, **no-play**.
   - **service** indicates the start of the play when a player tosses the ball to serve it.
   - **play** indicates the periods of game where the players are playing and the game is on.
   - **no-play** indicates the periods of the game where the players are not playing.
@@ -98,7 +98,7 @@ The output of object detection comes in 6 colors indicating 6 different objects:
 - Orange box: volleyball spike action.
 
 the third step is to use the generated data to find insights about the game. 
-for example, in the below gif, one of the ace points is fetched 
+for example, in the below gif, one of the ace points is extracted. 
 
 ### Demo 4: FRANCE - POLAND Ace score.
 
