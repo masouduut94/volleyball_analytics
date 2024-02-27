@@ -148,11 +148,12 @@ test:
 - `make install` to install dependencies.
 - `make test` to run unittest tests for backend APIs.
 - `uvicorn src.backend.app.app:app` to start the APIs.
+- Then to seed the database with initial data, run `src/api_init_data.py`.
 - run `src/main.py` and check out the database to see the results.
 
 # About data 
 The video clips that are gathered as data are from 
-[this youtube channel](https://www.youtube.com/@VolleyballWatchdog/videos).
+[this YouTube channel](https://www.youtube.com/@VolleyballWatchdog/videos).
 
 ## What comes next:
 1. Data Analysis is going to be added to the code. There are various KPIs that can be
