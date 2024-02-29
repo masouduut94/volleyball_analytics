@@ -3,7 +3,7 @@
     Volleyball Analytics
 </h1>
 <h1 align="center">
-    <img src="data/wiki/images/coach2.jpg">
+    <img src="assets/readme/coach2.jpg">
 </h1>
 
 [image source](https://sportsedtv.com/blog/what-to-pack-on-a-volleyball-trip-volleyball)
