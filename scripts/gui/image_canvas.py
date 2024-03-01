@@ -8,31 +8,45 @@ class CourtAnnotator(object):
     def __init__(self, filename: str, ):
         self._x = None
         self._y = None
-        cap = cv2.VideoCapture(file)
+        cap = cv2.VideoCapture(filename)
         assert cap.isOpened(), "file is not accessible."
         w, h, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
+
+        w_tl = w // 4
+        w_tr = w * 3 / 4
+        w_dl = w // 30
+        w_dr = w * 29 / 30
+
+        h_tl = h / 2.5
+        h_dr = h * 29 / 30
 
         image = self.get_frame(cap)
 
         self.root = Tk()
         self.root.title("Court Annotation: ")
-        self.canvas = Canvas(self.root, width=w + 20, height=h + 20, bg='black')
-        self.canvas.pack()
+        self.canvas = Canvas(self.root, width=w + 20, height=h + 50, bg='black')
+
         image = ImageTk.PhotoImage(image)
         self.canvas.create_image(0, 0, image=image, anchor="nw")
 
-        self.court_TL = self.canvas.create_oval(10, 10, 30, 30, fill="red")
-        self.court_DL = self.canvas.create_oval(200, 200, 220, 220, fill="red")
-        self.court_TR = self.canvas.create_oval(10, 400, 30, 420, fill="red")
-        self.court_DR = self.canvas.create_oval(500, 400, 520, 420, fill="red")
+        self.court_TL = self.canvas.create_oval(w_tl, h_tl, w_tl+30, h_tl+30, fill="red")
+        self.court_DL = self.canvas.create_oval(w_dl, h_dr, w_dl+30, h_dr+30, fill="red")
+        self.court_TR = self.canvas.create_oval(w_tr, h_tl, w_tr+30, h_tl+30, fill="red")
+        self.court_DR = self.canvas.create_oval(w_dr, h_dr, w_dr+30, h_dr+30, fill="red")
 
         self.court_top_line = self.draw_line_pt1_pt2(self.court_TL, self.court_TR)
         self.court_down_line = self.draw_line_pt1_pt2(self.court_DL, self.court_DR)
         self.court_left_line = self.draw_line_pt1_pt2(self.court_DL, self.court_TL)
         self.court_right_line = self.draw_line_pt1_pt2(self.court_DR, self.court_TR)
 
+        self.frame_changer = Button(self.root, width=20, height=2)
+        self.frame_changer.configure(text="click to change frame", bg='grey')
+        self.frame_changer.place(x=w // 2, y=h - 10)
+        self.canvas.pack()
+
         self.canvas.bind("<ButtonPress-1>", self.start_move)
         self.canvas.bind("<B1-Motion>", self.move)
+        # self.canvas.bind("<ButtonPress-1>", self.start_move)
 
         self.root.mainloop()
 
