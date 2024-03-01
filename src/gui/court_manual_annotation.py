@@ -195,7 +195,7 @@ class CourtAnnotator(object):
             "main_zone": [court_top_left, court_down_left, court_down_right, court_top_right],
             "front_zone": [att_top_left, att_down_left, att_down_right, att_top_right]
         }
-        json.dump(out_dict, open('output_json.json', 'w'))
+        json.dump(out_dict, open('../scripts/gui/output_json.json', 'w'))
 
 
 if __name__ == '__main__':
@@ -217,5 +217,5 @@ if __name__ == '__main__':
     
     """
 
-    file = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/8.mp4'
+    file = '/data/raw/videos/train/8.mp4'
     CourtAnnotator(filename=file)
