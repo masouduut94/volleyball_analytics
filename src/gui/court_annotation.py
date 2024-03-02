@@ -9,7 +9,8 @@ class CourtAnnotator(object):
     def __init__(self, filename: str):
         self._x = None
         self._y = None
-        self.cap = cv2.VideoCapture(filename)
+        self.filename = filename
+        self.cap = cv2.VideoCapture(self.filename)
         assert self.cap.isOpened(), "file is not accessible."
         self.w, self.h, self.fps, _, self.n_frames = [int(self.cap.get(i)) for i in range(3, 8)]
 
@@ -195,27 +196,26 @@ class CourtAnnotator(object):
             "main_zone": [court_top_left, court_down_left, court_down_right, court_top_right],
             "front_zone": [att_top_left, att_down_left, att_down_right, att_top_right]
         }
-        json.dump(out_dict, open('../scripts/gui/output_json.json', 'w'))
+        json.dump(out_dict, open('output_json.json', 'w'))
 
 
 if __name__ == '__main__':
-
     """
     1. select an initial frame from video which can be random
     2. Use a button to change to another frame in the video if current one was unclear.
     3. keep the previous frame numbers, so we can use another button to get to previous ones.
-    
+
     UI:
         1. insert 4 red points for the whole court annotation.
         2. insert 4 blue points for front zone annotation.
-    
+
     After annotation:
         1. we get center line.
         2. we get attack lines.
         3. we get front zone of team A, and team B.
         4. we get each 1 - 6 zones for both teams.
-    
+
     """
 
-    file = '/data/raw/videos/train/8.mp4'
+    file = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/10.mp4'
     CourtAnnotator(filename=file)
