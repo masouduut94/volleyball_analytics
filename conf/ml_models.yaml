@@ -17,6 +17,10 @@ yolo:
   action_detection6:
     weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/action_detection/6_class/version1-simple/weights/best.pt"
     labels: { 0: 'ball', 1: 'block', 2: "receive", 3: 'set', 4: 'spike', 5: 'serve'}
+  court_segment:
+    weight: "/home/masoud/Desktop/projects/volleyball_analytics/weights/court_segment/weights/best.pt"
+    labels: { 0: "court"}
+
 
 video_mae:
   game_state_3:

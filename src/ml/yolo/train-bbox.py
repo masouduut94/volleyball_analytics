@@ -30,11 +30,10 @@ model = YOLO('yolov8n.pt')  # load a pretrained.py model (recommended for traini
 
 # Train the model with 1 GPU.
 results = model.train(
-    data='/home/masoud/Desktop/projects/volleyball_analytics/data/processed/vb_actions_6.yaml',
+    data='/home/masoud/Downloads/a/Volleyball Tracking.v18-800_by_800_version.yolov8/data.yaml',
     epochs=5,
     task='detect',
     batch=32,
-    # int8=True,
     half=True,
     optimizer='AdamW',
     seed=1368,
