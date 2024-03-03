@@ -1,3 +1,4 @@
+import math
 from typing import List
 
 import numpy as np
@@ -39,8 +40,12 @@ class CourtSegmentor:
         return frame
 
 
+def distance(pt1, pt2):
+    return math.sqrt((pt1[0] - pt2[0]) ** 2 + (pt1[1] - pt2[1]) ** 2)
+
+
 if __name__ == '__main__':
-    video = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/9.webm'
+    video = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/3.mp4'
     output = '/home/masoud/Desktop/projects/volleyball_analytics/runs/DEMO'
     cfg = {
         'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/court_segment/weights/best.pt',
@@ -60,9 +65,30 @@ if __name__ == '__main__':
         cap.set(1, fno)
         status, frame = cap.read()
         points = court_segmentor.predict(frame)
-        frame = court_segmentor.draw(frame, points)
+        top_left = (0, 0)
+        top_right = (w, 0)
+        down_left = (0, h)
+        down_right = (w, h)
+        # frame = court_segmentor.draw(frame, points)
+        if len(points):
+            points = sorted(points, key=lambda x: distance(x, down_left))
+            DownLeft = points[0]
+            cv2.circle(frame, tuple(DownLeft), 10, (255, 0, 0), 3)
+
+            points = sorted(points, key=lambda x: distance(x, down_right))
+            DownRight = points[0]
+            cv2.circle(frame, tuple(DownRight), 10, (0, 255, 0), 3)
+
+            points = sorted(points, key=lambda x: distance(x, top_left))
+            TopLeft = points[0]
+            cv2.circle(frame, tuple(TopLeft), 10, (0, 0, 255), 3)
+
+            points = sorted(points, key=lambda x: distance(x, top_right))
+            TopRight = points[0]
+            cv2.circle(frame, tuple(TopRight), 10, (255, 0, 255), 3)
+
         writer.write(frame)
-        if fno > 200:
+        if fno > 100:
             break
 
     cap.release()
