@@ -26,41 +26,51 @@ class CourtAnnotator(object):
         self.w, self.h, self.fps, _, self.n_frames = [int(self.cap.get(i)) for i in range(3, 8)]
 
         self.size = 20
-        image, self.frame = self.get_frame()
+        self.frame = self.get_frame()
         tl, dl, dr, tr = self.ml_guided_corners(self.frame)
 
         self.w_tl = tl[0]
         self.w_tr = tr[0]
         self.w_dl = dl[0]
         self.w_dr = dr[0]
+        self.h_top = tl[1]
+        self.h_down = dr[1]
 
-        self.h_tl = tl[1]
-        self.h_dr = dr[1]
+        p1_top_left = (self.w_tl + 10, self.h_top + 100)
+        p2_top_right = (self.w_tr + 50, self.h_top + 50)
+        p3_down_left = (self.w_tl + 50, self.h_top + 350)
+        p4_down_right = (self.w_tr + 50, self.h_top + 300)
 
-
-
-
-        self.al_w_tl = (self.w_tl + self.w_dl) / 2
-        self.al_w_tr = (self.w_tr + self.w_dr) / 2
-        self.al_w_dl = (self.w_tl + self.w_dl) / 2
-        self.al_w_dr = (self.w_tr + self.w_dr) / 2
-
-        self.al_h_tl = (self.h_tl + self.h_dr) / 2.2
-        self.al_h_dl = (self.h_tl + self.h_dr) / 2
-        self.al_h_tr = (self.h_dr + self.h_tl) / 2.2
-        self.al_h_dr = (self.h_dr + self.h_tl) / 2
+        self.intersection1 = self.find_intersection(
+            line_pt1=(self.w_tl, self.h_top),
+            line_pt2=(self.w_dl, self.h_down),
+            x=p1_top_left
+        )
+        self.intersection2 = self.find_intersection(
+            line_pt1=(self.w_tr, self.h_top),
+            line_pt2=(self.w_dr, self.h_down),
+            x=p2_top_right
+        )
+        self.intersection3 = self.find_intersection(
+            line_pt1=(self.w_tl, self.h_top),
+            line_pt2=(self.w_dl, self.h_down),
+            x=p3_down_left
+        )
+        self.intersection4 = self.find_intersection(
+            line_pt1=(self.w_tr, self.h_top),
+            line_pt2=(self.w_dr, self.h_down),
+            x=p4_down_right
+        )
 
         self.root = Tk()
         self.root.title("Court Annotation: ")
         self.canvas = Canvas(self.root, width=self.w + 20, height=self.h + 50, bg='black')
-
-        image = ImageTk.PhotoImage(image)
+        image = ImageTk.PhotoImage(Image.fromarray(self.frame))
         self.canvas.create_image(0, 0, image=image, anchor="nw")
-
         self.court_corners()
         self.draw_court()
         self.attack_line_pts()
-        # self.draw_attack_zone()
+        self.draw_attack_zone()
         self.canvas.pack()
 
         self.canvas.bind("<ButtonPress-1>", self.start_move)
@@ -70,38 +80,84 @@ class CourtAnnotator(object):
         self.root.mainloop()
 
     def ml_guided_corners(self, frame: NDArray):
+        """
+        It assists us to find 4 corners of court based on the segmentation model output.
+        Args:
+            frame:
+
+        Returns:
+
+        """
         points = self.segmentor.predict(frame)
         tl, dl, dr, tr = self.segmentor.find_corners(frame, mask_points=points)
         return tl, dl, dr, tr
 
     @staticmethod
-    def find_intersection(line_pt1, line_pt2, x):
+    def find_intersection(line_pt1: tuple, line_pt2: tuple, x: tuple):
+        """
+        This method finds the intersection point between point `x` and line
+        that connects `line_pt1` and `line_pt2`.
+        Args:
+            line_pt1:
+            line_pt2:
+            x:
+
+        Returns:
+            the intersection point (x, y)
+        """
         intersect = intersect_point_line(x, line_pt1, line_pt2)
-        return intersect[0]
+        return intersect[0][0], intersect[0][1]
 
     def attack_line_pts(self):
         self.att_line_TL = self.canvas.create_oval(
-            self.al_w_tl, self.al_h_tl, self.al_w_tl + self.size, self.al_h_tl + self.size, fill="yellow"
-        )
-        self.att_line_DL = self.canvas.create_oval(
-            self.al_w_dl, self.al_h_dl, self.al_w_dl + self.size, self.al_h_dl + self.size, fill="purple"
+            self.intersection1[0],
+            self.intersection1[1],
+            self.intersection1[0] + self.size,
+            self.intersection1[1] + self.size,
+            fill="yellow"
         )
         self.att_line_TR = self.canvas.create_oval(
-            self.al_w_tr, self.al_h_tr, self.al_w_tr + self.size, self.al_h_tr + self.size, fill="green"
+            self.intersection2[0],
+            self.intersection2[1],
+            self.intersection2[0] + self.size,
+            self.intersection2[1] + self.size,
+            fill="green"
         )
+
+        self.att_line_DL = self.canvas.create_oval(
+            self.intersection3[0],
+            self.intersection3[1],
+            self.intersection3[0] + self.size,
+            self.intersection3[1] + self.size,
+            fill="purple"
+        )
+
         self.att_line_DR = self.canvas.create_oval(
-            self.al_w_dr, self.al_h_dr, self.al_w_dr + self.size, self.al_h_dr + self.size, fill="blue"
+            self.intersection4[0],
+            self.intersection4[1],
+            self.intersection4[0] + self.size,
+            self.intersection4[1] + self.size,
+            fill="blue"
         )
 
     def court_corners(self):
-        self.court_TL = self.canvas.create_oval(self.w_tl, self.h_tl, self.w_tl + self.size,
-                                                self.h_tl + self.size, fill="red")
-        self.court_DL = self.canvas.create_oval(self.w_dl, self.h_dr, self.w_dl + self.size,
-                                                self.h_dr + self.size, fill="red")
-        self.court_TR = self.canvas.create_oval(self.w_tr, self.h_tl, self.w_tr + self.size,
-                                                self.h_tl + self.size, fill="red")
-        self.court_DR = self.canvas.create_oval(self.w_dr, self.h_dr, self.w_dr + self.size,
-                                                self.h_dr + self.size, fill="red")
+        """
+        Draws the court corner points.
+        Returns:
+
+        """
+        self.court_TL = self.canvas.create_oval(
+            self.w_tl, self.h_top, self.w_tl + self.size, self.h_top + self.size, fill="red"
+        )
+        self.court_DL = self.canvas.create_oval(
+            self.w_dl, self.h_down, self.w_dl + self.size, self.h_down + self.size, fill="red"
+        )
+        self.court_TR = self.canvas.create_oval(
+            self.w_tr, self.h_top, self.w_tr + self.size, self.h_top + self.size, fill="red"
+        )
+        self.court_DR = self.canvas.create_oval(
+            self.w_dr, self.h_down, self.w_dr + self.size, self.h_down + self.size, fill="red"
+        )
 
     def draw_court(self):
         self.court_top_line = self.draw_line_pt1_pt2(self.court_TL, self.court_TR, color='red')
@@ -112,19 +168,34 @@ class CourtAnnotator(object):
     def draw_attack_zone(self):
         self.attackline_top_line = self.draw_line_pt1_pt2(self.att_line_TL, self.att_line_TR, color='yellow')
         self.attackline_down_line = self.draw_line_pt1_pt2(self.att_line_DL, self.att_line_DR, color='yellow')
-        self.attackline_left_line = self.draw_line_pt1_pt2(self.att_line_DL, self.att_line_TR, color='yellow')
-        self.attackline_right_line = self.draw_line_pt1_pt2(self.att_line_DR, self.att_line_TL, color='yellow')
+        self.attackline_left_line = self.draw_line_pt1_pt2(self.att_line_DL, self.att_line_TL, color='yellow')
+        self.attackline_right_line = self.draw_line_pt1_pt2(self.att_line_DR, self.att_line_TR, color='yellow')
 
     def get_frame(self):
+        """
+        Selects a frame from video input.
+        Returns:
+
+        """
         n_frames = int(self.cap.get(7))
         fno = random.randint(1, n_frames)
         self.cap.set(1, fno)
         _, frame = self.cap.read()
         image = cv2.cvtColor(frame, 4)
-        image = Image.fromarray(image)
-        return image, frame
+        return image
 
-    def draw_line_pt1_pt2(self, pt1, pt2, color):
+    def draw_line_pt1_pt2(self, pt1: tuple, pt2: tuple, color: str):
+        """
+        It creates a line between `pt1` and `pt2`.
+
+        Args:
+            pt1:
+            pt2:
+            color:
+
+        Returns:
+
+        """
         coordination1 = self.canvas.coords(pt1)
         coordination2 = self.canvas.coords(pt2)
         x0 = (coordination1[0] + coordination1[2]) // 2
@@ -138,16 +209,28 @@ class CourtAnnotator(object):
                      self.court_left_line, self.court_right_line]:
             self.canvas.delete(item)
         self.draw_court()
-        # for item in [self.attackline_top_line, self.attackline_down_line,
-        #              self.attackline_left_line, self.attackline_right_line]:
-        #     self.canvas.delete(item)
-        # self.draw_attack_zone()
+        for item in [
+            self.attackline_top_line,
+            self.attackline_down_line,
+            self.attackline_left_line,
+            self.attackline_right_line
+        ]:
+            self.canvas.delete(item)
+        self.draw_attack_zone()
 
     def start_move(self, event):
         self._x = event.x
         self._y = event.y
 
     def move(self, event):
+        """
+        Function to call when trying to move the circles around the image
+        Args:
+            event:
+
+        Returns:
+
+        """
         delta_x = event.x - self._x
         delta_y = event.y - self._y
         self._x = event.x
@@ -211,5 +294,5 @@ if __name__ == '__main__':
 
     """
 
-    file = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/10.mp4'
+    file = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/6.mp4'
     CourtAnnotator(filename=file)
