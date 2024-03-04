@@ -4,34 +4,51 @@ from PIL import Image, ImageTk
 import cv2
 import random
 
+from mathutils.geometry import intersect_point_line
+from numpy._typing import NDArray
+from typing_extensions import List
+
+from src.ml.yolo.court.segmentation import CourtSegmentor
+
 
 class CourtAnnotator(object):
     def __init__(self, filename: str):
         self._x = None
         self._y = None
+        cfg = {
+            'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/court_segment/weights/best.pt',
+            "labels": {0: 'court'}
+        }
+        self.segmentor = CourtSegmentor(cfg=cfg)
         self.filename = filename
         self.cap = cv2.VideoCapture(self.filename)
         assert self.cap.isOpened(), "file is not accessible."
         self.w, self.h, self.fps, _, self.n_frames = [int(self.cap.get(i)) for i in range(3, 8)]
 
         self.size = 20
+        image, self.frame = self.get_frame()
+        tl, dl, dr, tr = self.ml_guided_corners(self.frame)
 
-        self.w_tl = self.w / 4
-        self.w_tr = self.w * 3 / 4
-        self.w_dl = self.w / 30
-        self.w_dr = self.w * 29 / 30
-        self.h_tl = self.h / 2.5
-        self.h_dr = self.h * 29 / 30
+        self.w_tl = tl[0]
+        self.w_tr = tr[0]
+        self.w_dl = dl[0]
+        self.w_dr = dr[0]
 
-        self.al_w_tl = self.w / 5.5
-        self.al_w_tr = self.w * (4 / 5)
-        self.al_w_dl = self.w * (6 / 7)
-        self.al_w_dr = self.w * (1 / 7)
+        self.h_tl = tl[1]
+        self.h_dr = dr[1]
 
-        self.al_h_tl = self.h / 1.8
-        self.al_h_dr = self.h / 1.4
 
-        image = self.get_frame()
+
+
+        self.al_w_tl = (self.w_tl + self.w_dl) / 2
+        self.al_w_tr = (self.w_tr + self.w_dr) / 2
+        self.al_w_dl = (self.w_tl + self.w_dl) / 2
+        self.al_w_dr = (self.w_tr + self.w_dr) / 2
+
+        self.al_h_tl = (self.h_tl + self.h_dr) / 2.2
+        self.al_h_dl = (self.h_tl + self.h_dr) / 2
+        self.al_h_tr = (self.h_dr + self.h_tl) / 2.2
+        self.al_h_dr = (self.h_dr + self.h_tl) / 2
 
         self.root = Tk()
         self.root.title("Court Annotation: ")
@@ -43,7 +60,7 @@ class CourtAnnotator(object):
         self.court_corners()
         self.draw_court()
         self.attack_line_pts()
-        self.draw_attack_zone()
+        # self.draw_attack_zone()
         self.canvas.pack()
 
         self.canvas.bind("<ButtonPress-1>", self.start_move)
@@ -52,18 +69,28 @@ class CourtAnnotator(object):
 
         self.root.mainloop()
 
+    def ml_guided_corners(self, frame: NDArray):
+        points = self.segmentor.predict(frame)
+        tl, dl, dr, tr = self.segmentor.find_corners(frame, mask_points=points)
+        return tl, dl, dr, tr
+
+    @staticmethod
+    def find_intersection(line_pt1, line_pt2, x):
+        intersect = intersect_point_line(x, line_pt1, line_pt2)
+        return intersect[0]
+
     def attack_line_pts(self):
         self.att_line_TL = self.canvas.create_oval(
             self.al_w_tl, self.al_h_tl, self.al_w_tl + self.size, self.al_h_tl + self.size, fill="yellow"
         )
         self.att_line_DL = self.canvas.create_oval(
-            self.al_w_dl, self.al_h_dr, self.al_w_dl + self.size, self.al_h_dr + self.size, fill="yellow"
+            self.al_w_dl, self.al_h_dl, self.al_w_dl + self.size, self.al_h_dl + self.size, fill="purple"
         )
         self.att_line_TR = self.canvas.create_oval(
-            self.al_w_tr, self.al_h_tl, self.al_w_tr + self.size, self.al_h_tl + self.size, fill="yellow"
+            self.al_w_tr, self.al_h_tr, self.al_w_tr + self.size, self.al_h_tr + self.size, fill="green"
         )
         self.att_line_DR = self.canvas.create_oval(
-            self.al_w_dr, self.al_h_dr, self.al_w_dr + self.size, self.al_h_dr + self.size, fill="yellow"
+            self.al_w_dr, self.al_h_dr, self.al_w_dr + self.size, self.al_h_dr + self.size, fill="blue"
         )
 
     def court_corners(self):
@@ -95,7 +122,7 @@ class CourtAnnotator(object):
         _, frame = self.cap.read()
         image = cv2.cvtColor(frame, 4)
         image = Image.fromarray(image)
-        return image
+        return image, frame
 
     def draw_line_pt1_pt2(self, pt1, pt2, color):
         coordination1 = self.canvas.coords(pt1)
@@ -111,10 +138,10 @@ class CourtAnnotator(object):
                      self.court_left_line, self.court_right_line]:
             self.canvas.delete(item)
         self.draw_court()
-        for item in [self.attackline_top_line, self.attackline_down_line,
-                     self.attackline_left_line, self.attackline_right_line]:
-            self.canvas.delete(item)
-        self.draw_attack_zone()
+        # for item in [self.attackline_top_line, self.attackline_down_line,
+        #              self.attackline_left_line, self.attackline_right_line]:
+        #     self.canvas.delete(item)
+        # self.draw_attack_zone()
 
     def start_move(self, event):
         self._x = event.x
@@ -129,47 +156,8 @@ class CourtAnnotator(object):
         self.reset_lines()
 
     @staticmethod
-    def get_center(pt):
-        return (pt[0] + pt[2]) / 2, (pt[1] + pt[3]) / 2
-
-    @staticmethod
-    def get_top_left(pt1, pt2, pt3, pt4):
-        temp = [pt1, pt2, pt3, pt4]
-        temp.sort(key=lambda x: x[1])  # Based on min Y
-        x1 = temp[0]
-        x2 = temp[1]
-        return min(x1, x2, key=lambda x: x[0])
-
-    @staticmethod
-    def get_top_right(pt1, pt2, pt3, pt4):
-        temp = [pt1, pt2, pt3, pt4]
-        temp.sort(key=lambda x: x[1])  # Based on min Y
-        x1 = temp[0]
-        x2 = temp[1]
-        return max(x1, x2, key=lambda x: x[0])
-
-    @staticmethod
-    def get_down_left(pt1, pt2, pt3, pt4):
-        temp = [pt1, pt2, pt3, pt4]
-        temp.sort(key=lambda x: x[1], reverse=True)  # Based on min Y
-        x1 = temp[0]
-        x2 = temp[1]
-        return min(x1, x2, key=lambda x: x[0])
-
-    @staticmethod
-    def get_down_right(pt1, pt2, pt3, pt4):
-        temp = [pt1, pt2, pt3, pt4]
-        temp.sort(key=lambda x: x[1], reverse=True)  # Based on min Y
-        x1 = temp[0]
-        x2 = temp[1]
-        return max(x1, x2, key=lambda x: x[0])
-
-    def organize_pts(self, pt1, pt2, pt3, pt4):
-        top_left = self.get_top_left(pt1, pt2, pt3, pt4)
-        down_left = self.get_down_left(pt1, pt2, pt3, pt4)
-        down_right = self.get_down_right(pt1, pt2, pt3, pt4)
-        top_right = self.get_top_right(pt1, pt2, pt3, pt4)
-        return list(top_left), list(down_left), list(down_right), list(top_right)
+    def get_center(pt) -> List[int]:
+        return [(pt[0] + pt[2]) // 2, (pt[1] + pt[3]) // 2]
 
     def save_pts(self, _event=None):
         print("saving coordination....")
@@ -181,7 +169,10 @@ class CourtAnnotator(object):
         pt2 = self.get_center(p1)
         pt3 = self.get_center(p2)
         pt4 = self.get_center(p3)
-        court_top_left, court_down_left, court_down_right, court_top_right = self.organize_pts(pt1, pt2, pt3, pt4)
+        court_top_left, court_down_left, court_down_right, court_top_right = self.segmentor.find_corners(
+            frame=self.frame,
+            mask_points=[pt1, pt2, pt3, pt4]
+        )
 
         p0 = self.canvas.coords(self.att_line_TL)
         p1 = self.canvas.coords(self.att_line_DL)
@@ -191,7 +182,10 @@ class CourtAnnotator(object):
         pt2 = self.get_center(p1)
         pt3 = self.get_center(p2)
         pt4 = self.get_center(p3)
-        att_top_left, att_down_left, att_down_right, att_top_right = self.organize_pts(pt1, pt2, pt3, pt4)
+        att_top_left, att_down_left, att_down_right, att_top_right = self.segmentor.find_corners(
+            frame=self.frame,
+            mask_points=[pt1, pt2, pt3, pt4]
+        )
         out_dict = {
             "main_zone": [court_top_left, court_down_left, court_down_right, court_top_right],
             "front_zone": [att_top_left, att_down_left, att_down_right, att_top_right]

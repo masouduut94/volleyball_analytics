@@ -1,5 +1,5 @@
 import math
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -20,7 +20,7 @@ class CourtSegmentor:
         self.model = YOLO(cfg['weight'])
         self.labels = cfg['labels']
 
-    def predict(self, frame: NDArray) -> list:
+    def predict(self, frame: NDArray) -> List[int]:
         results = self.model(frame, verbose=False, classes=0)
         points = []
         if results[0].masks is not None:
@@ -32,16 +32,35 @@ class CourtSegmentor:
         return points
 
     @staticmethod
+    def find_corners(frame: NDArray, mask_points: List[List[int]]) -> Tuple:
+        h, w, _ = frame.shape
+        top_left_corner = (0, 0)
+        top_right_corner = (w, 0)
+        down_left_corner = (0, h)
+        down_right_corner = (w, h)
+
+        down_left = None
+        down_right = None
+        top_left = None
+        top_right = None
+
+        if len(mask_points):
+            points = sorted(mask_points, key=lambda x: math.dist(x, down_left_corner))
+            down_left = points[0]
+            points = sorted(mask_points, key=lambda x: math.dist(x, down_right_corner))
+            down_right = points[0]
+            points = sorted(mask_points, key=lambda x: math.dist(x, top_left_corner))
+            top_left = points[0]
+            points = sorted(mask_points, key=lambda x: math.dist(x, top_right_corner))
+            top_right = points[0]
+        return top_left, down_left, down_right, top_right
+
+    @staticmethod
     def draw(frame: NDArray, points: list, color=Meta.green):
         if len(points):
             points = np.array(points)
-            # frame = cv2.drawContours(frame, contours, contourIdx=-1, color=color, thickness=5)
             frame = cv2.fillPoly(frame, [points], color)
         return frame
-
-
-def distance(pt1, pt2):
-    return math.sqrt((pt1[0] - pt2[0]) ** 2 + (pt1[1] - pt2[1]) ** 2)
 
 
 if __name__ == '__main__':
@@ -71,21 +90,11 @@ if __name__ == '__main__':
         down_right = (w, h)
         # frame = court_segmentor.draw(frame, points)
         if len(points):
-            points = sorted(points, key=lambda x: distance(x, down_left))
-            DownLeft = points[0]
-            cv2.circle(frame, tuple(DownLeft), 10, (255, 0, 0), 3)
-
-            points = sorted(points, key=lambda x: distance(x, down_right))
-            DownRight = points[0]
-            cv2.circle(frame, tuple(DownRight), 10, (0, 255, 0), 3)
-
-            points = sorted(points, key=lambda x: distance(x, top_left))
-            TopLeft = points[0]
-            cv2.circle(frame, tuple(TopLeft), 10, (0, 0, 255), 3)
-
-            points = sorted(points, key=lambda x: distance(x, top_right))
-            TopRight = points[0]
-            cv2.circle(frame, tuple(TopRight), 10, (255, 0, 255), 3)
+            tl, dl, dr, tr = court_segmentor.find_corners(frame, points)
+            cv2.circle(frame, tuple(tl), 10, (255, 0, 0), 3)
+            cv2.circle(frame, tuple(dl), 10, (0, 255, 0), 3)
+            cv2.circle(frame, tuple(dr), 10, (0, 0, 255), 3)
+            cv2.circle(frame, tuple(tr), 10, (255, 0, 255), 3)
 
         writer.write(frame)
         if fno > 100:
