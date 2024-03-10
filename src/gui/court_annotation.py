@@ -294,5 +294,5 @@ if __name__ == '__main__':
 
     """
 
-    file = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/6.mp4'
+    file = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/11.mp4'
     CourtAnnotator(filename=file)

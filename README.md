@@ -144,7 +144,21 @@ test:
   dialect: 'postgresql'
   driver: 'psycopg2'
 ```
+- install PostgreSQL based on [this link tutorials](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
+- Create a `.env` file like `conf/sample.env`, and copy paste its path to `src/backend/app/core/config.py` in line 28.
 
+these are sample values in the `.env` file:    
+```
+MODE=development or test
+DEV_USERNAME=user1
+DEV_PASSWORD=********
+DEV_HOST=localhost
+DEV_DB=volleyball_development
+DEV_PORT=5432
+DEV_DRIVER=postgresql
+TEST_DB_URL=sqlite:///./vb.db
+```
+ 
 - `make install` to install dependencies.
 - `make test` to run unittest tests for backend APIs.
 - `uvicorn src.backend.app.app:app` to start the APIs.
