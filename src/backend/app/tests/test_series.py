@@ -1,10 +1,9 @@
 from datetime import datetime
-
 import pendulum
 
-from src.backend.app.tests.utility import VBTest
-from src.backend.app.schemas import series, matches
 from fastapi.encoders import jsonable_encoder as jsonify
+from src.backend.app.schemas import series, matches
+from src.backend.app.tests.utility import VBTest
 from fastapi import status
 
 

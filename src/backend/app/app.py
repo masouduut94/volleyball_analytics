@@ -1,7 +1,6 @@
-from fastapi.middleware.cors import CORSMiddleware
-
 from src.backend.app.api.endpoints import cameras, nations, rallies, series, teams, videos, matches, players
 from src.backend.app.db.engine import engine, Base
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 
 Base.metadata.create_all(bind=engine)
