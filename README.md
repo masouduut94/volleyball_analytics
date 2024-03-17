@@ -145,7 +145,7 @@ test:
   driver: 'psycopg2'
 ```
 - install PostgreSQL based on [this link tutorials](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
-- Create a `.env` file like `conf/sample.env`, and copy paste its path to `src/backend/app/core/config.py` in line 28.
+- Create a `.env` file like `conf/sample.env`, and copy and paste its path to `src/backend/app/core/config.py` in line 28.
 
 these are sample values in the `.env` file:    
 ```

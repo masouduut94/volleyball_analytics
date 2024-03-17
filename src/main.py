@@ -39,7 +39,6 @@ def main():
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     assert cap.isOpened(), "file is not accessible..."
     n_frames = int(cap.get(7))
-    # cap.set(1, 4950)
     pbar = tqdm(list(range(4950, n_frames)))
 
     for fno in pbar:

@@ -10,7 +10,7 @@ db_uri = settings.get_db_uri()
 mode = settings.MODE
 engine = create_engine(db_uri)
 logger.info(f"The `MODE` is {mode} ")
-msg = f"The db = {settings.DEV_DB if mode == 'test' else settings.TEST_DB_URL} is selected."
+msg = f"The db = {settings.DEV_DB if mode != 'test' else settings.TEST_DB_URL} is selected."
 logger.success(msg)
 
 
