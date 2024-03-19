@@ -46,6 +46,18 @@ def timeit(f):
     return wrap
 
 
+def state_summarize(states):
+    curr = states[0]
+    temp = [curr]
+    for item in states:
+        if item == curr:
+            continue
+        else:
+            curr = item
+            temp.append(curr)
+    return temp
+
+
 class Meta:
     white = (255, 255, 255)
     black = (0, 0, 0)
@@ -638,4 +650,3 @@ class ProjectLogger:
 
     def critical(self, msg):
         self.logger.critical(msg)
-

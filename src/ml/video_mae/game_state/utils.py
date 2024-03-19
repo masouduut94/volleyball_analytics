@@ -9,7 +9,7 @@ from typing_extensions import List, Dict, Tuple
 
 from src.backend.app.api_interface import APIInterface
 from src.backend.app.enums.enums import GameState, ServiceType
-from src.utilities.utils import timeit, BoundingBox, ProjectLogger
+from src.utilities.utils import timeit, BoundingBox, ProjectLogger, state_summarize
 from src.backend.app.schemas import services, rallies, matches, series, videos
 from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
 from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
@@ -251,11 +251,11 @@ class Manager:
         """
         rally_1st_frame = frame_numbers[0]
         rally_last_frame = frame_numbers[-1]
-        # labels = state_changes(labels, prediction_length=30)
+        labels = state_summarize(labels)
         service_end_frame = rally_1st_frame + service_ending_index if service_ending_index is not None else None
 
         service_data = services.ServiceCreateSchema(
-            end_frame=service_end_frame, end_index=service_ending_index, hitter="Igor Kliuka",
+            end_frame=service_end_frame, end_index=service_ending_index, hitter="Igor",
             hitter_bbox={}, bounce_point={'x': 120, 'y': 200}, target_zone=5, type=ServiceType.HIGH_TOSS
         )
         rally_data = rallies.RallyCreateSchema(

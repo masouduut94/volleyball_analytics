@@ -7,6 +7,5 @@ from pathlib import Path
 
 if __name__ == '__main__':
     api = APIInterface("http://localhost:8000")
-    # p = api.get_rallies(match_id=1)
     t = api.get_rallies(match_id=1)
-    print(t)
+    print(t[0])
