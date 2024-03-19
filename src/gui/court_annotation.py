@@ -4,9 +4,10 @@ from PIL import Image, ImageTk
 import cv2
 import random
 
+from mathutils import Vector
 from mathutils.geometry import intersect_point_line
 from numpy._typing import NDArray
-from typing_extensions import List
+from typing_extensions import List, Tuple
 
 from src.ml.yolo.court.segmentation import CourtSegmentor
 
@@ -105,6 +106,10 @@ class CourtAnnotator(object):
         Returns:
             the intersection point (x, y)
         """
+        line_pt1 = Vector(line_pt1)
+        line_pt2 = Vector(line_pt2)
+        x = Vector(x)
+
         intersect = intersect_point_line(x, line_pt1, line_pt2)
         return intersect[0][0], intersect[0][1]
 
@@ -114,7 +119,7 @@ class CourtAnnotator(object):
             self.intersection1[1],
             self.intersection1[0] + self.size,
             self.intersection1[1] + self.size,
-            fill="yellow"
+            fill="green"
         )
         self.att_line_TR = self.canvas.create_oval(
             self.intersection2[0],
@@ -129,7 +134,7 @@ class CourtAnnotator(object):
             self.intersection3[1],
             self.intersection3[0] + self.size,
             self.intersection3[1] + self.size,
-            fill="purple"
+            fill="green"
         )
 
         self.att_line_DR = self.canvas.create_oval(
@@ -137,7 +142,7 @@ class CourtAnnotator(object):
             self.intersection4[1],
             self.intersection4[0] + self.size,
             self.intersection4[1] + self.size,
-            fill="blue"
+            fill="green"
         )
 
     def court_corners(self):
@@ -166,10 +171,26 @@ class CourtAnnotator(object):
         self.court_right_line = self.draw_line_pt1_pt2(self.court_DR, self.court_TR, color='red')
 
     def draw_attack_zone(self):
-        self.attackline_top_line = self.draw_line_pt1_pt2(self.att_line_TL, self.att_line_TR, color='yellow')
-        self.attackline_down_line = self.draw_line_pt1_pt2(self.att_line_DL, self.att_line_DR, color='yellow')
-        self.attackline_left_line = self.draw_line_pt1_pt2(self.att_line_DL, self.att_line_TL, color='yellow')
-        self.attackline_right_line = self.draw_line_pt1_pt2(self.att_line_DR, self.att_line_TR, color='yellow')
+        self.attackline_top_line = self.draw_line_pt1_pt2(self.att_line_TL, self.att_line_TR, color='green')
+        self.attackline_down_line = self.draw_line_pt1_pt2(self.att_line_DL, self.att_line_DR, color='green')
+        self.attackline_left_line = self.draw_line_pt1_pt2(self.att_line_DL, self.att_line_TL, color='green')
+        self.attackline_right_line = self.draw_line_pt1_pt2(self.att_line_DR, self.att_line_TR, color='green')
+
+        TL = self.canvas.coords(self.att_line_TL)
+        DL = self.canvas.coords(self.att_line_DL)
+
+        TR = self.canvas.coords(self.att_line_TR)
+        DR = self.canvas.coords(self.att_line_DR)
+
+        TL_pt = self.get_center(TL)
+        DL_pt = self.get_center(DL)
+        TR_pt = self.get_center(TR)
+        DR_pt = self.get_center(DR)
+
+        left = int((TL_pt[0] + DL_pt[0]) / 2), int((TL_pt[1] + DL_pt[1]) / 2)
+        right = int((TR_pt[0] + DR_pt[0]) / 2), int((TR_pt[1] + DR_pt[1]) / 2)
+
+        self.center_line = self.draw_line_pt1_pt2(left, right, color='yellow')
 
     def get_frame(self):
         """
@@ -184,7 +205,7 @@ class CourtAnnotator(object):
         image = cv2.cvtColor(frame, 4)
         return image
 
-    def draw_line_pt1_pt2(self, pt1: tuple, pt2: tuple, color: str):
+    def draw_line_pt1_pt2(self, pt1: int | Tuple[int, int], pt2: int | Tuple[int, int], color: str):
         """
         It creates a line between `pt1` and `pt2`.
 
@@ -196,12 +217,21 @@ class CourtAnnotator(object):
         Returns:
 
         """
-        coordination1 = self.canvas.coords(pt1)
-        coordination2 = self.canvas.coords(pt2)
-        x0 = (coordination1[0] + coordination1[2]) // 2
-        y0 = (coordination1[1] + coordination1[3]) // 2
-        x1 = (coordination2[0] + coordination2[2]) // 2
-        y1 = (coordination2[1] + coordination2[3]) // 2
+        if isinstance(pt1, int):
+            coordination1 = self.canvas.coords(pt1)
+            x0 = (coordination1[0] + coordination1[2]) // 2
+            y0 = (coordination1[1] + coordination1[3]) // 2
+        else:
+            x0 = pt1[0]
+            y0 = pt1[1]
+
+        if isinstance(pt2, int):
+            coordination2 = self.canvas.coords(pt2)
+            x1 = (coordination2[0] + coordination2[2]) // 2
+            y1 = (coordination2[1] + coordination2[3]) // 2
+        else:
+            x1 = pt2[0]
+            y1 = pt2[1]
         return self.canvas.create_line(x0, y0, x1, y1, fill=color, width=3)
 
     def reset_lines(self):
@@ -213,7 +243,8 @@ class CourtAnnotator(object):
             self.attackline_top_line,
             self.attackline_down_line,
             self.attackline_left_line,
-            self.attackline_right_line
+            self.attackline_right_line,
+            self.center_line
         ]:
             self.canvas.delete(item)
         self.draw_attack_zone()

@@ -20,7 +20,7 @@ class CourtSegmentor:
         self.model = YOLO(cfg['weight'])
         self.labels = cfg['labels']
 
-    def predict(self, frame: NDArray) -> List[int]:
+    def predict(self, frame: NDArray) -> List[List[int]]:
         results = self.model(frame, verbose=False, classes=0)
         points = []
         if results[0].masks is not None:
