@@ -178,7 +178,6 @@ class CourtAnnotator(object):
 
         TL = self.canvas.coords(self.att_line_TL)
         DL = self.canvas.coords(self.att_line_DL)
-
         TR = self.canvas.coords(self.att_line_TR)
         DR = self.canvas.coords(self.att_line_DR)
 
