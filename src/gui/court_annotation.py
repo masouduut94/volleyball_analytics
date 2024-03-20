@@ -7,7 +7,7 @@ import random
 from mathutils import Vector
 from mathutils.geometry import intersect_point_line
 from numpy._typing import NDArray
-from typing_extensions import List, Tuple
+from typing_extensions import List, Tuple, Dict
 
 from src.ml.yolo.court.segmentation import CourtSegmentor
 
@@ -37,10 +37,18 @@ class CourtAnnotator(object):
         self.h_top = tl[1]
         self.h_down = dr[1]
 
+        self.net_DR = self.w_tr, self.h_top - 200
+        self.net_DL = self.w_tl, self.h_top - 200
+        self.net_TR = self.w_tr, self.h_top - 300
+        self.net_TL = self.w_tl, self.h_top - 300
+
         p1_top_left = (self.w_tl + 10, self.h_top + 100)
         p2_top_right = (self.w_tr + 50, self.h_top + 50)
         p3_down_left = (self.w_tl + 50, self.h_top + 350)
         p4_down_right = (self.w_tr + 50, self.h_top + 300)
+
+        # TODO: add intersections and attack lines draw in one function
+        # TODO: Draw court net and add the same functionality of moving to its annotations.
 
         self.intersection1 = self.find_intersection(
             line_pt1=(self.w_tl, self.h_top),
@@ -68,10 +76,15 @@ class CourtAnnotator(object):
         self.canvas = Canvas(self.root, width=self.w + 20, height=self.h + 50, bg='black')
         image = ImageTk.PhotoImage(Image.fromarray(self.frame))
         self.canvas.create_image(0, 0, image=image, anchor="nw")
+
+        # Replace it with draw_court_with_4_points
         self.court_corners()
         self.draw_court()
+
+        # Replace it with draw_court_with_4_points
         self.attack_line_pts()
         self.draw_attack_zone()
+
         self.canvas.pack()
 
         self.canvas.bind("<ButtonPress-1>", self.start_move)
@@ -94,7 +107,7 @@ class CourtAnnotator(object):
         return tl, dl, dr, tr
 
     @staticmethod
-    def find_intersection(line_pt1: tuple, line_pt2: tuple, x: tuple):
+    def find_intersection(line_pt1: tuple, line_pt2: tuple, x: tuple) -> Tuple[int, int]:
         """
         This method finds the intersection point between point `x` and line
         that connects `line_pt1` and `line_pt2`.
@@ -112,6 +125,25 @@ class CourtAnnotator(object):
 
         intersect = intersect_point_line(x, line_pt1, line_pt2)
         return intersect[0][0], intersect[0][1]
+
+    def draw_court_with_4_points(self, pt1: tuple, pt2: tuple, pt3: tuple, pt4: tuple, color: str) \
+            -> Dict[str, List[int]]:
+        # Create ovals
+        top_left = self.canvas.create_oval(pt1[0], pt1[1], pt1[0] + self.size, pt1[1] + self.size, fill=color)
+        down_left = self.canvas.create_oval(pt3[0], pt3[1], pt3[0] + self.size, pt3[1] + self.size, fill=color)
+        down_right = self.canvas.create_oval(pt4[0], pt4[1], pt4[0] + self.size, pt4[1] + self.size, fill=color)
+        top_right = self.canvas.create_oval(pt2[0], pt2[1], pt2[0] + self.size, pt2[1] + self.size, fill=color)
+
+        # Create lines
+        top_line = self.draw_line_pt1_pt2(top_left, top_right, color=color)
+        left_line = self.draw_line_pt1_pt2(down_left, top_left, color=color)
+        down_line = self.draw_line_pt1_pt2(down_left, down_right, color=color)
+        right_line = self.draw_line_pt1_pt2(down_right, top_right, color=color)
+        # output everything created
+        return {
+            "points": [top_left, down_left, down_right, top_right],
+            "lines": [top_line, left_line, down_line, right_line]
+        }
 
     def attack_line_pts(self):
         self.att_line_TL = self.canvas.create_oval(
@@ -163,6 +195,25 @@ class CourtAnnotator(object):
         self.court_DR = self.canvas.create_oval(
             self.w_dr, self.h_down, self.w_dr + self.size, self.h_down + self.size, fill="red"
         )
+
+    # def net_corners(self):
+    #     """
+    #     Draws the court corner points.
+    #     Returns:
+    #
+    #     """
+    #     self.net_DL = self.canvas.create_oval(
+    #         self.w_dl + 100, self.h_down, self.w_dl + self.size, self.h_down + self.size, fill="red"
+    #     )
+    #     self.net_DR = self.canvas.create_oval(
+    #         self.w_dr, self.h_down, self.w_dr + self.size, self.h_down + self.size, fill="red"
+    #     )
+    #     self.net_TL = self.canvas.create_oval(
+    #         self.w_tl, self.h_top, self.w_tl + self.size, self.h_top + self.size, fill="red"
+    #     )
+    #     self.net_TR = self.canvas.create_oval(
+    #         self.w_tr, self.h_top, self.w_tr + self.size, self.h_top + self.size, fill="red"
+    #     )
 
     def draw_court(self):
         self.court_top_line = self.draw_line_pt1_pt2(self.court_TL, self.court_TR, color='red')
