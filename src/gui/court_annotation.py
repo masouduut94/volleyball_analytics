@@ -78,15 +78,69 @@ class CourtAnnotator(object):
         self.canvas.create_image(0, 0, image=image, anchor="nw")
 
         # Replace it with draw_court_with_4_points
-        self.court_corners()
-        self.draw_court()
+        self.pt1 = (self.w_tl, self.h_top)
+        self.pt2 = (self.w_dl, self.h_down)
+        self.pt3 = (self.w_tr, self.h_top)
+        self.pt4 = (self.w_dr, self.h_down)
 
-        # Replace it with draw_court_with_4_points
-        self.attack_line_pts()
-        self.draw_attack_zone()
+        self.court_oval_tl, self.court_oval_dl, self.court_oval_dr, self.court_oval_tr = \
+            self.create_zone_corners(
+                self.pt1,
+                self.pt2,
+                self.pt3,
+                self.pt4,
+                fill='green'
+            )
+        self.court_top_line, self.court_left_line, self.court_down_line, self.court_right_line = \
+            self.create_zone_lines(
+                self.court_oval_tl,
+                self.court_oval_dl,
+                self.court_oval_dr,
+                self.court_oval_tr,
+                color='green'
+            )
 
+        self.att_oval_tl, self.att_oval_dl, self.att_oval_dr, self.att_oval_tr = \
+            self.create_zone_corners(
+                pt1=self.intersection1,
+                pt2=self.intersection2,
+                pt3=self.intersection3,
+                pt4=self.intersection4,
+                fill='yellow'
+            )
+        self.att_top_line, self.att_left_line, self.att_down_line, self.att_right_line = \
+            self.create_zone_lines(
+                oval_tl=self.att_oval_tl,
+                oval_dl=self.att_oval_dl,
+                oval_dr=self.att_oval_dr,
+                oval_tr=self.att_oval_tr,
+                color='yellow'
+            )
+
+        self.net_pt1 = (self.w_tl, self.h_top - 400)
+        self.net_pt2 = (self.w_tl, self.h_top - 200)
+        self.net_pt3 = (self.w_tr, self.h_top - 400)
+        self.net_pt4 = (self.w_tr, self.h_top - 200)
+
+        self.net_oval_tl, self.net_oval_dl, self.net_oval_dr, self.net_oval_tr = \
+            self.create_zone_corners(
+                self.net_pt1,
+                self.net_pt2,
+                self.net_pt3,
+                self.net_pt4,
+                fill='red'
+            )
+        self.net_top_line, self.net_left_line, self.net_down_line, self.net_right_line = \
+            self.create_zone_lines(
+                self.net_oval_tl,
+                self.net_oval_dl,
+                self.net_oval_dr,
+                self.net_oval_tr,
+                color='red'
+            )
+
+        self.draw_center_line()
         self.canvas.pack()
-
         self.canvas.bind("<ButtonPress-1>", self.start_move)
         self.canvas.bind("<B1-Motion>", self.move)
         self.root.bind("s", self.save_pts)
@@ -126,111 +180,37 @@ class CourtAnnotator(object):
         intersect = intersect_point_line(x, line_pt1, line_pt2)
         return intersect[0][0], intersect[0][1]
 
-    def draw_court_with_4_points(self, pt1: tuple, pt2: tuple, pt3: tuple, pt4: tuple, color: str) \
-            -> Dict[str, List[int]]:
-        # Create ovals
-        top_left = self.canvas.create_oval(pt1[0], pt1[1], pt1[0] + self.size, pt1[1] + self.size, fill=color)
-        down_left = self.canvas.create_oval(pt3[0], pt3[1], pt3[0] + self.size, pt3[1] + self.size, fill=color)
-        down_right = self.canvas.create_oval(pt4[0], pt4[1], pt4[0] + self.size, pt4[1] + self.size, fill=color)
-        top_right = self.canvas.create_oval(pt2[0], pt2[1], pt2[0] + self.size, pt2[1] + self.size, fill=color)
-
-        # Create lines
-        top_line = self.draw_line_pt1_pt2(top_left, top_right, color=color)
-        left_line = self.draw_line_pt1_pt2(down_left, top_left, color=color)
-        down_line = self.draw_line_pt1_pt2(down_left, down_right, color=color)
-        right_line = self.draw_line_pt1_pt2(down_right, top_right, color=color)
-        # output everything created
-        return {
-            "points": [top_left, down_left, down_right, top_right],
-            "lines": [top_line, left_line, down_line, right_line]
-        }
-
-    def attack_line_pts(self):
-        self.att_line_TL = self.canvas.create_oval(
-            self.intersection1[0],
-            self.intersection1[1],
-            self.intersection1[0] + self.size,
-            self.intersection1[1] + self.size,
-            fill="green"
-        )
-        self.att_line_TR = self.canvas.create_oval(
-            self.intersection2[0],
-            self.intersection2[1],
-            self.intersection2[0] + self.size,
-            self.intersection2[1] + self.size,
-            fill="green"
-        )
-
-        self.att_line_DL = self.canvas.create_oval(
-            self.intersection3[0],
-            self.intersection3[1],
-            self.intersection3[0] + self.size,
-            self.intersection3[1] + self.size,
-            fill="green"
-        )
-
-        self.att_line_DR = self.canvas.create_oval(
-            self.intersection4[0],
-            self.intersection4[1],
-            self.intersection4[0] + self.size,
-            self.intersection4[1] + self.size,
-            fill="green"
-        )
-
-    def court_corners(self):
+    def create_zone_corners(self, pt1: tuple, pt2: tuple, pt3: tuple, pt4: tuple, fill: str):
         """
-        Draws the court corner points.
+        Creates 4 ovals as 4 corners of a rectangle.
+        Args:
+            pt1:
+            pt2:
+            pt3:
+            pt4:
+            fill:
+
         Returns:
 
         """
-        self.court_TL = self.canvas.create_oval(
-            self.w_tl, self.h_top, self.w_tl + self.size, self.h_top + self.size, fill="red"
-        )
-        self.court_DL = self.canvas.create_oval(
-            self.w_dl, self.h_down, self.w_dl + self.size, self.h_down + self.size, fill="red"
-        )
-        self.court_TR = self.canvas.create_oval(
-            self.w_tr, self.h_top, self.w_tr + self.size, self.h_top + self.size, fill="red"
-        )
-        self.court_DR = self.canvas.create_oval(
-            self.w_dr, self.h_down, self.w_dr + self.size, self.h_down + self.size, fill="red"
-        )
+        court_top_left = self.canvas.create_oval(pt1[0], pt1[1], pt1[0] + self.size, pt1[1] + self.size, fill=fill)
+        court_down_left = self.canvas.create_oval(pt2[0], pt2[1], pt2[0] + self.size, pt2[1] + self.size, fill=fill)
+        court_top_right = self.canvas.create_oval(pt3[0], pt3[1], pt3[0] + self.size, pt3[1] + self.size, fill=fill)
+        court_down_right = self.canvas.create_oval(pt4[0], pt4[1], pt4[0] + self.size, pt4[1] + self.size, fill=fill)
+        return court_top_left, court_down_left, court_down_right, court_top_right
 
-    # def net_corners(self):
-    #     """
-    #     Draws the court corner points.
-    #     Returns:
-    #
-    #     """
-    #     self.net_DL = self.canvas.create_oval(
-    #         self.w_dl + 100, self.h_down, self.w_dl + self.size, self.h_down + self.size, fill="red"
-    #     )
-    #     self.net_DR = self.canvas.create_oval(
-    #         self.w_dr, self.h_down, self.w_dr + self.size, self.h_down + self.size, fill="red"
-    #     )
-    #     self.net_TL = self.canvas.create_oval(
-    #         self.w_tl, self.h_top, self.w_tl + self.size, self.h_top + self.size, fill="red"
-    #     )
-    #     self.net_TR = self.canvas.create_oval(
-    #         self.w_tr, self.h_top, self.w_tr + self.size, self.h_top + self.size, fill="red"
-    #     )
+    def create_zone_lines(self, oval_tl, oval_dl, oval_dr, oval_tr, color):
+        top_line = self.draw_line_pt1_pt2(oval_tl, oval_tr, color=color)
+        down_line = self.draw_line_pt1_pt2(oval_dl, oval_dr, color=color)
+        left_line = self.draw_line_pt1_pt2(oval_dl, oval_tl, color=color)
+        right_line = self.draw_line_pt1_pt2(oval_dr, oval_tr, color=color)
+        return top_line, left_line, down_line, right_line
 
-    def draw_court(self):
-        self.court_top_line = self.draw_line_pt1_pt2(self.court_TL, self.court_TR, color='red')
-        self.court_down_line = self.draw_line_pt1_pt2(self.court_DL, self.court_DR, color='red')
-        self.court_left_line = self.draw_line_pt1_pt2(self.court_DL, self.court_TL, color='red')
-        self.court_right_line = self.draw_line_pt1_pt2(self.court_DR, self.court_TR, color='red')
-
-    def draw_attack_zone(self):
-        self.attackline_top_line = self.draw_line_pt1_pt2(self.att_line_TL, self.att_line_TR, color='green')
-        self.attackline_down_line = self.draw_line_pt1_pt2(self.att_line_DL, self.att_line_DR, color='green')
-        self.attackline_left_line = self.draw_line_pt1_pt2(self.att_line_DL, self.att_line_TL, color='green')
-        self.attackline_right_line = self.draw_line_pt1_pt2(self.att_line_DR, self.att_line_TR, color='green')
-
-        TL = self.canvas.coords(self.att_line_TL)
-        DL = self.canvas.coords(self.att_line_DL)
-        TR = self.canvas.coords(self.att_line_TR)
-        DR = self.canvas.coords(self.att_line_DR)
+    def draw_center_line(self):
+        TL = self.canvas.coords(self.att_oval_tl)
+        DL = self.canvas.coords(self.att_oval_dl)
+        TR = self.canvas.coords(self.att_oval_tr)
+        DR = self.canvas.coords(self.att_oval_dr)
 
         TL_pt = self.get_center(TL)
         DL_pt = self.get_center(DL)
@@ -288,16 +268,44 @@ class CourtAnnotator(object):
         for item in [self.court_top_line, self.court_down_line,
                      self.court_left_line, self.court_right_line]:
             self.canvas.delete(item)
-        self.draw_court()
+        self.court_top_line, self.court_down_line, self.court_left_line, self.court_right_line = \
+            self.create_zone_lines(
+                self.court_oval_tl,
+                self.court_oval_dl,
+                self.court_oval_dr,
+                self.court_oval_tr,
+                color="green"
+            )
         for item in [
-            self.attackline_top_line,
-            self.attackline_down_line,
-            self.attackline_left_line,
-            self.attackline_right_line,
+            self.att_top_line,
+            self.att_down_line,
+            self.att_left_line,
+            self.att_right_line,
             self.center_line
         ]:
             self.canvas.delete(item)
-        self.draw_attack_zone()
+
+        self.att_top_line, self.att_down_line, self.att_left_line, self.att_right_line = \
+            self.create_zone_lines(
+                self.att_oval_tl,
+                self.att_oval_dl,
+                self.att_oval_dr,
+                self.att_oval_tr,
+                color="yellow"
+            )
+        self.draw_center_line()
+
+        for item in [self.net_top_line, self.net_down_line,
+                     self.net_left_line, self.net_right_line]:
+            self.canvas.delete(item)
+        self.net_top_line, self.net_down_line, self.net_left_line, self.net_right_line = \
+            self.create_zone_lines(
+                self.net_oval_tl,
+                self.net_oval_dl,
+                self.net_oval_dr,
+                self.net_oval_tr,
+                color="red"
+            )
 
     def start_move(self, event):
         self._x = event.x
