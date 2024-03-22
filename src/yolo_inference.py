@@ -36,7 +36,7 @@ def config():
     parser.add_argument(
         "--court",
         type=str,
-        default="/home/masoud/Desktop/projects/volleyball_analytics/conf/court.json"
+        default="/home/masoud/Desktop/projects/volleyball_analytics/conf/reference_pts.json"
     )
     parser.add_argument(
         "--use_segment",
