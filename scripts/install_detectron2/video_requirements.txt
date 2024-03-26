@@ -1,0 +1,6 @@
+# Video
+opencv-python>=4.8.0.76
+ffmpeg-python>=0.2.0
+# av>=10.0.0 --no-binary=av
+av>=10.0.0
+PyAudio==0.2.13
