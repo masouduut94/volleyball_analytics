@@ -85,23 +85,34 @@ class Meta:
 
 class CourtCoordinates:
     def __init__(self, points: dict):
-        main_zone = points['main_zone']
-        front_zone = points['front_zone']
-        self.main_zone = np.array(
-            [main_zone],
-            dtype=np.int32
-        )
-        self.front_zone = np.array(
-            [front_zone],
-            dtype=np.int32
-        )
+        self.court = np.array(points['court'], dtype=np.int32)
+        self.front = np.array(points['attack'], dtype=np.int32)
+        self.center_line = np.array(points['center'], dtype=np.int32)
+        self.net = np.array(points['net'], dtype=np.int32)
+
+        # Now let's create volleyball zones. we split the court into 6 zones.
+        # First find the coords of 1/3rd and 2/3rd of court width (x).
+
+        team_a_zone_1 = None
+        team_a_zone_2 = None
+        team_a_zone_3 = None
+        team_a_zone_4 = None
+        team_a_zone_5 = None
+        team_a_zone_6 = None
+
+        team_b_zone_1 = None
+        team_b_zone_2 = None
+        team_b_zone_3 = None
+        team_b_zone_4 = None
+        team_b_zone_5 = None
+        team_b_zone_6 = None
 
     def is_inside_main_zone(self, point: tuple):
-        result = cv2.pointPolygonTest(self.main_zone, point, False)
+        result = cv2.pointPolygonTest(self.court, point, False)
         return result > 0
 
     def is_inside_front_zone(self, point: tuple):
-        result = cv2.pointPolygonTest(self.front_zone, point, False)
+        result = cv2.pointPolygonTest(self.front, point, False)
         return result > 0
 
 
