@@ -114,6 +114,41 @@ Development
 The whole project is developed with python 3.11. The requirements can be
 found in `requirements.txt`.
 
+Open the `conf/ml_models.yaml`, and configure it this way:
+
+```
+yolo:
+  player_segmentation:
+    weight: "path/to/weights" # download: https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n-seg.pt
+    labels: {0: 'person'}
+  player_detection:
+    weight: "path/to/weights" # download: https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n.pt
+    labels: {0: 'person'}
+  pose_estimation:
+    weight: "path/to/weights" # download: https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n-pose.pt
+    labels: {0: 'person'}
+  ball_segmentation:
+    weight: "path/to/weights" # download: https://drive.google.com/file/d/1KXDunsC1ALOObb303n9j6HHO7Bxz1HR_/view?usp=sharing
+    labels: {0: "ball"}
+  action_detection6:
+    weight: "/path/to/weights" # download: https://drive.google.com/file/d/1o-KpRVBbjrGbqlT8tOjFv91YS8LIJZw2/view?usp=sharing
+    labels: { 0: 'ball', 1: 'block', 2: "receive", 3: 'set', 4: 'spike', 5: 'serve'}
+  court_segment:
+    weight: "/path/to/weights.pt" # donwload link: https://drive.google.com/file/d/1bShZ7hxNw_AESEgKf_EyoBXdFqCuL7V-/view?usp=sharing
+    labels: { 0: "court"}
+
+video_mae:
+  game_state_3:
+    weight: "/path/to/checkpoint directory" # download: https://drive.google.com/file/d/18vtJSLIpaRHOlvXNmwvSd9stYYAEsMcK/view?usp=sharing
+```
+For more information about datasets and weights, please have a look at the wiki page here:
+- https://github.com/masouduut94/volleyball_analytics/wiki/Datasets-and-Weights
+
+you can also find insights about the API, the models used in the project, and their structure and 
+training results.
+check it out yourself: 
+- https://github.com/masouduut94/volleyball_analytics/wiki/API
+
 There are several scripts that can run the models and output demos that are listed here:
 
 - `src/demo.py`: It uses both video classification + yolo in the inference code and 
