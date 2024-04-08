@@ -6,7 +6,8 @@ from time import time
 """
 command:
 $TRT = /home/masoud/TensorRT-8.6.1.6/bin/trtexec 
-$TRT --onnx=/home/masoud/Desktop/projects/volleyball_analytics/scripts/optimize/models/6_classes_half/best.onnx --saveEngine=/home/masoud/Desktop/projects/volleyball_analytics/scripts/optimize/models/6_classes_half/best.trt
+$TRT --onnx=/home/masoud/Desktop/projects/volleyball_analytics/scripts/optimize/models/6_classes_half/best.onnx \
+  --saveEngine=/home/masoud/Desktop/projects/volleyball_analytics/scripts/optimize/models/6_classes_half/best.trt
 
 """
 

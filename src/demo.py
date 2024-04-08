@@ -90,44 +90,44 @@ if __name__ == '__main__':
 
         if len(buffer) != args.buffer_size:
             continue
-        else:
-            t1 = time()
-            label = state_detector.predict(buffer)
-            match label:
-                case GameState.SERVICE:
-                    color = (0, 255, 0)
-                case GameState.NO_PLAY:
-                    color = (0, 0, 255)
-                case GameState.PLAY:
-                    color = (255, 255, 0)
-                case _:
-                    color = (255, 255, 255)
+        
+        t1 = time()
+        label = state_detector.predict(buffer)
+        match label:
+            case GameState.SERVICE:
+                color = (0, 255, 0)
+            case GameState.NO_PLAY:
+                color = (0, 0, 255)
+            case GameState.PLAY:
+                color = (255, 255, 0)
+            case _:
+                color = (255, 255, 255)
 
-            for i, f in enumerate(buffer):
-                game_state = state_detector.state2label[label].upper()
-                frame_info = f"Frame #{fno_buffer[i]}/{n_frames}".upper()
+        for i, f in enumerate(buffer):
+            game_state = state_detector.state2label[label].upper()
+            frame_info = f"Frame #{fno_buffer[i]}/{n_frames}".upper()
 
-                buffer[i] = cv2.putText(buffer[i], f"Game Status: {game_state}", (150, 50),
-                                        cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2)
-                buffer[i] = cv2.putText(buffer[i], frame_info, (w - 350, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                                        0.6, (255, 0, 0), 2)
+            buffer[i] = cv2.putText(buffer[i], f"Game Status: {game_state}", (150, 50),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2)
+            buffer[i] = cv2.putText(buffer[i], frame_info, (w - 350, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                                    0.6, (255, 0, 0), 2)
 
-                if label != GameState.NO_PLAY:
-                    # YOLO Object detection
-                    balls = vb_object_detector.detect_balls(f)
-                    vb_objects = vb_object_detector.detect_actions(f, exclude=('ball',))
-                    blocks = vb_objects['block']
-                    sets = vb_objects['set']
-                    spikes = vb_objects['spike']
-                    receives = vb_objects['receive']
-                    services = vb_objects['serve']
-                    objects = balls + blocks + sets + receives + spikes + services
-                    # logger.info(f"Detected {len(objects)} objects...")
-                    buffer[i] = vb_object_detector.draw_bboxes(buffer[i], objects)
+            if label != GameState.NO_PLAY:
+                # YOLO Object detection
+                balls = vb_object_detector.detect_balls(f)
+                vb_objects = vb_object_detector.detect_actions(f, exclude=('ball',))
+                blocks = vb_objects['block']
+                sets = vb_objects['set']
+                spikes = vb_objects['spike']
+                receives = vb_objects['receive']
+                services = vb_objects['serve']
+                objects = balls + blocks + sets + receives + spikes + services
+                # logger.info(f"Detected {len(objects)} objects...")
+                buffer[i] = vb_object_detector.draw_bboxes(buffer[i], objects)
 
-                writer.write(buffer[i])
-            t2 = time()
-            pbar.set_description(f'processing {fno}/{n_frames} | process time: {abs(t2 - t1): .3f}')
+            writer.write(buffer[i])
+        t2 = time()
+        pbar.set_description(f'processing {fno}/{n_frames} | process time: {abs(t2 - t1): .3f}')
 
         buffer.clear()
         fno_buffer.clear()

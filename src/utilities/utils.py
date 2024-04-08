@@ -52,9 +52,9 @@ def state_summarize(states):
     for item in states:
         if item == curr:
             continue
-        else:
-            curr = item
-            temp.append(curr)
+        
+        curr = item
+        temp.append(curr)
     return temp
 
 

@@ -133,7 +133,7 @@ if __name__ == '__main__':
 
             if length < 30:
                 continue
-            elif length >= 30:
+            if length >= 30:
                 write_video(
                     cap=cap,
                     st=start_serve_fno,
@@ -163,7 +163,7 @@ if __name__ == '__main__':
             length = end_inplay_fno - start_inplay_fno
             if length < (vdo_length + 5):
                 continue
-            elif (vdo_length + 5) <= length <= 120:
+            if (vdo_length + 5) <= length <= 120:
                 # Generate 1 video.
                 st = random_start_frame(
                     start_inplay_fno, end_inplay_fno, divisions=1, vdo_length=vdo_length
@@ -228,7 +228,7 @@ if __name__ == '__main__':
             if length < vdo_length + 5:
                 continue
 
-            elif (vdo_length + 5) <= length <= 120:
+            if (vdo_length + 5) <= length <= 120:
                 # Generate 1 video.
                 st = random_start_frame(
                     start_noplay_fno, end_noplay_fno, divisions=1, vdo_length=vdo_length
