@@ -45,9 +45,9 @@ if __name__ == '__main__':
     elif fmt == 'openvino':
         args = dict(format=fmt, half=False, int8=False)
     if single_mode:
-            model.export(
-                **args
-            )
+        model.export(
+            **args
+        )
     else:
         args['batch'] = 30
         model.export(

@@ -1,10 +1,10 @@
 from datetime import datetime
 import pendulum
 
+from fastapi import status
 from fastapi.encoders import jsonable_encoder as jsonify
 from src.backend.app.schemas import series, matches
 from src.backend.app.tests.utility import VBTest
-from fastapi import status
 
 
 class SeriesTest(VBTest):
@@ -123,3 +123,4 @@ class SeriesTest(VBTest):
         self.assertEqual(len(resp3.json()), 2)
         self.assertIn(resp1.json()['id'], [item['id'] for item in resp3.json()])
         self.assertIn(resp2.json()['id'], [item['id'] for item in resp3.json()])
+

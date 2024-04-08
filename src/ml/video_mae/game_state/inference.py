@@ -1,8 +1,8 @@
 import cv2
 import yaml
 from tqdm import tqdm
-from src.backend.app.models.models import Video
 from gamestate_detection import GameStateDetector
+from src.backend.app.models.models import Video
 from src.ml.video_mae.game_state.utils import Manager
 
 if __name__ == '__main__':

@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from os import makedirs
+from os.path import join
 from shutil import move
 from pathlib import Path
-from os.path import join
 from random import shuffle
 from natsort import natsorted
 import matplotlib.pyplot as plt

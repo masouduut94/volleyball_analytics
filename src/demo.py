@@ -3,8 +3,8 @@ import yaml
 from tqdm import tqdm
 from time import time
 from os import makedirs
-from pathlib import Path
 from os.path import join
+from pathlib import Path
 from argparse import ArgumentParser
 
 from src.utilities.utils import ProjectLogger
@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
         if len(buffer) != args.buffer_size:
             continue
-        
+
         t1 = time()
         label = state_detector.predict(buffer)
         match label:

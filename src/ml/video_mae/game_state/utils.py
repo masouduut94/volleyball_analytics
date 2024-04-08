@@ -3,8 +3,8 @@ import numpy as np
 from tqdm import tqdm
 from time import time
 from os import makedirs
-from pathlib import Path
 from os.path import join
+from pathlib import Path
 from typing_extensions import List, Dict, Tuple
 
 from src.backend.app.api_interface import APIInterface
@@ -368,7 +368,7 @@ def annotate_service(
 
         if len(buffer) != buffer_size:
             continue
-        
+
         t1 = time()
         label = serve_detection_model.predict(buffer)
         t2 = time()

@@ -34,5 +34,3 @@ for video_path in all_videos:
     cap.release()
 progress_bar.close()
 
-
-
