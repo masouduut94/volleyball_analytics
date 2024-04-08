@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
             match current:
                 case 'service':
-                    if prev == 'no-play' or prev == 'service':
+                    if prev in ('no-play', 'service'):
                         state_manager.keep(current_frames)
                         state_manager.reset_temp_buffer()
                     elif prev == 'play':
@@ -73,7 +73,7 @@ if __name__ == '__main__':
                         state_manager.reset_temp_buffer()
                 case 'no-play':
                     # Only 2 consecutive "no-play" means the end of rally...
-                    if prev == 'service' or prev == 'play':
+                    if prev in ('service', 'play'):
                         # if we haven't got 2 cons
                         state_manager.keep(current_frames)
                         # store the whole game video from service to end of the game.

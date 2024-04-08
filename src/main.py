@@ -66,14 +66,14 @@ def main():
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
                         if state_manager.service_last_frame is None:
                             state_manager.service_last_frame = len(state_manager.long_buffer_fno) - 1
-                    elif previous == GameState.PLAY or previous == GameState.NO_PLAY:
+                    elif previous in (GameState.PLAY, GameState.NO_PLAY):
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
 
                 case GameState.NO_PLAY:
-                    if previous == GameState.SERVICE or previous == GameState.PLAY:
+                    if previous in (GameState.SERVICE, GameState.PLAY):
                         state_manager.keep(current_frames, current_fnos, [current] * len(current_frames))
                     elif previous == GameState.NO_PLAY:
-                        if previous2 == GameState.PLAY or previous2 == GameState.SERVICE:
+                        if previous2 in (GameState.PLAY, GameState.SERVICE):
                             all_labels: List[int] = state_manager.get_labels()
                             all_frames: List[np.ndarray] = state_manager.get_long_buffer()
                             all_fnos: List[int] = state_manager.get_long_buffer_fno()
