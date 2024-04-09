@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from tkinter import Canvas, Tk, Button
+from tkinter import Canvas, Tk
 from PIL import Image, ImageTk
 import cv2
 import random
@@ -8,7 +8,7 @@ import random
 from mathutils import Vector
 from mathutils.geometry import intersect_point_line
 from numpy._typing import NDArray
-from typing_extensions import List, Tuple, Dict
+from typing_extensions import Tuple
 
 from src.ml.yolo.court.segmentation import CourtSegmentor
 

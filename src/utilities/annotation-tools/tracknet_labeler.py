@@ -29,7 +29,7 @@ def check_fno(fno, total_frame):
     if fno < 0:
         print('\nInvaild !!! Jump to first image...')
         return False
-    elif fno > total_frame:
+    if fno > total_frame:
         print(f"\n maximum frames = {total_frame}")
     else:
         print(f"Frame set to: {fno}")
@@ -50,27 +50,27 @@ def to_frame(cap, df, current_fno, total_frame, custom_msg=None):
         print("frame index bigger than number of frames.")
     if not ret:
         return None
+
+    cv2.putText(frame, f'Frame: {current}/{total_frame}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 2)
+    if message != '':
+        cv2.putText(frame, message, (100, 400), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 2)
+
+    item = df.iloc[current]
+    if BBOX_ANNOTATION:
+        if item.x1 != -1:
+            x1 = item.x1
+            x2 = item.x2
+            y1 = item.y1
+            y2 = item.y2
+            frame = cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
     else:
-        cv2.putText(frame, f'Frame: {current}/{total_frame}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 2)
-        if message != '':
-            cv2.putText(frame, message, (100, 400), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 2)
-
-        item = df.iloc[current]
-        if BBOX_ANNOTATION:
-            if item.x1 != -1:
-                x1 = item.x1
-                x2 = item.x2
-                y1 = item.y1
-                y2 = item.y2
-                frame = cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
-        else:
-            if item.x != -1:
-                color = (0, 0, 255)
-                x = item.x
-                y = item.y
-                cv2.circle(frame, (x, y), 5, color, thickness=-1)
-        return frame
+        if item.x != -1:
+            color = (0, 0, 255)
+            x = item.x
+            y = item.y
+            cv2.circle(frame, (x, y), 5, color, thickness=-1)
+    return frame
 
 
 def go_to_next(df: pd.DataFrame, column: str, value: bool, current: int, return_last=False):
@@ -85,9 +85,8 @@ def go_to_next(df: pd.DataFrame, column: str, value: bool, current: int, return_
         if return_last:
             return temp.iloc[-1].frame, ""
         return temp.iloc[0].frame, ""
-    else:
-        print(msg)
-        return None, msg
+    print(msg)
+    return None, msg
 
 
 def go_to_previous(df: pd.DataFrame, column: str, value: bool, current: int, return_first=False):
@@ -102,9 +101,8 @@ def go_to_previous(df: pd.DataFrame, column: str, value: bool, current: int, ret
         if return_first:
             return temp.iloc[0].frame, ""
         return temp.iloc[-1].frame, ""
-    else:
-        print(msg)
-        return None, msg
+    print(msg)
+    return None, msg
 
 
 def click_and_crop(event, x, y, flags, param):

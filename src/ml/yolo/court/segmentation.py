@@ -7,7 +7,7 @@ import cv2
 from pathlib import Path
 from tqdm import tqdm
 from ultralytics import YOLO
-from src.utilities.utils import BoundingBox, Meta
+from src.utilities.utils import Meta
 
 
 # weights = 'yolov8n-seg.pt'

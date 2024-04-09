@@ -3,8 +3,8 @@ import numpy as np
 from tqdm import tqdm
 from time import time
 from os import makedirs
-from pathlib import Path
 from os.path import join
+from pathlib import Path
 from typing_extensions import List, Dict, Tuple
 
 from src.backend.app.api_interface import APIInterface
@@ -368,28 +368,28 @@ def annotate_service(
 
         if len(buffer) != buffer_size:
             continue
-        else:
-            t1 = time()
-            label = serve_detection_model.predict(buffer)
-            t2 = time()
-            pbar.set_description(f'processing {fno}/{n_frames} | p-time: {abs(t2 - t1): .3f}')
 
-            match label:
-                case GameState.SERVICE:
-                    color = (0, 255, 0)
-                case GameState.NO_PLAY:
-                    color = (0, 0, 255)
-                case GameState.PLAY:
-                    color = (255, 255, 0)
-                case _:
-                    color = (255, 255, 255)
+        t1 = time()
+        label = serve_detection_model.predict(buffer)
+        t2 = time()
+        pbar.set_description(f'processing {fno}/{n_frames} | p-time: {abs(t2 - t1): .3f}')
 
-            for f, fno in zip(buffer, buffer2):
-                f = cv2.putText(f, serve_detection_model.state2label[label].upper(), (w // 2, 50),
-                                cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2)
-                f = cv2.putText(f, f"Frame # {fno}/{n_frames}".upper(), (w - 200, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                                0.6, (255, 0, 0), 2)
-                writer.write(f)
+        match label:
+            case GameState.SERVICE:
+                color = (0, 255, 0)
+            case GameState.NO_PLAY:
+                color = (0, 0, 255)
+            case GameState.PLAY:
+                color = (255, 255, 0)
+            case _:
+                color = (255, 255, 255)
+
+        for f, fno in zip(buffer, buffer2):
+            f = cv2.putText(f, serve_detection_model.state2label[label].upper(), (w // 2, 50),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2)
+            f = cv2.putText(f, f"Frame # {fno}/{n_frames}".upper(), (w - 200, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                            0.6, (255, 0, 0), 2)
+            writer.write(f)
         buffer.clear()
         buffer2.clear()
 

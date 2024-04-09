@@ -10,9 +10,9 @@ from natsort import natsorted
 import xml.etree.ElementTree as ET
 
 from src.ml.yolo.ball import BallSegmentor
+from src.ml.yolo.vb_action.action_detection import ActionDetector
 from src.utilities.utils import BoundingBox
 from notebooks.utils import Bbox, ImageAnnot
-from src.ml.yolo.vb_action.action_detection import ActionDetector
 
 
 class CVATDataset:

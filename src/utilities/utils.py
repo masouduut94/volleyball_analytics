@@ -52,9 +52,9 @@ def state_summarize(states):
     for item in states:
         if item == curr:
             continue
-        else:
-            curr = item
-            temp.append(curr)
+
+        curr = item
+        temp.append(curr)
     return temp
 
 
@@ -194,8 +194,7 @@ class BoundingBox:
         con = "Contour" if self.contour_type else "no Contour"
         if self.detected:
             return f"""name={self.name} | {con} | center={self.center} | box={self.box}"""
-        else:
-            return f"""name={self.name} | NOT detected!"""
+        return f"""name={self.name} | NOT detected!"""
 
     @classmethod
     def create(cls, x):
@@ -434,8 +433,7 @@ class BoundingBox:
     def to_txt(self):
         if self.detected:
             return f'{self.name} {self.conf:.2f} {self.x1} {self.y1} {self.x2} {self.y2}'
-        else:
-            return ''
+        return ''
 
 
 class KeyPointBox:
@@ -580,13 +578,13 @@ class KeyPointBox:
 
         if self.is_kp_detected(lw) and self.is_kp_detected(rw):
             return lw[0] > rw[0]
-        elif self.is_kp_detected(le) and self.is_kp_detected(re):
+        if self.is_kp_detected(le) and self.is_kp_detected(re):
             return le[0] > re[0]
-        elif self.is_kp_detected(lk) and self.is_kp_detected(rk):
+        if self.is_kp_detected(lk) and self.is_kp_detected(rk):
             return lk[0] > rk[0]
-        elif self.is_kp_detected(ls) and self.is_kp_detected(rs):
+        if self.is_kp_detected(ls) and self.is_kp_detected(rs):
             return ls[0] > rs[0]
-        elif self.is_kp_detected(la) and self.is_kp_detected(ra):
+        if self.is_kp_detected(la) and self.is_kp_detected(ra):
             return la[0] > ra[0]
 
     def plot(self, img: NDArray) -> NDArray:
