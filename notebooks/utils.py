@@ -42,26 +42,26 @@ class Segment:
         self.label = label
 
     def chunk(self, arr: List) -> List[ArrayLike]:
-        return [np.array(arr[i:i + 2]).reshape((-1,1,2)).astype(np.int32) for i in range(0, len(arr), 2)]
+        return [np.array(arr[i:i + 2]).reshape((-1, 1, 2)).astype(np.int32) for i in range(0, len(arr), 2)]
 
     def to_yolo_segment(self, img_w, img_h):
         text = f"{self.label} "
         for i, p in enumerate(self.polygon):
-            if i % 2 == 0: # x points / img_w
+            if i % 2 == 0:  # x points / img_w
                 text += f" {p/img_w}"
-            else: # y points / img_h
+            else:  # y points / img_h
                 text += f" {p/img_h}"
         return text
 
     def get_bbox(self) -> Bbox:
-        Xs = [int(item) for i, item in enumerate(self.polygon) if i%2 == 0]
-        Ys = [int(item) for i, item in enumerate(self.polygon) if i%2 == 1]
+        Xs = [int(item) for i, item in enumerate(self.polygon) if i % 2 == 0]
+        Ys = [int(item) for i, item in enumerate(self.polygon) if i % 2 == 1]
         x1, y1 = min(Xs), min(Ys)
         x2, y2 = max(Xs), max(Ys)
         bbox = Bbox([x1, y1, x2, y2], self.label)
         return bbox
 
-    def draw(self, img: ArrayLike, color: tuple = (0, 255, 0), draw_bbox = True) -> ArrayLike:
+    def draw(self, img: ArrayLike, color: tuple = (0, 255, 0), draw_bbox=True) -> ArrayLike:
         img = cv2.drawContours(img, self.pts, -1, color, 3)
         bbox: Bbox = self.get_bbox()
         if draw_bbox:

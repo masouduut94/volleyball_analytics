@@ -67,4 +67,3 @@ async def delete_nation(nation_id: int, db: Session = Depends(get_db)):
         )
     nation_crud.remove(db=db, id=nation_id)
     return {"status": "success", "message": "Item removed successfully"}
-

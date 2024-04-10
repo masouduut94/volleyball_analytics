@@ -29,4 +29,3 @@ for i, (img, lbl) in enumerate(pairs):
     makedirs(lbl_path, exist_ok=True)
     move(img.as_posix(), img_path)
     move(lbl.as_posix(), lbl_path)
-

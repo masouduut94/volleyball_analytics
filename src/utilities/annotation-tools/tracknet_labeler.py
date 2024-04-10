@@ -105,7 +105,7 @@ def go_to_previous(df: pd.DataFrame, column: str, value: bool, current: int, ret
     return None, msg
 
 
-def click_and_crop(event, x, y, flags, param):
+def click_and_crop(event, x, y, flags, param):  # noqa: C901
     # grab references to the global variables
     global data, cap, current
     global frame
@@ -173,6 +173,15 @@ def init_message(df, index, columns, custom_msg=None):
     return st
 
 
+def turn_columns_into_int32(dataframe):
+    if BBOX_ANNOTATION:
+        for col in ['frame', 'x1', 'y1', 'x2', 'y2']:
+            dataframe[col] = dataframe[col].astype('int32')
+    else:
+        for col in ['frame', 'x', 'y']:
+            dataframe[col] = dataframe[col].astype('int32')
+
+
 def init(dataframe: pd.DataFrame, columns_dtype: dict, with_fake_values: bool = False):
     frames = np.arange(0, n_frames)
     fake_positions = [-1] * n_frames
@@ -194,12 +203,7 @@ def init(dataframe: pd.DataFrame, columns_dtype: dict, with_fake_values: bool = 
             }
         dataframe = pd.DataFrame(data=data)
 
-    if BBOX_ANNOTATION:
-        for col in ['frame', 'x1', 'y1', 'x2', 'y2']:
-            dataframe[col] = dataframe[col].astype('int32')
-    else:
-        for col in ['frame', 'x', 'y']:
-            dataframe[col] = dataframe[col].astype('int32')
+    turn_columns_into_int32(dataframe)
 
     for dtype, columns in columns_dtype.items():
         if dtype == 'int32':
@@ -223,7 +227,7 @@ def save_data(df, save_path):
     return df
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # noqa: C901
     VIDEO_FILE = "data/videos/5.mp4"
     CSV_SAVE_PATH = 'data/videos'
 

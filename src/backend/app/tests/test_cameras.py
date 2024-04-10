@@ -50,4 +50,3 @@ class CameraTest(VBTest):
 
         r = self.client.get(f"/api/cameras/{t.id}")
         self.assertEqual(r.status_code, 404)
-

@@ -68,4 +68,3 @@ async def delete_camera(camera_id: str, db: Session = Depends(get_db)):
         )
     camera_crud.remove(db=db, id=int(camera_id))
     return {"status": "success", "message": "Item removed successfully"}
-

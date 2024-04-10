@@ -16,4 +16,3 @@ class VideoCreateSchema(BaseModel):
 
 class VideoBaseSchema(VideoCreateSchema):
     id: int = None
-

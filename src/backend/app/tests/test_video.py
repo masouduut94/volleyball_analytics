@@ -74,4 +74,3 @@ class VideoTest(VBTest):
 
         r = self.client.get(f"/api/videos/{v.id}")
         self.assertEqual(r.status_code, 404)
-

@@ -11,4 +11,3 @@ api_router.include_router(rallies.router, prefix="/rallies", tags=["rallies"])
 api_router.include_router(series.router, prefix="/series", tags=["series"])
 api_router.include_router(teams.router, prefix="/teams", tags=["teams"])
 api_router.include_router(videos.router, prefix="/videos", tags=["videos"])
-
