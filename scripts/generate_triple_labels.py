@@ -80,7 +80,7 @@ def write_video(cap: cv2.VideoCapture, st: int, fps: int, width: int, height: in
     writer2.release()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # noqa: C901
     output_base_dir = '/home/masoud/Desktop/projects/volleyball_analytics/data/preprocessed/game-state'
     game_dir = Path(output_base_dir) / 'play'
     no_game_dir = Path(output_base_dir) / 'no-play'

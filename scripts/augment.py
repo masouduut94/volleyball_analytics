@@ -33,4 +33,3 @@ for video_path in all_videos:
     writer.release()
     cap.release()
 progress_bar.close()
-

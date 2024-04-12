@@ -87,4 +87,3 @@ async def get_all_matches_for_this_series(series_id: int, db: Session = Depends(
         )
 
     return matches_
-

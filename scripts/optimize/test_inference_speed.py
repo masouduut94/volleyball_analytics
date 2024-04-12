@@ -5,7 +5,7 @@ import cv2
 from time import time
 """
 command:
-$TRT = /home/masoud/TensorRT-8.6.1.6/bin/trtexec 
+$TRT = /home/masoud/TensorRT-8.6.1.6/bin/trtexec
 $TRT --onnx=/home/masoud/Desktop/projects/volleyball_analytics/scripts/optimize/models/6_classes_half/best.onnx \
   --saveEngine=/home/masoud/Desktop/projects/volleyball_analytics/scripts/optimize/models/6_classes_half/best.trt
 
@@ -59,8 +59,6 @@ if __name__ == '__main__':
         print("*" * 40)
         print("*" * 40)
 
-
-
 """
 ==========================================================================================================
 ==========================================================================================================
@@ -77,7 +75,7 @@ Speed: 0.8ms preprocess, 1.6ms inference, 0.4ms postprocess per image at shape (
 ==========================================================================================================
 ==========================================================================================================
 
-int8 | 
+int8 |
 
 0: 384x640 1 ball, 2 blocks, 1 spike, 39.3ms
 Speed: 2.7ms preprocess, 39.3ms inference, 163.4ms postprocess per image at shape (1, 3, 384, 640)

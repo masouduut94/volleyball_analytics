@@ -73,7 +73,7 @@ def write_video(cap: cv2.VideoCapture, st: int, fps: int, width: int, height: in
     writer.release()
 
 
-for video, annot in pairs:
+for video, annot in pairs:  # noqa: C901
     cap = cv2.VideoCapture(video.as_posix())
     w, h, fps = [int(cap.get(i)) for i in range(3, 6)]
 
@@ -216,6 +216,3 @@ for video, annot in pairs:
                     label='noplay'
                 )
     pbar.close()
-
-
-

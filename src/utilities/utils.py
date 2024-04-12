@@ -94,23 +94,6 @@ class CourtCoordinates:
         self.center_line = np.array(points['center'], dtype=np.int32)
         self.net = np.array(points['net'], dtype=np.int32)
 
-        # Now let's create volleyball zones. we split the court into 6 zones.
-        # First find the coords of 1/3rd and 2/3rd of court width (x).
-
-        team_a_zone_1 = None
-        team_a_zone_2 = None
-        team_a_zone_3 = None
-        team_a_zone_4 = None
-        team_a_zone_5 = None
-        team_a_zone_6 = None
-
-        team_b_zone_1 = None
-        team_b_zone_2 = None
-        team_b_zone_3 = None
-        team_b_zone_4 = None
-        team_b_zone_5 = None
-        team_b_zone_6 = None
-
     def is_inside_main_zone(self, point: tuple):
         result = cv2.pointPolygonTest(self.court, point, False)
         return result > 0

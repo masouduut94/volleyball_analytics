@@ -123,4 +123,3 @@ class SeriesTest(VBTest):
         self.assertEqual(len(resp3.json()), 2)
         self.assertIn(resp1.json()['id'], [item['id'] for item in resp3.json()])
         self.assertIn(resp2.json()['id'], [item['id'] for item in resp3.json()])
-

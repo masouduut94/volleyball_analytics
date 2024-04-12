@@ -19,4 +19,3 @@ class NationBaseSchema(NationCreateSchema):
     Stores the nationalities and how they are displayed on the scoreboard.
     """
     id: int = None
-

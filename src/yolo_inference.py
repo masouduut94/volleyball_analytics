@@ -56,7 +56,6 @@ if __name__ == '__main__':
     """
     1. Draw ball and ball tracking history in 5-6 frames before...
     2. Draw spiker-blocker-receiver-setter-Service ...
-    
     """
     cfg = config()
     video_path = Path(cfg.video_path)

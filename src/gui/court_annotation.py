@@ -348,10 +348,11 @@ class CourtAnnotator(object):
     def get_center(pt) -> Tuple[int, int]:
         return int((pt[0] + pt[2]) / 2), int((pt[1] + pt[3]) / 2)
 
-    def get_coords(self, oval_1, oval_2, oval_3, oval_4):
-        find_coordinations = lambda a, b, c, d: [self.canvas.coords(i) for i in [a, b, c, d]]
+    def find_coordinations(self, a, b, c, d):
+        return [self.canvas.coord(i) for i in [a, b, c, d]]
 
-        p1, p2, p3, p4 = find_coordinations(oval_1, oval_2, oval_3, oval_4)
+    def get_coords(self, oval_1, oval_2, oval_3, oval_4):
+        p1, p2, p3, p4 = self.find_coordinations(oval_1, oval_2, oval_3, oval_4)
         pt1, pt2, pt3, pt4 = [self.get_center(pt) for pt in [p1, p2, p3, p4]]
         court_coords = self.segmentor.find_corners(frame=self.frame, mask_points=[pt1, pt2, pt3, pt4])
         return court_coords
