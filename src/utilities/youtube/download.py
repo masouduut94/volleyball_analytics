@@ -21,8 +21,7 @@ v_links = [
     'https://www.youtube.com/watch?v=IYwAGz7BhXY',
     'https://www.youtube.com/watch?v=DWq7lRpvaLw',
     'https://www.youtube.com/watch?v=hHXyJ-Qm-XE'
-    
-    ]
+]
 
 
 for link in tqdm(v_links):
@@ -31,4 +30,3 @@ for link in tqdm(v_links):
     stream = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
     # stream = yt.streams.first()
     stream.download('./')
-

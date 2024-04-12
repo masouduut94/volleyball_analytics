@@ -14,10 +14,10 @@ https://vegibit.com/sqlalchemy-orm-relationships-one-to-many-many-to-one-many-to
 
 """
 from datetime import datetime
-from sqlalchemy.sql import func
 from typing_extensions import List
-from sqlalchemy.orm import Mapped, relationship, declared_attr
 from sqlalchemy import Column, Integer, String, Text, JSON, Boolean, ForeignKey, TIMESTAMP, ForeignKeyConstraint
+from sqlalchemy.sql import func
+from sqlalchemy.orm import Mapped, relationship, declared_attr
 
 from src.backend.app.db.engine import Base, get_db
 

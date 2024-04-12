@@ -1,5 +1,5 @@
-from os import makedirs
 from pathlib import Path
+from os import makedirs
 from os.path import join
 from random import shuffle
 from shutil import move

@@ -34,20 +34,17 @@ class VolleyBallObjectDetector:
     def detect_balls(self, inputs: NDArray | List[NDArray]):
         if isinstance(inputs, np.ndarray):
             return self.ball_detector.predict(inputs=inputs)
-        else:
-            return self.ball_detector.batch_predict(inputs=inputs)
+        return self.ball_detector.batch_predict(inputs=inputs)
 
     def detect_actions(self, inputs: NDArray | List[NDArray], exclude=None):
         if isinstance(inputs, np.ndarray):
             return self.action_detector.predict(inputs=inputs, exclude=exclude)
-        else:
-            return self.action_detector.batch_predict(inputs=inputs, exclude=exclude)
+        return self.action_detector.batch_predict(inputs=inputs, exclude=exclude)
 
     def detect_keypoints(self, inputs: NDArray | List[NDArray]):
         if isinstance(inputs, np.ndarray):
             return self.pose_estimator.predict(inputs=inputs)
-        else:
-            return self.pose_estimator.batch_predict(inputs=inputs)
+        return self.pose_estimator.batch_predict(inputs=inputs)
 
     def segment_players(self, inputs: NDArray | List[NDArray]):
         return self.player_detector.predict(frame=inputs)
