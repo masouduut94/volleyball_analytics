@@ -3,10 +3,14 @@ import math
 from loguru import logger
 import numpy as np
 from time import time
+
+from supervision import ColorPalette
 from tqdm import tqdm
 from pathlib import Path
 from functools import wraps
 from numpy.typing import NDArray
+from typing_extensions import List, Tuple
+import supervision as sv
 
 
 def video_write(input: str, output_path: str, yolo_model, config):
@@ -124,48 +128,62 @@ class BoundingBox:
     can provide variety of tools related to bounding boxes.
     """
 
-    def __init__(self, x, name=None, conf=0.0, contour=False):
-        self.contour_type = contour
-        if not contour:
-            if isinstance(x, list):
-                self.box = [int(i) for i in x]
-            elif isinstance(x, dict):
-                x1 = x['x1']
-                x2 = x['x2']
-                y1 = x['y1']
-                y2 = x['y2']
-                self.box = [int(i) for i in [x1, y1, x2, y2]]
-            elif isinstance(x, np.ndarray):
-                self.box = x.astype(int).tolist()
-            self.contour = None
-            self.x1 = self.box[0]
-            self.y1 = self.box[1]
-            self.x2 = self.box[2]
-            self.y2 = self.box[3]
-
-            self.max_x = max([self.x1, self.x2])
-            self.min_x = min([self.x1, self.x2])
-            self.max_y = max([self.y1, self.y2])
-            self.min_y = min([self.y1, self.y2])
-
-            self.width = abs(self.x1 - self.x2)
-            self.height = abs(self.y1 - self.y2)
-        else:
-            self.contour = np.array([x[0], x[1], x[2], x[3]], dtype=np.float32)
-            self.x1 = self.min_x = min([i[0] for i in x])
-            self.x2 = self.max_x = max([i[0] for i in x])
-            self.y1 = self.min_y = min([i[1] for i in x])
-            self.y2 = self.max_y = max([i[1] for i in x])
+    def __init__(self, x, name=None, conf=0.0, label: int = None):
+        if isinstance(x, list):
+            self.box = [int(i) for i in x]
+        elif isinstance(x, dict):
+            x1 = x['x1']
+            x2 = x['x2']
+            y1 = x['y1']
+            y2 = x['y2']
+            self.box = [int(i) for i in [x1, y1, x2, y2]]
+        elif isinstance(x, np.ndarray):
+            self.box = x.astype(int).tolist()
+        self.x1, self.y1, self.x2, self.y2 = self.box
 
         self.attributes = []
-        self.count = 0
-        self.deleted = 0
+        self.label = label
         self.conf = conf
+        self.annot_id = None
         self.name = name
         self.random_color = tuple(np.random.randint(low=0, high=254, size=(3,)).tolist())
 
+    def extend_image(self, width_start, height_start):
+        self.x1 += width_start
+        self.x2 += width_start
+        self.y1 += height_start
+        self.y2 += height_start
+        return self.create([self.x1, self.y1, self.x2, self.y2], name=self.name, conf=self.conf, label=self.label)
+
+    @property
+    def width(self):
+        return abs(self.x1 - self.x2)
+
+    @property
+    def height(self):
+        return abs(self.y1 - self.y2)
+
+    @property
+    def min_x(self):
+        return min([self.x1, self.x2])
+
+    @property
+    def max_x(self):
+        return max([self.x1, self.x2])
+
+    @property
+    def min_y(self):
+        return min([self.y1, self.y2])
+
+    @property
+    def max_y(self):
+        return max([self.y1, self.y2])
+
     def add_attribute(self, attribute):
         self.attributes.append(attribute)
+
+    def set_annot_id(self, annot_id):
+        self.annot_id = annot_id
 
     @property
     def detected(self):
@@ -191,14 +209,13 @@ class BoundingBox:
         }
 
     def __repr__(self):
-        con = "Contour" if self.contour_type else "no Contour"
         if self.detected:
-            return f"""name={self.name} | {con} | center={self.center} | box={self.box}"""
+            return f"""name={self.name} | center={self.center} | box={self.box}"""
         else:
             return f"""name={self.name} | NOT detected!"""
 
     @classmethod
-    def create(cls, x):
+    def create(cls, x, name=None, conf=0.0, label: int = None):
         """
 
         Args:
@@ -207,7 +224,7 @@ class BoundingBox:
         Returns:
             instantiate a BoundingBox module in place.
         """
-        return cls(x, name=None)
+        return cls(x, name=name, conf=conf, label=label)
 
     @property
     def area(self):
@@ -319,123 +336,180 @@ class BoundingBox:
         return True if self.iou(box) > threshold else False
 
     @property
-    def left_top(self):
-        return min(self.x1, self.x2), min(self.y1, self.y2)
+    def top_left(self):
+        return self.min_x, self.min_y
 
     @property
-    def left_down(self):
-        return min(self.x1, self.x2), max(self.y1, self.y2)
+    def down_left(self):
+        return self.min_x, self.max_y
 
     @property
-    def right_top(self):
-        return max(self.x1, self.x2), min(self.y1, self.y2)
+    def top_right(self):
+        return self.max_x, self.min_y
 
     @property
-    def right_down(self):
-        return max(self.x1, self.x2), max(self.y1, self.y2)
+    def down_right(self):
+        return self.max_x, self.max_y
 
     @property
     def down_center(self):
-        x_center = (self.left_down[0] + self.right_down[0]) // 2
-        y_center = (self.left_down[1] + self.right_down[1]) // 2
+        x_center = (self.down_left[0] + self.down_right[0]) // 2
+        y_center = (self.down_left[1] + self.down_right[1]) // 2
         return x_center, y_center
 
     @property
     def top_center(self):
-        x_center = (self.left_top[0] + self.right_top[0]) // 2
-        y_center = (self.left_top[1] + self.right_top[1]) // 2
+        x_center = (self.top_left[0] + self.top_right[0]) // 2
+        y_center = (self.top_left[1] + self.top_right[1]) // 2
         return x_center, y_center
 
     @property
     def diameter_size(self):
         return math.sqrt(self.width ** 2 + self.height ** 2)
 
-    def plot(self, frame, color=None, title=None):
-        img = frame.copy()
-        if not self.contour_type:
-            if not color:
-                if self.name == "players":
-                    color = (255, 0, 0)
-                elif self.name == 'ball':
-                    color = (0, 255, 0)
-                else:
-                    color = self.random_color
-            img = cv2.rectangle(img, (self.x1, self.y1), (self.x2, self.y2), color=color, thickness=2)
-            if title:
-                img = cv2.putText(img, title, (self.x1, self.y1), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, thickness=2)
-            elif self.name:
-                img = cv2.putText(img, self.name, (self.x1, self.y1), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, thickness=2)
-            if len(self.attributes):
-                img = cv2.putText(img, " | ".join(self.attributes), (self.x1, self.y2 + 10), cv2.FONT_HERSHEY_SIMPLEX,
-                                  0.6, color, thickness=2)
+    # def draw_title(self, frame, color=None, title=None):
+    #     img = cv2.putText(frame.copy(), title, (self.x1, self.y1), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, thickness=2)
+    #     return img
+
+    def to_yolo(self, img_width, img_height, seg_type=False):
+        if seg_type:
+            img_dimensions = np.array([img_width, img_height])
+            tl = (np.array(self.top_left) / img_dimensions).tolist()
+            dl = (np.array(self.down_left) / img_dimensions).tolist()
+            dr = (np.array(self.down_right) / img_dimensions).tolist()
+            tr = (np.array(self.top_right) / img_dimensions).tolist()
+            return f"{self.label} {tl[0]} {tl[1]} {dl[0]} {dl[1]} {dr[0]} {dr[1]} {tr[0]} {tr[1]}"
         else:
-            color = (255, 0, 0) if not color else color
-            img = cv2.drawContours(img, [self.contour.astype(int)], 0, color, 2)
-        return img
+            x_cen, y_cen = self.center
+            x_cen /= img_width
+            y_cen /= img_height
+            w = self.width / img_width
+            h = self.height / img_height
+            return f"{self.label} {x_cen} {y_cen} {w} {h}"
 
-    def draw_ellipse(self, img: NDArray, color: tuple = Meta.blue) -> NDArray:
-        if not self.detected:
-            return img
-        img = cv2.ellipse(
-            img,
-            center=self.down_center,
-            axes=(int((self.width - 10)), int(0.35 * (self.width - 10))),
-            angle=0.0,
-            startAngle=-45,
-            endAngle=235,
-            color=color,
-            thickness=2,
-            lineType=cv2.LINE_4
-        )
-        return img
+    def to_mask(self, img_width, img_height, polygon=None):
+        polygon = self.get_polygon(polygon=polygon)
+        x = [item for i, item in enumerate(polygon) if i % 2 == 0]
+        y = [item for i, item in enumerate(polygon) if i % 2 == 1]
+        pts = [item for item in zip(x, y)]
+        mask = sv.polygon_to_mask(np.array(pts), resolution_wh=(img_width, img_height))
+        return mask
 
-    def draw_marker(self, img: np.ndarray, color: tuple = Meta.green) -> np.ndarray:
-        if not self.detected:
-            return img
-        x = self.top_center[0]
-        y = self.top_center[1]
-        y_top = y - 10
-        x_left = x - 10
-        x_right = x + 10
+    def plot_mask(self, image, polygon=None, color=(255, 0, 255)):
+        height, width, _ = image.shape
+        mask = self.to_mask(img_width=width, img_height=height, polygon=polygon)
+        masked_image = np.where(
+            np.repeat(mask[:, :, np.newaxis], 3, axis=2),
+            np.asarray(color, dtype='uint8'), image)
+        return masked_image
 
-        left = [x_left, y_top]
-        right = [x_right, y_top]
-        contour = np.array([left, [x, y], right], dtype=np.int32)  # Maybe float32
-        img = cv2.fillPoly(img, [contour], color)
-        # cv2.circle(img, left, 10, color, -2)
-        # cv2.circle(img, right, 10, color, -2)
-        # cv2.circle(img, self.top_center, 10, color, -2)
+    def get_polygon(self, polygon=None):
+        if polygon is not None:
+            return polygon
+        else:
+            segmentation = []
+            for item in [self.top_left, self.down_left, self.down_right, self.top_right, self.top_left]:
+                segmentation.append(item[0])
+                segmentation.append(item[1])
+            return segmentation
 
-        return img
+    def to_coco(self, image_id: int):
+        segmentation = self.get_polygon()
 
-    def is_inside(self, center):
+        return {
+            'iscrowd': 0,
+            "bbox_mode": 0,
+            "area": self.area,
+            'id': self.annot_id,
+            'image_id': image_id,
+            'category_id': self.label,
+            'bbox': [self.x1, self.y1, self.width, self.height],
+            'segmentation': [segmentation],
+        }
+
+    def supervision_plot(self, image: np.ndarray, color: tuple = (255, 0, 0), plot_type: str = 'triangle',
+                         use_label=False):
         """
-        Indicates if the point `center` falls inside the bounding box or not.
+
         Args:
-            center:
+            image:
+            color:
+            plot_type: choose one of these ->  triangle - corner - dot - color - round - ellipse - bar
+            use_label:
 
         Returns:
 
         """
-        x, y = center.tolist()
-        if not self.contour_type:
-            x_inside = False
-            y_inside = False
-            if self.x1 < x < self.x2:
-                x_inside = True
-            if self.y1 < y < self.y2:
-                y_inside = True
-            result = x_inside and y_inside
-        else:
-            result = cv2.pointPolygonTest(self.contour, (x, y), False)
-            result = result > 0
-        return result
+        c = sv.Color(r=color[0], g=color[1], b=color[2])
+        annotator = sv.BoxAnnotator(color=c, thickness=2)
 
-    def to_txt(self):
-        if self.detected:
-            return f'{self.name} {self.conf:.2f} {self.x1} {self.y1} {self.x2} {self.y2}'
-        else:
-            return ''
+        match plot_type:
+            case "triangle":
+                annotator = sv.TriangleAnnotator()
+            case "corner":
+                annotator = sv.BoxCornerAnnotator(color=c, thickness=2)
+            case "dot":
+                annotator = sv.DotAnnotator(radius=10)
+            case "circle":
+                annotator = sv.CircleAnnotator(color=c, thickness=2)
+            case "color":
+                annotator = sv.ColorAnnotator(color=c)
+            case "round":
+                annotator = sv.RoundBoxAnnotator(color=c, thickness=2)
+            case "ellipse":
+                annotator = sv.EllipseAnnotator(color=c, thickness=2)
+            case "bar":
+                annotator = sv.PercentageBarAnnotator(color=c)
+
+        detections = sv.Detections(xyxy=np.array([[self.x1, self.y1, self.x2, self.y2]]))
+        image = annotator.annotate(scene=image, detections=detections)
+        if use_label:
+            label_annotator = sv.LabelAnnotator(color=c, text_position=sv.Position.TOP_CENTER, text_thickness=1,
+                                                text_color=sv.Color.BLACK)
+            image = label_annotator.annotate(scene=image, detections=detections, labels=[self.name])
+        return image
+
+
+def supervision_plot(image: np.ndarray, bboxes: List[BoundingBox], color: tuple = None,
+                     plot_type: str = None, use_label=False):
+    if not len(bboxes):
+        return image
+
+    if color is None:
+        c = ColorPalette.DEFAULT
+    else:
+        c = sv.Color(r=color[0], g=color[1], b=color[2])
+    match plot_type:
+        case "triangle":
+            annotator = sv.TriangleAnnotator(color=c)
+        case "corner":
+            annotator = sv.BoxCornerAnnotator(color=c, thickness=2)
+        case "dot":
+            annotator = sv.DotAnnotator(color=c, radius=10)
+        case "circle":
+            annotator = sv.CircleAnnotator(color=c, thickness=2)
+        case "color":
+            annotator = sv.ColorAnnotator(color=c)
+        case "round":
+            annotator = sv.RoundBoxAnnotator(color=c, thickness=2)
+        case "ellipse":
+            annotator = sv.EllipseAnnotator(color=c, thickness=2)
+        case "bar":
+            annotator = sv.PercentageBarAnnotator(color=c, border_thickness=2)
+        case None | _:
+            annotator = sv.BoundingBoxAnnotator(color=c, thickness=2)
+
+    detections = sv.Detections(
+        xyxy=np.array([[bbox.x1, bbox.y1, bbox.x2, bbox.y2] for bbox in bboxes]),
+        class_id=np.array([bbox.label for bbox in bboxes])
+    )
+
+    image = annotator.annotate(scene=image, detections=detections)
+    if use_label:
+        label_annotator = sv.LabelAnnotator(color=c, text_position=sv.Position.TOP_CENTER, text_color=sv.Color.BLACK,
+                                            text_thickness=1)
+        image = label_annotator.annotate(scene=image, detections=detections, labels=[bbox.name for bbox in bboxes])
+    return image
 
 
 class KeyPointBox:
@@ -607,10 +681,10 @@ class KeyPointBox:
         return img
 
     def draw_ellipse(self, img: NDArray, color: tuple = Meta.blue) -> NDArray:
-        return self.box.draw_ellipse(img=img, color=color)
+        return self.box.supervision_plot(image=img, color=color, plot_type='ellipse')
 
     def draw_marker(self, img: np.ndarray, color: tuple = Meta.green) -> np.ndarray:
-        return self.box.draw_marker(img=img, color=color)
+        return self.box.supervision_plot(image=img, color=color, plot_type='triangle')
 
     def json(self):
         # TODO: Needs integration with self.is_kp_detected...
