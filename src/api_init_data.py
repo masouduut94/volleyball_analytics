@@ -21,7 +21,7 @@ if __name__ == '__main__':
     camera = api.insert_camera(**new_cam.model_dump())
 
     # insert videos
-    video_path = "/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/11.mp4"
+    video_path = "data/raw/videos/train/11.mp4"
     new_video = videos.VideoCreateSchema(camera_type_id=camera.id, path=video_path)
     video = api.insert_video(**new_video.model_dump())
 

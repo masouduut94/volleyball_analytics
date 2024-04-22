@@ -18,7 +18,7 @@ class CourtAnnotator(object):
         self._x = None
         self._y = None
         cfg = {
-            'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/court_segment/weights/best.pt',
+            'weight': 'weights/court_segment/weights/best.pt',
             "labels": {0: 'court'}
         }
         self.segmentor = CourtSegmentor(cfg=cfg)
@@ -403,6 +403,6 @@ if __name__ == '__main__':
 
     """
 
-    file = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/11.mp4'
-    save_path = '/home/masoud/Desktop/projects/volleyball_analytics/conf'
+    file = 'data/raw/videos/train/11.mp4'
+    save_path = 'conf'
     CourtAnnotator(filename=file, save_path=save_path)

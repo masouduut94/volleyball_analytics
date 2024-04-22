@@ -4,8 +4,8 @@ from os import makedirs
 from os.path import join
 from random import shuffle
 
-dataset_root = '/home/masoud/Desktop/projects/volleyball_analytics/data/preprocessed/game-state-3-classes'
-new_path = '/home/masoud/Desktop/projects/volleyball_analytics/data/processed/game-status'
+dataset_root = 'data/preprocessed/game-state-3-classes'
+new_path = 'data/processed/game-status'
 all_videos = list(Path(dataset_root).rglob('*.mp4'))
 
 # services = [v for v in all_videos if v.parent.stem == 'service']

@@ -79,11 +79,11 @@ class ActionDetector:
 
 
 if __name__ == '__main__':
-    video = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/test/videos/11_short.mp4'
-    output = '/home/masoud/Desktop/projects/volleyball_analytics/runs/inference/det'
+    video = 'data/raw/videos/test/videos/11_short.mp4'
+    output = 'runs/inference/det'
     os.makedirs(output, exist_ok=True)
     cfg = {
-        'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/vb_actions_6_class/model1/weights/best.pt',
+        'weight': 'weights/vb_actions_6_class/model1/weights/best.pt',
         "labels": {0: 'spike', 1: 'block', 2: 'receive', 3: 'set'}
     }
 

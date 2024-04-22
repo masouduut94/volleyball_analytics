@@ -96,8 +96,8 @@ class PlayerDetector:
 
 
 if __name__ == '__main__':
-    video = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/11.mp4'
-    output = '/home/masoud/Desktop/projects/volleyball_analytics/runs/detect/onnx'
+    video = 'data/raw/videos/train/11.mp4'
+    output = 'runs/detect/onnx'
     cfg = {
         'weight': '/home/masoud/Desktop/projects/yolov8-tensorrt-test/weights/yolov8s.onnx',
         "labels": {0: 'person'}

@@ -11,18 +11,18 @@ def parse_args():
 
         "--model_cfg",
         type=str,
-        default='/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
+        default='conf/ml_models.yaml'
     )
 
     parser.add_argument(
         '--video_path',
         type=str,
-        default="/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/22.mp4"
+        default="data/raw/videos/train/22.mp4"
     )
     parser.add_argument(
         '--output_path',
         type=str,
-        default="/home/masoud/Desktop/projects/volleyball_analytics/runs/inference/game_state"
+        default="runs/inference/game_state"
     )
     parser.add_argument(
         '--buffer-size',

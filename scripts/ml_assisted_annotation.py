@@ -135,7 +135,7 @@ class YoloDataset:
 
 if __name__ == '__main__':
     action_cfg = {
-        'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/vb_actions_6_class/model1/weights/best.pt',
+        'weight': 'weights/vb_actions_6_class/model1/weights/best.pt',
         "labels": {
             0: 'ball',
             1: 'block',
@@ -146,17 +146,17 @@ if __name__ == '__main__':
         }
     }
     ball_cfg = {
-        'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/ball_segment/model2/weights/best.pt',
+        'weight': 'weights/ball_segment/model2/weights/best.pt',
         "labels": {0: 'ball'}
     }
 
     action_detector = ActionDetector(action_cfg)
     ball_detector = BallSegmentor(ball_cfg)
 
-    image_dir = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/4_classes/receive'
+    image_dir = 'data/raw/4_classes/receive'
     images = natsorted(list(Path(image_dir).glob('*.png')))
-    # meta_file = '/home/masoud/Desktop/projects/volleyball_analytics/notebooks/meta.xml'
-    output_path = '/home/masoud/Desktop/projects/volleyball_analytics/runs/yolo_package/receive'
+    # meta_file = 'notebooks/meta.xml'
+    output_path = 'runs/yolo_package/receive'
     os.makedirs(output_path, exist_ok=True)
     yolo_fmt = YoloDataset(list(action_cfg['labels'].values()))
 
