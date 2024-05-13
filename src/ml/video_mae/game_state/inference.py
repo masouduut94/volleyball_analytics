@@ -6,7 +6,7 @@ from src.backend.app.models.models import Video
 from src.ml.video_mae.game_state.utils import Manager
 
 if __name__ == '__main__':
-    config = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
+    config = 'conf/ml_models.yaml'
     cfg = yaml.load(open(config), Loader=yaml.SafeLoader)
     model = GameStateDetector(cfg=cfg['video_mae']['game_state_3'])
     src = Video.get(1)

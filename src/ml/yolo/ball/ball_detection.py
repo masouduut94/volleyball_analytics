@@ -7,7 +7,7 @@ from ultralytics import YOLO
 from numpy.typing import NDArray
 from src.utilities.utils import BoundingBox, Meta
 
-# weights = '/home/masoud/Desktop/projects/volleyball_analytics/weights/ball_segment/model2/weights/best.pt'
+# weights = 'weights/ball_segment/model2/weights/best.pt'
 
 __all__ = ['BallSegmentor']
 
@@ -59,10 +59,10 @@ class BallSegmentor:
 
 
 if __name__ == '__main__':
-    video = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/nian1.mp4'
-    output = '/home/masoud/Desktop/projects/volleyball_analytics/runs/DEMO'
+    video = 'data/raw/videos/train/nian1.mp4'
+    output = 'runs/DEMO'
     cfg = {
-        'weight': '/home/masoud/Desktop/projects/volleyball_analytics/runs/detect/train/weights/best.pt',
+        'weight': 'runs/detect/train/weights/best.pt',
         "labels": {0: 'ball'}
     }
 

@@ -46,7 +46,7 @@ def random_start_frame(st, end, divisions=5, vdo_length=50):
     return results
 
 
-output_base_dir = '/home/masoud/Desktop/projects/volleyball_analytics/data/preprocessed/game-state-2-classes'
+output_base_dir = 'data/preprocessed/game-state-2-classes'
 game_dir = Path(output_base_dir) / 'play'
 no_game_dir = Path(output_base_dir) / 'no-play'
 makedirs(game_dir.as_posix(), exist_ok=True)

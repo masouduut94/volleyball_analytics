@@ -1,3 +1,3 @@
 match_id: 1
-court_json: '/home/masoud/Desktop/projects/volleyball_analytics/conf/reference_pts.json'
+court_json: 'conf/reference_pts.json'
 base_dir: "/media/masoud/HDD-8TB/DATA/volleyball/"

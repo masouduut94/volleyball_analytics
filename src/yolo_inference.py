@@ -15,28 +15,28 @@ def config():
 
         "--model_cfg",
         type=str,
-        default='/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
+        default='conf/ml_models.yaml'
     )
     parser.add_argument(
 
         "--setup_cfg",
         type=str,
-        default='/home/masoud/Desktop/projects/volleyball_analytics/conf/setup.yaml'
+        default='conf/setup.yaml'
     )
     parser.add_argument(
         '--video_path',
         type=str,
-        default="/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/22.mp4"
+        default="data/raw/videos/train/22.mp4"
     )
     parser.add_argument(
         '--output_path',
         type=str,
-        default="/home/masoud/Desktop/projects/volleyball_analytics/runs/detect"
+        default="runs/detect"
     )
     parser.add_argument(
         "--court",
         type=str,
-        default="/home/masoud/Desktop/projects/volleyball_analytics/conf/reference_pts.json"
+        default="conf/reference_pts.json"
     )
     parser.add_argument(
         "--use_segment",
