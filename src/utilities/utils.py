@@ -9,7 +9,7 @@ from tqdm import tqdm
 from pathlib import Path
 from functools import wraps
 from numpy.typing import NDArray
-from typing_extensions import List, Tuple
+from typing_extensions import List
 import supervision as sv
 
 
@@ -56,9 +56,8 @@ def state_summarize(states):
     for item in states:
         if item == curr:
             continue
-        else:
-            curr = item
-            temp.append(curr)
+        curr = item
+        temp.append(curr)
     return temp
 
 
@@ -194,8 +193,7 @@ class BoundingBox:
     def __repr__(self):
         if self.detected:
             return f"""name={self.name} | center={self.center} | box={self.box}"""
-        else:
-            return f"""name={self.name} | NOT detected!"""
+        return f"""name={self.name} | NOT detected!"""
 
     @classmethod
     def create(cls, x, name=None, conf=0.0, label: int = None):
@@ -362,19 +360,18 @@ class BoundingBox:
             dr = (np.array(self.down_right) / img_dimensions).tolist()
             tr = (np.array(self.top_right) / img_dimensions).tolist()
             return f"{self.label} {tl[0]} {tl[1]} {dl[0]} {dl[1]} {dr[0]} {dr[1]} {tr[0]} {tr[1]}"
-        else:
-            x_cen, y_cen = self.center
-            x_cen /= img_width
-            y_cen /= img_height
-            w = self.width / img_width
-            h = self.height / img_height
-            return f"{self.label} {x_cen} {y_cen} {w} {h}"
+        x_cen, y_cen = self.center
+        x_cen /= img_width
+        y_cen /= img_height
+        w = self.width / img_width
+        h = self.height / img_height
+        return f"{self.label} {x_cen} {y_cen} {w} {h}"
 
     def to_mask(self, img_width, img_height, polygon=None):
         polygon = self.get_polygon(polygon=polygon)
-        x = [item for i, item in enumerate(polygon) if i % 2 == 0]
-        y = [item for i, item in enumerate(polygon) if i % 2 == 1]
-        pts = [item for item in zip(x, y)]
+        x = polygon[::2]
+        y = polygon[1::2]
+        pts = list(zip(x, y))
         mask = sv.polygon_to_mask(np.array(pts), resolution_wh=(img_width, img_height))
         return mask
 
@@ -389,12 +386,11 @@ class BoundingBox:
     def get_polygon(self, polygon=None):
         if polygon is not None:
             return polygon
-        else:
-            segmentation = []
-            for item in [self.top_left, self.down_left, self.down_right, self.top_right, self.top_left]:
-                segmentation.append(item[0])
-                segmentation.append(item[1])
-            return segmentation
+        segmentation = []
+        for item in [self.top_left, self.down_left, self.down_right, self.top_right, self.top_left]:
+            segmentation.append(item[0])
+            segmentation.append(item[1])
+        return segmentation
 
     def to_coco(self, image_id: int):
         segmentation = self.get_polygon()
@@ -637,13 +633,13 @@ class KeyPointBox:
 
         if self.is_kp_detected(lw) and self.is_kp_detected(rw):
             return lw[0] > rw[0]
-        elif self.is_kp_detected(le) and self.is_kp_detected(re):
+        if self.is_kp_detected(le) and self.is_kp_detected(re):
             return le[0] > re[0]
-        elif self.is_kp_detected(lk) and self.is_kp_detected(rk):
+        if self.is_kp_detected(lk) and self.is_kp_detected(rk):
             return lk[0] > rk[0]
-        elif self.is_kp_detected(ls) and self.is_kp_detected(rs):
+        if self.is_kp_detected(ls) and self.is_kp_detected(rs):
             return ls[0] > rs[0]
-        elif self.is_kp_detected(la) and self.is_kp_detected(ra):
+        if self.is_kp_detected(la) and self.is_kp_detected(ra):
             return la[0] > ra[0]
 
     def plot(self, img: NDArray) -> NDArray:
