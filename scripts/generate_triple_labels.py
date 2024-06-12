@@ -81,7 +81,7 @@ def write_video(cap: cv2.VideoCapture, st: int, fps: int, width: int, height: in
 
 
 if __name__ == '__main__':  # noqa: C901
-    output_base_dir = '/home/masoud/Desktop/projects/volleyball_analytics/data/preprocessed/game-state'
+    output_base_dir = 'data/preprocessed/game-state'
     game_dir = Path(output_base_dir) / 'play'
     no_game_dir = Path(output_base_dir) / 'no-play'
     service_dir = Path(output_base_dir) / 'service'
@@ -286,8 +286,8 @@ if __name__ == '__main__':  # noqa: C901
 
     print("finished data generation ....")
     # Split to train-test
-    # dataset_root = '/home/masoud/Desktop/projects/volleyball_analytics/data/preprocessed/game-state'
-    new_path = '/home/masoud/Desktop/projects/volleyball_analytics/data/processed/game-status'
+    # dataset_root = 'data/preprocessed/game-state'
+    new_path = 'data/processed/game-status'
     all_videos = list(Path(output_base_dir).rglob('*.mp4'))
 
     # services = [v for v in all_videos if v.parent.stem == 'service']

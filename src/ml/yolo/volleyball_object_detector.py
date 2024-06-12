@@ -58,9 +58,9 @@ class VolleyBallObjectDetector:
 
 
 if __name__ == '__main__':
-    config_file = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
-    setup = '/home/masoud/Desktop/projects/volleyball_analytics/conf/setup.yaml'
-    court_json = '/home/masoud/Desktop/projects/volleyball_analytics/conf/reference_pts.json'
+    config_file = 'conf/ml_models.yaml'
+    setup = 'conf/setup.yaml'
+    court_json = 'conf/reference_pts.json'
     video_name = "22.mp4"
 
     cfg: dict = yaml.load(open(config_file), Loader=SafeLoader)

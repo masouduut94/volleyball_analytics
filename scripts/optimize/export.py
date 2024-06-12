@@ -1,5 +1,5 @@
 """
-$TRT --onnx= --saveEngine=/home/masoud/Desktop/projects/volleyball_analytics/scripts/optimize/models/6_classes_half/best.trt
+$TRT --onnx= --saveEngine=scripts/optimize/models/6_classes_half/best.trt
 format	'torchscript'	format to export to
 imgsz	640	image size as scalar or (h, w) list, i.e. (640, 480)
 keras	False	use Keras for TF SavedModel export

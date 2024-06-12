@@ -6,15 +6,15 @@ from time import time
 """
 command:
 $TRT = /home/masoud/TensorRT-8.6.1.6/bin/trtexec
-$TRT --onnx=/home/masoud/Desktop/projects/volleyball_analytics/scripts/optimize/models/6_classes_half/best.onnx \
-  --saveEngine=/home/masoud/Desktop/projects/volleyball_analytics/scripts/optimize/models/6_classes_half/best.trt
+$TRT --onnx=scripts/optimize/models/6_classes_half/best.onnx \
+  --saveEngine=scripts/optimize/models/6_classes_half/best.trt
 
 """
 
 
 if __name__ == '__main__':
-    weights = '/home/masoud/Desktop/projects/volleyball_analytics/scripts/optimize/models/6_classes_half/best.engine'
-    img_path = "/home/masoud/Desktop/projects/volleyball_analytics/data/inference_test/test"
+    weights = 'scripts/optimize/models/6_classes_half/best.engine'
+    img_path = "data/inference_test/test"
     single_mode = True
 
     all_images = list(Path(img_path).glob('*.png'))

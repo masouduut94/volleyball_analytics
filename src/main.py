@@ -26,8 +26,8 @@ def main():
 
     """
     # match_id = 1
-    ml_config = '/home/masoud/Desktop/projects/volleyball_analytics/conf/ml_models.yaml'
-    setup_config = "/home/masoud/Desktop/projects/volleyball_analytics/conf/setup.yaml"
+    ml_config = 'conf/ml_models.yaml'
+    setup_config = "conf/setup.yaml"
     api_base_url = "http://localhost:8000"
     cfg: dict = yaml.load(open(ml_config), Loader=yaml.SafeLoader)
     temp: dict = yaml.load(open(setup_config), Loader=yaml.SafeLoader)

@@ -64,10 +64,10 @@ class CourtSegmentor:
 
 
 if __name__ == '__main__':
-    video = '/home/masoud/Desktop/projects/volleyball_analytics/data/raw/videos/train/3.mp4'
-    output = '/home/masoud/Desktop/projects/volleyball_analytics/runs/DEMO'
+    video = 'data/raw/videos/train/3.mp4'
+    output = 'runs/DEMO'
     cfg = {
-        'weight': '/home/masoud/Desktop/projects/volleyball_analytics/weights/court_segment/weights/best.pt',
+        'weight': 'weights/court_segment/weights/best.pt',
         "labels": {0: 'court'}
     }
 

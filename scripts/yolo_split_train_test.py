@@ -6,8 +6,8 @@ from shutil import move
 
 from natsort import natsorted
 
-dataset_root = '/home/masoud/Desktop/projects/volleyball_analytics/data/preprocessed/6_classs_V2'
-new_path = '/home/masoud/Desktop/projects/volleyball_analytics/data/processed/6_classs_V2'
+dataset_root = 'data/preprocessed/6_classs_V2'
+new_path = 'data/processed/6_classs_V2'
 all_images = natsorted(list(Path(dataset_root).rglob('*.png')), key=lambda x: x.stem)
 all_labels = natsorted(list(Path(dataset_root).rglob('*.txt')), key=lambda x: x.stem)
 pairs = list(zip(all_images, all_labels))

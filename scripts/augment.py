@@ -4,7 +4,7 @@ from pathlib import Path
 from os.path import join
 from natsort import natsorted
 
-data_path = '/home/masoud/Desktop/projects/volleyball_analytics/data/processed/game-status-2-classes/train'
+data_path = 'data/processed/game-status-2-classes/train'
 
 all_videos = natsorted(list(Path(data_path).rglob('*.mp4')), key=lambda x: x.parent.stem)
 progress_bar = tqdm(all_videos)
