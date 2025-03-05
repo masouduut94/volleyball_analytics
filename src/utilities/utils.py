@@ -420,15 +420,27 @@ class BoundingBox:
 
         """
         c = sv.Color(r=color[0], g=color[1], b=color[2])
-        annotator = sv.BoxAnnotator(color=c, thickness=2)
+
+        detections = sv.Detections(
+            xyxy=np.array([[self.x1, self.y1, self.x2, self.y2]]),
+            class_id=np.array([self.label]),  # Add class_id from BoundingBox.label
+            confidence=np.array([self.conf]),  # Optional: Add confidence
+        )
+
+        # Update the annotator to use COLOR (not class-based lookup)
+        annotator = sv.BoxAnnotator(
+            color=c,  # Directly use the provided color
+            color_lookup=sv.ColorLookup.CLASS,
+            thickness=2,
+        )
 
         match plot_type:
             case "triangle":
-                annotator = sv.TriangleAnnotator()
+                annotator = sv.TriangleAnnotator(color=c)
             case "corner":
                 annotator = sv.BoxCornerAnnotator(color=c, thickness=2)
             case "dot":
-                annotator = sv.DotAnnotator(radius=10)
+                annotator = sv.DotAnnotator(radius=10, color=c)
             case "circle":
                 annotator = sv.CircleAnnotator(color=c, thickness=2)
             case "color":
@@ -439,12 +451,19 @@ class BoundingBox:
                 annotator = sv.EllipseAnnotator(color=c, thickness=2)
             case "bar":
                 annotator = sv.PercentageBarAnnotator(color=c)
+            case "box":
+                annotator = sv.BoxAnnotator(color=c, thickness=2)
 
         detections = sv.Detections(xyxy=np.array([[self.x1, self.y1, self.x2, self.y2]]))
         image = annotator.annotate(scene=image, detections=detections)
         if use_label:
-            label_annotator = sv.LabelAnnotator(color=c, text_position=sv.Position.TOP_CENTER, text_thickness=1,
-                                                text_color=sv.Color.BLACK)
+            label_annotator = sv.LabelAnnotator(
+                color=c,
+                text_position=sv.Position.TOP_CENTER,
+                text_thickness=1,
+                text_color=sv.Color.BLACK,
+                color_lookup=sv.ColorLookup.CLASS,
+            )
             image = label_annotator.annotate(scene=image, detections=detections, labels=[self.name])
         return image
 

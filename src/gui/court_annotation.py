@@ -44,8 +44,9 @@ class CourtAnnotator(object):
         print(f"ANNOTS: {annots}")
         if annots is not None:
             print("USING PRE-ANNOTATED JSON")
-            (self.w_tl, self.h_top), (self.w_dl, self.h_down), (self.w_dr, _), (self.w_tr, _) = annots['court']
-            self.net_top_left, self.net_down_left, self.net_down_right, self.net_top_right = annots['net']
+            (self.w_tl, self.h_top), (self.w_dl, self.h_down), (self.w_dr, _), (self.w_tr, _) = annots["court"]
+            self.net_top_left, self.net_down_left, self.net_down_right, self.net_top_right = annots["net"]
+            self.att_top_left, self.att_down_left, self.att_down_right, self.att_top_right = annots["attack"]
         else:
             print("Annotation not found. USING AI TO DETECT COURT ....")
 
@@ -63,34 +64,24 @@ class CourtAnnotator(object):
             self.net_top_right = (self.w_tr, self.h_top - 400)
             self.net_down_right = (self.w_tr, self.h_top - 200)
 
-        if annots is None:
             p1_top_left = (self.w_tl + 10, self.h_top + 100)
             p2_top_right = (self.w_tr + 50, self.h_top + 50)
             p3_down_left = (self.w_tl + 50, self.h_top + 350)
             p4_down_right = (self.w_tr + 50, self.h_top + 300)
 
             self.att_top_left = self.find_intersection(
-                line_pt1=(self.w_tl, self.h_top),
-                line_pt2=(self.w_dl, self.h_down),
-                x=p1_top_left
+                line_pt1=(self.w_tl, self.h_top), line_pt2=(self.w_dl, self.h_down), x=p1_top_left
             )
             self.att_top_right = self.find_intersection(
-                line_pt1=(self.w_tr, self.h_top),
-                line_pt2=(self.w_dr, self.h_down),
-                x=p2_top_right
+                line_pt1=(self.w_tr, self.h_top), line_pt2=(self.w_dr, self.h_down), x=p2_top_right
             )
             self.att_down_left = self.find_intersection(
-                line_pt1=(self.w_tl, self.h_top),
-                line_pt2=(self.w_dl, self.h_down),
-                x=p3_down_left
+                line_pt1=(self.w_tl, self.h_top), line_pt2=(self.w_dl, self.h_down), x=p3_down_left
             )
             self.att_down_right = self.find_intersection(
-                line_pt1=(self.w_tr, self.h_top),
-                line_pt2=(self.w_dr, self.h_down),
-                x=p4_down_right
+                line_pt1=(self.w_tr, self.h_top), line_pt2=(self.w_dr, self.h_down), x=p4_down_right
             )
-        else:
-            self.att_top_left, self.att_down_left, self.att_down_right, self.att_top_right = annots['attack']
+
         self.root = Tk()
         self.root.title("Court Annotation: ")
         self.canvas = Canvas(self.root, width=self.w + 20, height=self.h + 50, bg='black')
@@ -349,7 +340,7 @@ class CourtAnnotator(object):
         return int((pt[0] + pt[2]) / 2), int((pt[1] + pt[3]) / 2)
 
     def find_coordinations(self, a, b, c, d):
-        return [self.canvas.coord(i) for i in [a, b, c, d]]
+        return [self.canvas.coords(i) for i in [a, b, c, d]]
 
     def get_coords(self, oval_1, oval_2, oval_3, oval_4):
         p1, p2, p3, p4 = self.find_coordinations(oval_1, oval_2, oval_3, oval_4)
@@ -371,9 +362,10 @@ class CourtAnnotator(object):
                     "court": court_coords,
                     "attack": att_line_coords,
                     "center": (self.left_center, self.right_center),
-                    "net": net_coords
-                }}
-            json.dump(out_dict, open(self.save_file.as_posix(), 'w'), sort_keys=True, indent=4)
+                    "net": net_coords,
+                }
+            }
+            json.dump(out_dict, open(self.save_file.as_posix(), "w"), sort_keys=True, indent=4)
         else:
             js = json.load(open(self.save_file.as_posix()))
             js[Path(self.filename).name] = {
@@ -385,7 +377,14 @@ class CourtAnnotator(object):
             json.dump(js, open(self.save_file.as_posix(), 'w'), sort_keys=True, indent=4)
 
 
-if __name__ == '__main__':
+def parse_args():
+    parser = ArgumentParser("Arguments for court annotations UI")
+    parser.add_argument("--video_path", type=str, default="data/raw/videos/train/11.mp4")
+    parser.add_argument("--output_dir_path", type=str, default="conf")
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
     """
     1. select an initial frame from video which can be random
     2. Use a button to change to another frame in the video if current one was unclear.
@@ -403,6 +402,5 @@ if __name__ == '__main__':
 
     """
 
-    file = 'data/raw/videos/train/11.mp4'
-    save_path = 'conf'
-    CourtAnnotator(filename=file, save_path=save_path)
+    args = parse_args()
+    CourtAnnotator(filename=args.video_path, save_path=args.output_dir_path)

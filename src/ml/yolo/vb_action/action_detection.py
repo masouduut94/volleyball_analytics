@@ -63,18 +63,18 @@ class ActionDetector:
     def draw(frame: NDArray, items: List[BoundingBox | KeyPointBox]):
         for bb in items:
             match bb.name:
-                case 'spike':
-                    frame = bb.plot(frame, color=Meta.bgr_orange, title=bb.name)
-                case 'set':
-                    frame = bb.plot(frame, color=Meta.bgr_aqua, title=bb.name)
-                case 'receive':
-                    frame = bb.plot(frame, color=Meta.green, title=bb.name)
-                case 'block':
-                    frame = bb.plot(frame, color=Meta.bgr_purple, title=bb.name)
-                case 'serve':
-                    frame = bb.plot(frame, color=Meta.bgr_brown, title=bb.name)
-                case 'ball':
-                    frame = bb.plot(frame, color=Meta.bgr_red, title=bb.name)
+                case "spike":
+                    frame = bb.supervision_plot(frame, color=Meta.bgr_orange, plot_type="box", use_label=True)
+                case "set":
+                    frame = bb.supervision_plot(frame, color=Meta.bgr_aqua, plot_type="box", use_label=True)
+                case "receive":
+                    frame = bb.supervision_plot(frame, color=Meta.green, plot_type="box", use_label=True)
+                case "block":
+                    frame = bb.supervision_plot(frame, color=Meta.bgr_purple, plot_type="box", use_label=True)
+                case "serve":
+                    frame = bb.supervision_plot(frame, color=Meta.bgr_brown, plot_type="box", use_label=True)
+                case "ball":
+                    frame = bb.supervision_plot(frame, color=Meta.bgr_red, plot_type="box", use_label=True)
         return frame
 
 
