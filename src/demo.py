@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument(
         '--video_path',
         type=str,
-        default="data/raw/videos/train/16.mp4"
+        default="data/videos/videoplayback.mp4"
     )
     parser.add_argument(
         '--output_path',

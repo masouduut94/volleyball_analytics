@@ -454,7 +454,11 @@ class BoundingBox:
             case "box":
                 annotator = sv.BoxAnnotator(color=c, thickness=2)
 
-        detections = sv.Detections(xyxy=np.array([[self.x1, self.y1, self.x2, self.y2]]))
+        detections = sv.Detections(
+            xyxy=np.array([[self.x1, self.y1, self.x2, self.y2]]),
+            class_id=np.array([self.label]),  # Add class_id from BoundingBox.label
+            confidence=np.array([self.conf]),  # Optional: Add confidence
+        )
         image = annotator.annotate(scene=image, detections=detections)
         if use_label:
             label_annotator = sv.LabelAnnotator(
