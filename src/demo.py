@@ -6,6 +6,8 @@ from os import makedirs
 from os.path import join
 from pathlib import Path
 from argparse import ArgumentParser
+import csv
+
 
 from src.utilities.utils import ProjectLogger
 from src.backend.app.enums.enums import GameState
@@ -28,7 +30,7 @@ def parse_args():
     parser.add_argument(
         '--video_path',
         type=str,
-        default="data/videos/videoplayback.mp4"
+        default="data/videos/HandS.mp4"
     )
     parser.add_argument(
         '--output_path',
@@ -77,6 +79,7 @@ if __name__ == '__main__':
     output_name = join(args.output_path, f'{Path(video_path).stem}_DEMO.mp4')
     writer = cv2.VideoWriter(output_name, codec, fps, (w, h))
     logger.success("Process initialization completed...")
+    game_state_per_frame = []
 
     while status:
         status, frame = cap.read()
@@ -124,15 +127,24 @@ if __name__ == '__main__':
                 objects = balls + blocks + sets + receives + spikes + services
                 # logger.info(f"Detected {len(objects)} objects...")
                 buffer[i] = vb_object_detector.draw_bboxes(buffer[i], objects)
-
+            game_state_per_frame.append({
+                "frame": fno_buffer[i],
+                "game_state": game_state
+            })
             writer.write(buffer[i])
+
+        
+
         t2 = time()
         pbar.set_description(f'processing {fno}/{n_frames} | process time: {abs(t2 - t1): .3f}')
 
         buffer.clear()
         fno_buffer.clear()
     logger.success(f"Process finished. Saved output as {output_name}. ")
-
+    with open(f'{Path(video_path).stem}_DEMO.csv', "w", newline="") as csvfile:
+        csv_writer = csv.DictWriter(csvfile, fieldnames=["frame", "game_state"])
+        csv_writer.writeheader()
+        csv_writer.writerows(game_state_per_frame)
     writer.release()
     cap.release()
     pbar.close()
