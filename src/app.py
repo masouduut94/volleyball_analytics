@@ -1,3 +1,9 @@
+from fastapi import FastAPI, UploadFile
+from fastapi.exceptions import HTTPException
+from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+
 import cv2
 import yaml
 from tqdm import tqdm
@@ -7,53 +13,56 @@ from os.path import join
 from pathlib import Path
 from argparse import ArgumentParser
 import csv
-
+import aiofiles
 
 from src.utilities.utils import ProjectLogger
 from src.backend.app.enums.enums import GameState
 from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
 
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware
+    , allow_origins=["*"]
+    , allow_credentials=True
+    , allow_methods=["*"]
+    , allow_headers=["*"]
+)
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
 
-def parse_args():
-    parser = ArgumentParser("arguments for running volleyball action detection on videos...")
-    parser.add_argument(
-        "--model_cfg",
-        type=str,
-        default='conf/ml_models.yaml'
-    )
-    parser.add_argument(
-        "--setup_cfg",
-        type=str,
-        default='conf/setup.yaml'
-    )
-    parser.add_argument(
-        '--video_path',
-        type=str,
-        default="data/videos/back_view.mp4"
-    )
-    parser.add_argument(
-        '--output_path',
-        type=str,
-        default="runs/DEMO"
-    )
-    parser.add_argument(
-        '--buffer-size',
-        type=int,
-        default=30
-    )
-    return parser.parse_args()
+@app.post("/file/uploadAndProcess")
+async def upload_file(file: UploadFile):
+    # TODO: Add exception handling for file upload
+    model_cfg = 'conf/ml_models.yaml'
+    setup_cfg = 'conf/setup.yaml'
+    output_path = "runs/DEMO"
+    buffer_size = 30
+    UPLOAD_DIR = "data/videos/"
+    # with open(file.filename, "wb") as f:
+    #     f.write(file.file.read())
+    # Ensure upload directory exists
+    makedirs(UPLOAD_DIR, exist_ok=True)
 
+    save_to = join(UPLOAD_DIR, file.filename)
 
-if __name__ == '__main__':
+    try:
+        # Read and write file asynchronously
+        async with aiofiles.open(save_to, "wb") as out_file:
+            while content := await file.read(buffer_size * 1024):
+                await out_file.write(content)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
+
     logger = ProjectLogger(filename="logs.log")
-    args = parse_args()
 
-    video_path = Path(args.video_path)
-    output_path = Path(args.output_path)
+    video_path = Path(file.filename)
+    output_path = Path(output_path)
 
-    model_cfg: dict = yaml.load(open(args.model_cfg), Loader=yaml.SafeLoader)
-    setup_cfg: dict = yaml.load(open(args.setup_cfg), Loader=yaml.SafeLoader)
+    model_cfg: dict = yaml.load(open(model_cfg), Loader=yaml.SafeLoader)
+    setup_cfg: dict = yaml.load(open(setup_cfg), Loader=yaml.SafeLoader)
 
     model_cfg.update(setup_cfg)
     logger.info("Configs initialized successfully.")
@@ -64,11 +73,10 @@ if __name__ == '__main__':
         video_name=video_path.name
     )
     logger.info("Yolo detector initialized.")
-
     cap = cv2.VideoCapture(video_path.as_posix())
     assert video_path.is_file(), logger.info(f'file {video_path.as_posix()} not found...')
     assert cap.isOpened(), logger.info(f'the video file is not opening {video_path}')
-    makedirs(args.output_path, exist_ok=True)
+    makedirs(output_path, exist_ok=True)
 
     status = True
     buffer = []
@@ -76,7 +84,7 @@ if __name__ == '__main__':
     w, h, fps, _, n_frames = [int(cap.get(i)) for i in range(3, 8)]
     pbar = tqdm(total=n_frames, desc=f'writing 0/{n_frames}')
     codec = cv2.VideoWriter_fourcc(*'mp4v')
-    output_name = join(args.output_path, f'{Path(video_path).stem}_DEMO.mp4')
+    output_name = join(output_path, f'{Path(video_path).stem}_DEMO.mp4')
     writer = cv2.VideoWriter(output_name, codec, fps, (w, h))
     logger.success("Process initialization completed...")
     game_state_per_frame = []
@@ -91,7 +99,7 @@ if __name__ == '__main__':
         buffer.append(frame)
         fno_buffer.append(fno)
 
-        if len(buffer) != args.buffer_size:
+        if len(buffer) != buffer_size:
             continue
 
         t1 = time()
@@ -148,3 +156,9 @@ if __name__ == '__main__':
     writer.release()
     cap.release()
     pbar.close()
+    # return {"filename": file.filename}
+    return FileResponse(path=output_name,media_type='video/mp4', filename=output_name)
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)

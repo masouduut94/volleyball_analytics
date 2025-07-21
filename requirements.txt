@@ -34,3 +34,6 @@ loguru~=0.7.2
 pydantic-settings~=2.2.1
 supervision~=0.25.1
 black~=25.1.0
+fastapi
+uvicorn
+python-multipart
