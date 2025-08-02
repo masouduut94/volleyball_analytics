@@ -18,21 +18,21 @@ export function FileForm() {
     const inputRef = useRef(null);
 
 
-    // useEffect(() => {
-    //     const ws = new WebSocket("ws://localhost:8000/ws/progress");
-    //     ws.onmessage = (event) => {
-    //         const backendProgress = Number(event.data);
-    //         console.log("Backend progress:", backendProgress);
-    //         setFiles((prevFiles) =>
-    //             prevFiles.map((file) =>
-    //                 file.uploaded
-    //                     ? file
-    //                     : { ...file, progress: backendProgress }
-    //             )
-    //         );
-    //     };
-    //     return () => ws.close();
-    // }, []);
+    useEffect(() => {
+        const ws = new WebSocket("ws://localhost:8080/ws/progress");
+        ws.onmessage = (event) => {
+            const backendProgress = Number(event.data);
+            console.log("Backend progress:", backendProgress);
+            setFiles((prevFiles) =>
+                prevFiles.map((file) =>
+                    file.uploaded
+                        ? file
+                        : { ...file, progress: backendProgress }
+                )
+            );
+        };
+        return () => ws.close();
+    }, []);
 
     function handleFileSelect(e) {
     if (!e.target.files?.length) return;
@@ -60,7 +60,7 @@ export function FileForm() {
             formData.append('file', fileWithProgress.file);
 
             try {
-                const endpoint = 'http://localhost:8000/file/uploadAndProcess';
+                const endpoint = 'http://localhost:8080/file/uploadAndProcess';
                 await axios.post(endpoint, formData, {
                     onUploadProgress: (event) => {
                         const progress = Math.round((event.loaded * 100) / (event.total || 1));
