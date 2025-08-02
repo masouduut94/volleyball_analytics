@@ -14,11 +14,20 @@ from pathlib import Path
 from argparse import ArgumentParser
 import csv
 import aiofiles
+import asyncio
 
 from src.utilities.utils import ProjectLogger
 from src.backend.app.enums.enums import GameState
 from src.ml.video_mae.game_state.gamestate_detection import GameStateDetector
 from src.ml.yolo.volleyball_object_detector import VolleyBallObjectDetector
+from fastapi import WebSocket
+from fastapi import WebSocketDisconnect
+
+progress = 0
+
+def get_current_progress():
+    print(progress)
+    return progress
 
 app = FastAPI()
 app.add_middleware(
@@ -31,6 +40,17 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
+# @app.websocket("/ws/progress")
+# async def websocket_progress(websocket: WebSocket):
+#     await websocket.accept()
+#     try:
+#         while True:
+#             # Send the current progress value
+#             await websocket.send_text(str(get_current_progress()))
+#             await asyncio.sleep(0.5)  # Adjust frequency as needed
+#     except WebSocketDisconnect:
+#         pass
 
 @app.post("/file/uploadAndProcess")
 async def upload_file(file: UploadFile):
@@ -94,7 +114,9 @@ async def upload_file(file: UploadFile):
         fno = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
         if not status:
             break
-
+        
+        progress = ((fno / n_frames))  # percent
+        print(progress)
         pbar.update(1)
         buffer.append(frame)
         fno_buffer.append(fno)

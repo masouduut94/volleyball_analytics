@@ -1,59 +1,244 @@
-import {useState} from 'react';
+import axios from 'axios';
+import {
+  FileAudio,
+  FileIcon,
+  FileImage,
+  FileText,
+  FileVideo,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react';
+import { useRef, useState, useEffect} from 'react';
 
-function FileForm() {
-    const [file, setFile] = useState(null);
+export function FileForm() {
+    const [files, setFiles] = useState([]);
+    const [uploading, setUploading] = useState(false);
+    const inputRef = useRef(null);
 
-    const handleFileInputChange = (event) => {
-        setFile(event.target.files[0]);
+
+    // useEffect(() => {
+    //     const ws = new WebSocket("ws://localhost:8000/ws/progress");
+    //     ws.onmessage = (event) => {
+    //         const backendProgress = Number(event.data);
+    //         console.log("Backend progress:", backendProgress);
+    //         setFiles((prevFiles) =>
+    //             prevFiles.map((file) =>
+    //                 file.uploaded
+    //                     ? file
+    //                     : { ...file, progress: backendProgress }
+    //             )
+    //         );
+    //     };
+    //     return () => ws.close();
+    // }, []);
+
+    function handleFileSelect(e) {
+    if (!e.target.files?.length) return;
+
+    const newFiles = Array.from(e.target.files).map((file) => ({
+        file,
+        progress: 0,
+        uploaded: false,
+        id: file.name,
+    }));
+
+    setFiles((prev) => [...prev, ...newFiles]);
+
+    if (inputRef.current) {
+        inputRef.current.value = '';
     }
-    
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        if (!file) {
-            alert("Please select a file to upload.");
-            return;
-        }
-        const formData = new FormData();
-        formData.append('file', file);
+    }
 
-        try{
-            const endpoint = 'http://localhost:8000/file/uploadAndProcess';
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                body: formData
-            })
-            if(response.ok){
-                console.log("Filed uploaded successfully!");
-            } else {
-                console.error("Failed to upload file:", response.statusText);
+    async function handleUpload() {
+        if (files.length === 0 || uploading) return;
+        setUploading(true);
+
+        const uploadPromises = files.map(async (fileWithProgress) => {
+            const formData = new FormData();
+            formData.append('file', fileWithProgress.file);
+
+            try {
+                const endpoint = 'http://localhost:8000/file/uploadAndProcess';
+                await axios.post(endpoint, formData, {
+                    onUploadProgress: (event) => {
+                        const progress = Math.round((event.loaded * 100) / (event.total || 1));
+                        setFiles((prevFiles) =>
+                            prevFiles.map((file) =>
+                                file.id === fileWithProgress.id ? { ...file, progress } : file
+                            )
+                        );
+                    },
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+
+                setFiles((prevFiles) =>
+                    prevFiles.map((file) =>
+                        file.id === fileWithProgress.id ? { ...file, uploaded: true } : file
+                    )
+                );
+            } catch (err) {
+                console.error(err);
             }
-        }
-        catch (error) {
-            console.error("Error uploading file:", error);
-        }
+        });
+
+        await Promise.all(uploadPromises);
+        setUploading(false);
     }
 
-    return(
-        <div>
-            <h1>Upload and Process Video</h1>
-            <form onSubmit={handleSubmit}>
-                <label htmlFor="file-upload" className="custom-file-upload">
-                    Upload Video
-                </label>
-                <br />
-                <input id="file-upload" type="file" accept="video/*" onChange={handleFileInputChange}/>
-                <div style={{ marginTop: '20px', marginBottom: '20px' }}>
-                    <button type="submit">Process Video</button>
-                </div>
-                    
-            </form>
+    function removeFile(id) {
+    setFiles((prev) => prev.filter((file) => file.id !== id));
+    }
 
-            { file && <p>Selected file: {file.name}</p> }
+    function handleClear() {
+    setFiles([]);
+    }
 
-            <p>Make sure the video is in a supported format.</p>
-            <p>Click the button to upload and process the video.</p>
+    return (
+    <div className="file-form">
+        <h2 className="file-form-title">File Upload</h2>
+        <div className="file-form-controls">
+        <FileInput
+            inputRef={inputRef}
+            disabled={uploading}
+            onFileSelect={handleFileSelect}
+        />
+        <ActionButtons
+            disabled={files.length === 0 || uploading}
+            onUpload={handleUpload}
+            onClear={handleClear}
+        />
         </div>
-    )
+        <FileList files={files} onRemove={removeFile} uploading={uploading} />
+    </div>
+    );
 }
+
+function FileInput({ inputRef, disabled, onFileSelect }) {
+  return (
+    <>
+        <input
+        type="file"
+        ref={inputRef}
+        onChange={onFileSelect}
+        multiple
+        className="hidden-input"
+        id="file-upload"
+        disabled={disabled}
+        />
+        <label htmlFor="file-upload" className="button-like">
+        <Plus size={18} />
+        Select Files
+        </label>
+    </>
+  );
+}
+
+function ActionButtons({ disabled, onUpload, onClear }) {
+  return (
+    <div className="action-buttons">
+        <button
+        onClick={onUpload}
+        disabled={disabled}
+        className="button-like"
+        >
+        <Upload size={18} />
+        Upload
+        </button>
+
+        <button
+        onClick={onClear}
+        disabled={disabled}
+        className="button-like"
+        >
+        <Trash2 size={18} />
+        Clear All
+        </button>
+    </div>
+  );
+}
+function FileList({ files, onRemove, uploading }) {
+  if (files.length === 0) return null;
+
+  return (
+    <div className="file-list">
+      <h3 className="file-list-title">Files:</h3>
+      <div className="file-list-items">
+        {files.map((file) => (
+          <FileItem
+            key={file.id}
+            file={file}
+            onRemove={onRemove}
+            uploading={uploading}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FileItem({ file, onRemove, uploading }) {
+  const Icon = getFileIcon(file.file.type);
+
+  return (
+    <div className="file-item">
+      <div className="file-item-header">
+        <div className="file-item-details">
+          <Icon size={40} className="file-icon" />
+          <div className="file-meta">
+            <span className="file-name">{file.file.name}</span>
+            <div className="file-info">
+              <span>{formatFileSize(file.file.size)}</span>
+              <span>•</span>
+              <span>{file.file.type || 'Unknown type'}</span>
+            </div>
+          </div>
+        </div>
+        {!uploading && (
+          <button onClick={() => onRemove(file.id)} className="remove-button">
+            <X size={16} className="remove-icon" />
+          </button>
+        )}
+      </div>
+      <div className="file-progress-text">
+        {file.uploaded ? 'Completed' : `${Math.round(file.progress)}%`}
+      </div>
+      <ProgressBar progress={file.progress} />
+    </div>
+  );
+}
+
+
+function ProgressBar({ progress }) {
+  return (
+    <div className="progress-bar">
+      <div
+        className="progress-bar-inner"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  );
+}
+
+
+function getFileIcon(mimeType) {
+  if (mimeType.startsWith('image/')) return FileImage;
+  if (mimeType.startsWith('video/')) return FileVideo;
+  if (mimeType.startsWith('audio/')) return FileAudio;
+  if (mimeType === 'application/pdf') return FileText;
+  return FileIcon;
+}
+
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+}
+
 
 export default FileForm

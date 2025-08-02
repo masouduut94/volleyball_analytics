@@ -40,3 +40,154 @@
 .read-the-docs {
   color: #888;
 }
+
+/* -------------------------------------------------------------------- */
+.file-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.file-form-title {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.file-form-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.hidden-input {
+  display: none;
+}
+
+/* Unified button style */
+.button-like {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #4f46e5; /* Indigo-600 */
+  color: white;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.button-like:hover:not(:disabled) {
+  background-color: #4338ca; /* Indigo-700 */
+}
+
+.button-like:disabled {
+  background-color: #9ca3af; /* Gray-400 */
+  cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------------- */
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.file-list-title {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.file-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.file-item {
+  background-color: #374151; /* dark gray */
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: white;
+}
+
+.file-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.file-item-details {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.file-icon {
+  color: #3b82f6; /* blue */
+}
+
+.file-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-name {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.file-info {
+  font-size: 12px;
+  color: #d1d5db; /* light gray */
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.remove-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.remove-icon {
+  color: white;
+}
+
+.file-progress-text {
+  font-size: 12px;
+  text-align: right;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: #1f2937; /* very dark gray */
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-bar-inner {
+  height: 100%;
+  background-color: #3b82f6; /* blue */
+  transition: width 0.3s ease;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px; /* add a small gap between buttons */
+  /* margin-top: 10px; */
+}
