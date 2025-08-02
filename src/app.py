@@ -58,7 +58,7 @@ async def upload_file(file: UploadFile):
 
     logger = ProjectLogger(filename="logs.log")
 
-    video_path = Path(file.filename)
+    video_path = Path(save_to)
     output_path = Path(output_path)
 
     model_cfg: dict = yaml.load(open(model_cfg), Loader=yaml.SafeLoader)
