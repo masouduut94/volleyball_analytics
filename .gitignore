@@ -28,3 +28,4 @@ venv.bak/
 .vscode
 weights/*
 logs.log
+data/*

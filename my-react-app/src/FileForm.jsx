@@ -19,7 +19,7 @@ export function FileForm() {
 
 
     useEffect(() => {
-        const ws = new WebSocket("ws://localhost:8080/ws/progress");
+        const ws = new WebSocket("ws://localhost:8000/ws/progress");
         ws.onmessage = (event) => {
             const backendProgress = Number(event.data);
             console.log("Backend progress:", backendProgress);
@@ -60,7 +60,7 @@ export function FileForm() {
             formData.append('file', fileWithProgress.file);
 
             try {
-                const endpoint = 'http://localhost:8080/file/uploadAndProcess';
+                const endpoint = 'http://localhost:8000/file/uploadAndProcess';
                 await axios.post(endpoint, formData, {
                     onUploadProgress: (event) => {
                         const progress = Math.round((event.loaded * 100) / (event.total || 1));

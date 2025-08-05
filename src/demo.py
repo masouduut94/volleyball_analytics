@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument(
         '--video_path',
         type=str,
-        default="data/videos/20250720_105716000_iOS.MOV"
+        default="data/videos/20250804_100331000_iOS.MOV"
     )
     parser.add_argument(
         '--output_path',
