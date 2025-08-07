@@ -43,7 +43,7 @@ def parse_args():
         default=30
     )
     return parser.parse_args()
-
+    
 
 if __name__ == '__main__':
     logger = ProjectLogger(filename="logs.log")

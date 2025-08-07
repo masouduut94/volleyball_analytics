@@ -61,7 +61,7 @@ def splice_long_video_from_seconds(input_path, output_path, segments):
     print(f"✅ Spliced video saved to: {output_path}")
 
 
-csv_file = "20250727_095715000_iOS_DEMO.csv"
+csv_file = "20250804_100331000_iOS_DEMO.csv"
 play_timestamps = []
 current_state = None
 current_count = 0
@@ -211,7 +211,7 @@ for start, end in merged_segments:
     print(f"Segment from {start}s to {end}s ({duration} frames)")
 
 # Path to original video
-input_video_path = "data/videos/20250727_095715000_iOS.MOV"
+input_video_path = "data/videos/20250804_100331000_iOS.MOV"
 # converted_video_path = "mp4.mp4"
 final_video_path = "final_output.mp4"
 FPS = 30  # Assuming same FPS used earlier

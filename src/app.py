@@ -39,7 +39,6 @@ async def websocket_progress(websocket: WebSocket):
     connected_clients.add(websocket)
     try:
         while True:
-            # await websocket.send_text("Test message")
             await asyncio.sleep(1)  # Keeps the connection open
     except WebSocketDisconnect:
         connected_clients.remove(websocket)

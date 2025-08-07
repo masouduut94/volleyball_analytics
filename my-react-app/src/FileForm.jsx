@@ -10,117 +10,119 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { useRef, useState, useEffect} from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 export function FileForm() {
-    const [files, setFiles] = useState([]);
-    const [uploading, setUploading] = useState(false);
-    const inputRef = useRef(null);
+  const [files, setFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef(null);
 
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:8000/ws/progress");
+    ws.onmessage = (event) => {
+      const backendProgress = Number(event.data);
+      console.log("Backend progress:", backendProgress);
+      setFiles((prevFiles) =>
+        prevFiles.map((file) =>
+          file.processing
+            ? { ...file, progress: backendProgress }
+            : file
+        )
+      );
+    };
+    return () => ws.close();
+  }, []);
 
-    useEffect(() => {
-        const ws = new WebSocket("ws://localhost:8000/ws/progress");
-        ws.onmessage = (event) => {
-            const backendProgress = Number(event.data);
-            console.log("Backend progress:", backendProgress);
-            setFiles((prevFiles) =>
-                prevFiles.map((file) =>
-                    file.uploaded
-                        ? file
-                        : { ...file, progress: backendProgress }
-                )
-            );
-        };
-        return () => ws.close();
-    }, []);
-
-    function handleFileSelect(e) {
+  function handleFileSelect(e) {
     if (!e.target.files?.length) return;
 
     const newFiles = Array.from(e.target.files).map((file) => ({
-        file,
-        progress: 0,
-        uploaded: false,
-        id: file.name,
+      file,
+      progress: 0,
+      uploaded: false,
+      processing: false,
+      id: file.name,
     }));
 
     setFiles((prev) => [...prev, ...newFiles]);
 
     if (inputRef.current) {
-        inputRef.current.value = '';
+      inputRef.current.value = '';
     }
-    }
+  }
 
-    async function handleUpload() {
-        if (files.length === 0 || uploading) return;
-        setUploading(true);
+  async function handleUpload() {
+    if (files.length === 0 || uploading) return;
+    setUploading(true);
 
-        const uploadPromises = files.map(async (fileWithProgress) => {
-            const formData = new FormData();
-            formData.append('file', fileWithProgress.file);
+    const uploadPromises = files.map(async (fileWithProgress) => {
+      const formData = new FormData();
+      formData.append('file', fileWithProgress.file);
 
-            try {
-                const endpoint = 'http://localhost:8000/file/uploadAndProcess';
-                await axios.post(endpoint, formData, {
-                    onUploadProgress: (event) => {
-                        const progress = Math.round((event.loaded * 100) / (event.total || 1));
-                        setFiles((prevFiles) =>
-                            prevFiles.map((file) =>
-                                file.id === fileWithProgress.id ? { ...file, progress } : file
-                            )
-                        );
-                    },
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
-
-                setFiles((prevFiles) =>
-                    prevFiles.map((file) =>
-                        file.id === fileWithProgress.id ? { ...file, uploaded: true } : file
-                    )
-                );
-            } catch (err) {
-                console.error(err);
-            }
+      try {
+        const endpoint = 'http://localhost:8000/file/uploadAndProcess';
+        await axios.post(endpoint, formData, {
+          onUploadProgress: (event) => {
+            const progress = Math.round((event.loaded * 100) / (event.total || 1));
+            setFiles((prevFiles) =>
+              prevFiles.map((file) =>
+                file.id === fileWithProgress.id
+                  ? { ...file, uploaded: true, processing: true }
+                  : file
+              )
+            );
+          },
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         });
 
-        await Promise.all(uploadPromises);
-        setUploading(false);
-    }
+        setFiles((prevFiles) =>
+          prevFiles.map((file) =>
+            file.id === fileWithProgress.id ? { ...file, uploaded: true } : file
+          )
+        );
+      } catch (err) {
+        console.error(err);
+      }
+    });
 
-    function removeFile(id) {
+    await Promise.all(uploadPromises);
+    setUploading(false);
+  }
+
+  function removeFile(id) {
     setFiles((prev) => prev.filter((file) => file.id !== id));
-    }
+  }
 
-    function handleClear() {
+  function handleClear() {
     setFiles([]);
-    }
+  }
 
-    return (
+  return (
     <div className="file-form">
-        <h2 className="file-form-title">File Upload</h2>
-        <div className="file-form-controls">
+      <h2 className="file-form-title">File Upload</h2>
+      <div className="file-form-controls">
         <FileInput
-            inputRef={inputRef}
-            disabled={uploading}
-            onFileSelect={handleFileSelect}
+          inputRef={inputRef}
+          disabled={uploading}
+          onFileSelect={handleFileSelect}
         />
         <ActionButtons
-            disabled={files.length === 0 || uploading}
-            onUpload={handleUpload}
-            onClear={handleClear}
+          disabled={files.length === 0 || uploading}
+          onUpload={handleUpload}
+          onClear={handleClear}
         />
-        </div>
-        <FileList files={files} onRemove={removeFile} uploading={uploading} />
+      </div>
+      <FileList files={files} onRemove={removeFile} uploading={uploading} />
     </div>
-    );
+  );
 }
 
 function FileInput({ inputRef, disabled, onFileSelect }) {
   return (
     <>
-        <input
+      <input
         type="file"
         ref={inputRef}
         onChange={onFileSelect}
@@ -128,11 +130,11 @@ function FileInput({ inputRef, disabled, onFileSelect }) {
         className="hidden-input"
         id="file-upload"
         disabled={disabled}
-        />
-        <label htmlFor="file-upload" className="button-like">
+      />
+      <label htmlFor="file-upload" className="button-like">
         <Plus size={18} />
         Select Files
-        </label>
+      </label>
     </>
   );
 }
@@ -140,26 +142,27 @@ function FileInput({ inputRef, disabled, onFileSelect }) {
 function ActionButtons({ disabled, onUpload, onClear }) {
   return (
     <div className="action-buttons">
-        <button
+      <button
         onClick={onUpload}
         disabled={disabled}
         className="button-like"
-        >
+      >
         <Upload size={18} />
         Upload
-        </button>
+      </button>
 
-        <button
+      <button
         onClick={onClear}
         disabled={disabled}
         className="button-like"
-        >
+      >
         <Trash2 size={18} />
         Clear All
-        </button>
+      </button>
     </div>
   );
 }
+
 function FileList({ files, onRemove, uploading }) {
   if (files.length === 0) return null;
 
@@ -204,9 +207,10 @@ function FileItem({ file, onRemove, uploading }) {
         )}
       </div>
       <div className="file-progress-text">
-        {file.uploaded ? 'Completed' : `${Math.round(file.progress)}%`}
+        {file.uploaded && (file.processing && file.progress === 100) ? 'Completed' : `${Math.round(file.progress)}%`}
       </div>
       <ProgressBar progress={file.progress} />
+      {/* <ProgressBar progress={file.progress} /> */}
     </div>
   );
 }
