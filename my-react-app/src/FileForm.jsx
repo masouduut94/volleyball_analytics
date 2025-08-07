@@ -25,7 +25,7 @@ export function FileForm() {
       setFiles((prevFiles) =>
         prevFiles.map((file) =>
           file.processing
-            ? { ...file, progress: backendProgress }
+            ? { ...file, backendProgress }
             : file
         )
       );
@@ -38,9 +38,11 @@ export function FileForm() {
 
     const newFiles = Array.from(e.target.files).map((file) => ({
       file,
-      progress: 0,
+      uploadProgress: 0,
+      backendProgress: 0,
       uploaded: false,
       processing: false,
+      processed: false,
       id: file.name,
     }));
 
@@ -67,7 +69,7 @@ export function FileForm() {
             setFiles((prevFiles) =>
               prevFiles.map((file) =>
                 file.id === fileWithProgress.id
-                  ? { ...file, uploaded: true, processing: true }
+                  ? { ...file, uploadProgress: progress }
                   : file
               )
             );
@@ -79,7 +81,9 @@ export function FileForm() {
 
         setFiles((prevFiles) =>
           prevFiles.map((file) =>
-            file.id === fileWithProgress.id ? { ...file, uploaded: true } : file
+            file.id === fileWithProgress.id
+              ? { ...file, uploaded: true, processing: true }
+              : file
           )
         );
       } catch (err) {
@@ -206,11 +210,24 @@ function FileItem({ file, onRemove, uploading }) {
           </button>
         )}
       </div>
-      <div className="file-progress-text">
-        {file.uploaded && (file.processing && file.progress === 100) ? 'Completed' : `${Math.round(file.progress)}%`}
+      <div className="file-progress-text" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontWeight: 500 }}>upload status:</span>
+        <span>
+          {file.uploaded && (file.processing && file.uploadProgress === 100)
+            ? 'Completed'
+            : `${Math.round(file.uploadProgress)}%`}
+        </span>
       </div>
-      <ProgressBar progress={file.progress} />
-      {/* <ProgressBar progress={file.progress} /> */}
+      <ProgressBar progress={file.uploadProgress}/>
+      <div className="file-progress-text" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontWeight: 500 }}>processing status:</span>
+        <span>
+          {file.processed && (file.processing && file.backendProgress === 100)
+            ? 'Completed'
+            : `${Math.round(file.backendProgress)}%`}
+        </span>
+      </div>
+      <ProgressBar progress={file.backendProgress} />
     </div>
   );
 }
