@@ -48,7 +48,7 @@ export function FileForm() {
       formData.append('file', fileWithProgress.file);
 
       try {
-        const endpoint = 'http://localhost:8000/file/uploadAndProcess';
+        const endpoint = 'http://[::1]:8000/file/uploadAndProcess';
         const response = await axios.post(endpoint, formData, {
           onUploadProgress: (event) => {
             const progress = Math.round((event.loaded * 100) / (event.total || 1));
@@ -68,7 +68,7 @@ export function FileForm() {
         const jobId = response.data.job_id;
 
         // Open WebSocket for backend processing progress
-        const ws = new WebSocket(`ws://localhost:8000/ws/progress/${jobId}`);
+        const ws = new WebSocket(`ws://[::1]:8000/ws/progress/${jobId}`);
         ws.onmessage = (event) => {
           const backendProgress = Number(event.data);
           setFiles((prevFiles) =>
@@ -227,7 +227,6 @@ function FileList({ files, onRemove, uploading }) {
 
 function FileItem({ file, onRemove, uploading }) {
   const Icon = getFileIcon(file.file.type);
-
   return (
     <div className="file-item">
       <div className="file-item-header">
@@ -251,7 +250,7 @@ function FileItem({ file, onRemove, uploading }) {
       <div className="file-progress-text" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontWeight: 500 }}>upload status:</span>
         <span>
-          {file.uploaded && (file.processing && file.uploadProgress === 100)
+          {file.uploaded && (file.uploadProgress === 100)
             ? 'Completed'
             : `${Math.round(file.uploadProgress)}%`}
         </span>
