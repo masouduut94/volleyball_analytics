@@ -10,7 +10,7 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 export function FileForm() {
   const [files, setFiles] = useState([]);
@@ -28,7 +28,8 @@ export function FileForm() {
       processing: false,
       processed: false,
       id: file.name,
-      jobId: null, // will be filled after upload
+      jobId: null,
+      ws: null, // hold websocket instance
     }));
 
     setFiles((prev) => [...prev, ...newFiles]);
@@ -66,36 +67,40 @@ export function FileForm() {
 
         const jobId = response.data.job_id;
 
-        // Update file state with jobId
-        setFiles((prevFiles) =>
-          prevFiles.map((file) =>
-            file.id === fileWithProgress.id
-              ? { ...file, uploaded: true, processing: true, jobId }
-              : file
-          )
-        );
-
         // Open WebSocket for backend processing progress
         const ws = new WebSocket(`ws://localhost:8000/ws/progress/${jobId}`);
         ws.onmessage = (event) => {
           const backendProgress = Number(event.data);
           setFiles((prevFiles) =>
-            prevFiles.map((file) =>
-              file.jobId === jobId
-                ? {
-                    ...file,
-                    backendProgress,
-                    processed: backendProgress === 100,
-                    processing: backendProgress < 100,
-                  }
-                : file
-            )
+            prevFiles.map((file) => {
+              if (file.jobId === jobId) {
+                // close socket when job completes
+                if (backendProgress === 100 && file.ws) {
+                  file.ws.close();
+                }
+                return {
+                  ...file,
+                  backendProgress,
+                  processed: backendProgress === 100,
+                  processing: backendProgress < 100,
+                };
+              }
+              return file;
+            })
           );
         };
         ws.onclose = () => {
           console.log(`WebSocket closed for job ${jobId}`);
         };
 
+        // Update file with jobId + websocket
+        setFiles((prevFiles) =>
+          prevFiles.map((file) =>
+            file.id === fileWithProgress.id
+              ? { ...file, uploaded: true, processing: true, jobId, ws }
+              : file
+          )
+        );
       } catch (err) {
         console.error(err);
       }
@@ -106,12 +111,35 @@ export function FileForm() {
   }
 
   function removeFile(id) {
-    setFiles((prev) => prev.filter((file) => file.id !== id));
+    setFiles((prev) => {
+      const fileToRemove = prev.find((f) => f.id === id);
+      if (fileToRemove?.ws) {
+        fileToRemove.ws.close();
+      }
+      return prev.filter((file) => file.id !== id);
+    });
   }
 
   function handleClear() {
-    setFiles([]);
+    setFiles((prev) => {
+      prev.forEach((file) => {
+        if (file.ws) file.ws.close();
+      });
+      return [];
+    });
   }
+
+  // Cleanup all sockets if component unmounts
+  useEffect(() => {
+    return () => {
+      setFiles((prev) => {
+        prev.forEach((file) => {
+          if (file.ws) file.ws.close();
+        });
+        return prev;
+      });
+    };
+  }, []);
 
   return (
     <div className="file-form">
