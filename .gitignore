@@ -29,3 +29,4 @@ venv.bak/
 weights/*
 logs.log
 data/*
+log.md

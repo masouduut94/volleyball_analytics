@@ -10,28 +10,12 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 
 export function FileForm() {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef(null);
-
-  useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8000/ws/progress");
-    ws.onmessage = (event) => {
-      const backendProgress = Number(event.data);
-      console.log("Backend progress:", backendProgress);
-      setFiles((prevFiles) =>
-        prevFiles.map((file) =>
-          file.processing
-            ? { ...file, backendProgress }
-            : file
-        )
-      );
-    };
-    return () => ws.close();
-  }, []);
 
   function handleFileSelect(e) {
     if (!e.target.files?.length) return;
@@ -44,6 +28,7 @@ export function FileForm() {
       processing: false,
       processed: false,
       id: file.name,
+      jobId: null, // will be filled after upload
     }));
 
     setFiles((prev) => [...prev, ...newFiles]);
@@ -63,7 +48,7 @@ export function FileForm() {
 
       try {
         const endpoint = 'http://localhost:8000/file/uploadAndProcess';
-        await axios.post(endpoint, formData, {
+        const response = await axios.post(endpoint, formData, {
           onUploadProgress: (event) => {
             const progress = Math.round((event.loaded * 100) / (event.total || 1));
             setFiles((prevFiles) =>
@@ -79,13 +64,38 @@ export function FileForm() {
           },
         });
 
+        const jobId = response.data.job_id;
+
+        // Update file state with jobId
         setFiles((prevFiles) =>
           prevFiles.map((file) =>
             file.id === fileWithProgress.id
-              ? { ...file, uploaded: true, processing: true }
+              ? { ...file, uploaded: true, processing: true, jobId }
               : file
           )
         );
+
+        // Open WebSocket for backend processing progress
+        const ws = new WebSocket(`ws://localhost:8000/ws/progress/${jobId}`);
+        ws.onmessage = (event) => {
+          const backendProgress = Number(event.data);
+          setFiles((prevFiles) =>
+            prevFiles.map((file) =>
+              file.jobId === jobId
+                ? {
+                    ...file,
+                    backendProgress,
+                    processed: backendProgress === 100,
+                    processing: backendProgress < 100,
+                  }
+                : file
+            )
+          );
+        };
+        ws.onclose = () => {
+          console.log(`WebSocket closed for job ${jobId}`);
+        };
+
       } catch (err) {
         console.error(err);
       }
@@ -222,7 +232,7 @@ function FileItem({ file, onRemove, uploading }) {
       <div className="file-progress-text" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontWeight: 500 }}>processing status:</span>
         <span>
-          {file.processed && (file.processing && file.backendProgress === 100)
+          {file.processed && file.backendProgress === 100
             ? 'Completed'
             : `${Math.round(file.backendProgress)}%`}
         </span>
@@ -231,7 +241,6 @@ function FileItem({ file, onRemove, uploading }) {
     </div>
   );
 }
-
 
 function ProgressBar({ progress }) {
   return (
@@ -243,7 +252,6 @@ function ProgressBar({ progress }) {
     </div>
   );
 }
-
 
 function getFileIcon(mimeType) {
   if (mimeType.startsWith('image/')) return FileImage;
@@ -261,5 +269,4 @@ function formatFileSize(bytes) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
-
-export default FileForm
+export default FileForm;

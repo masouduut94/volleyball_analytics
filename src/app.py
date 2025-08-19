@@ -11,6 +11,7 @@ from os.path import join
 from pathlib import Path
 import csv
 from time import time
+import uuid
 
 from src.utilities.utils import ProjectLogger
 from src.backend.app.enums.enums import GameState
@@ -27,28 +28,44 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-connected_clients = set()
+# In-memory job tracking
+job_progress: dict[str, int] = {}              # job_id -> percent int
+job_clients: dict[str, set[WebSocket]] = {}   # job_id -> set of websockets
+
 
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
 
-@app.websocket("/ws/progress")
-async def websocket_progress(websocket: WebSocket):
-    await websocket.accept()
-    connected_clients.add(websocket)
-    try:
-        while True:
-            await asyncio.sleep(1)  # Keeps the connection open
-    except WebSocketDisconnect:
-        connected_clients.remove(websocket)
 
-async def notify_progress(p):
-    for client in connected_clients.copy():
-        try:
-            await client.send_text(str(p))
-        except:
-            connected_clients.remove(client)
+@app.websocket("/ws/progress/{job_id}")
+async def websocket_progress(websocket: WebSocket, job_id: str):
+    await websocket.accept()
+    if job_id not in job_clients:
+        job_clients[job_id] = set()
+    job_clients[job_id].add(websocket)
+
+    try:
+        # Keep connection open, optionally send last known progress
+        if job_id in job_progress:
+            await websocket.send_text(str(job_progress[job_id]))
+        while True:
+            await asyncio.sleep(1)
+    except WebSocketDisconnect:
+        job_clients[job_id].remove(websocket)
+        if not job_clients[job_id]:
+            job_clients.pop(job_id, None)
+
+
+async def notify_progress(job_id: str, p: int):
+    job_progress[job_id] = p
+    if job_id in job_clients:
+        for client in job_clients[job_id].copy():
+            try:
+                await client.send_text(str(p))
+            except:
+                job_clients[job_id].remove(client)
+
 
 @app.post("/file/uploadAndProcess")
 async def upload_file(file: UploadFile):
@@ -63,12 +80,18 @@ async def upload_file(file: UploadFile):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
 
+    # Generate job_id for this upload
+    job_id = str(uuid.uuid4())
+    job_progress[job_id] = 0
+    job_clients[job_id] = set()
+
     # Start background video processing
-    asyncio.create_task(process_video_in_background(save_to))
+    asyncio.create_task(process_video_in_background(save_to, job_id))
 
-    return {"status": "processing started"}
+    return {"status": "processing started", "job_id": job_id}
 
-async def process_video_in_background(video_path_str: str):
+
+async def process_video_in_background(video_path_str: str, job_id: str):
     model_cfg_path = 'conf/ml_models.yaml'
     setup_cfg_path = 'conf/setup.yaml'
     output_path = "runs/DEMO"
@@ -94,7 +117,10 @@ async def process_video_in_background(video_path_str: str):
     logger.info("YOLO detector initialized.")
 
     cap = cv2.VideoCapture(video_path.as_posix())
-    assert cap.isOpened(), logger.error(f"Cannot open video: {video_path}")
+    if not cap.isOpened():
+        logger.error(f"Cannot open video: {video_path}")
+        await notify_progress(job_id, -1)  # signal error
+        return
 
     makedirs(output_path, exist_ok=True)
 
@@ -114,7 +140,7 @@ async def process_video_in_background(video_path_str: str):
 
         fno = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
         progress = round((fno / n_frames) * 100)
-        await notify_progress(progress)  # Send update
+        await notify_progress(job_id, progress)  # Send update
         await asyncio.sleep(0)  # Let event loop breathe
 
         pbar.update(1)
@@ -123,7 +149,6 @@ async def process_video_in_background(video_path_str: str):
 
         if len(buffer) != buffer_size:
             continue
-
 
         t1 = time()
         label = state_detector.predict(buffer)
@@ -149,10 +174,10 @@ async def process_video_in_background(video_path_str: str):
                 objects = (
                     balls +
                     vb_objects['block'] +
-                    vb_objects['set'] +
-                    vb_objects['receive'] +
-                    vb_objects['spike'] +
-                    vb_objects['serve']
+                    vb_object_detector.detect_actions(f, exclude=('ball',))['set'] +
+                    vb_object_detector.detect_actions(f, exclude=('ball',))['receive'] +
+                    vb_object_detector.detect_actions(f, exclude=('ball',))['spike'] +
+                    vb_object_detector.detect_actions(f, exclude=('ball',))['serve']
                 )
                 buffer[i] = vb_object_detector.draw_bboxes(buffer[i], objects)
 
@@ -174,9 +199,8 @@ async def process_video_in_background(video_path_str: str):
     logger.success(f"Finished processing. Output saved to: {output_name}")
 
     with open(f'{video_path.stem}_DEMO.csv', "w", newline="") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=["frame", "game_state"])
-        writer.writeheader()
-        writer.writerows(game_state_per_frame)
+        csv_writer = csv.DictWriter(csvfile, fieldnames=["frame", "game_state"])
+        csv_writer.writeheader()
+        csv_writer.writerows(game_state_per_frame)
 
-    await notify_progress(100)  # Final update
-
+    await notify_progress(job_id, 100)  # Final update
