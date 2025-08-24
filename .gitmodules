@@ -1,6 +1,3 @@
 [submodule "src/ml_manager"]
 	path = src/ml_manager
 	url = git@github.com:masouduut94/volleyball-ml-models.git
-[submodule "src/vb_backend"]
-	path = src/vb_backend
-	url = git@github.com:masouduut94/volleyball-backend.git
