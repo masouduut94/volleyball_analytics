@@ -3,8 +3,8 @@
 import pendulum
 from fastapi.encoders import jsonable_encoder
 
-from src.backend.app.api_interface import APIInterface
-from src.backend.app.schemas import teams, videos, series, matches, cameras
+from volleyball_backend.api_interface import APIInterface
+from volleyball_backend.schemas import teams, videos, series, matches, cameras
 
 if __name__ == '__main__':
     base_url = 'http://localhost:8000'
