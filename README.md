@@ -1,6 +1,6 @@
 
 <h1 align="center">
-    Volleyball Analytics
+    🏐 Volleyball Analytics
 </h1>
 <h1 align="center">
     <img src="assets/readme/coach2.jpg">
@@ -8,204 +8,333 @@
 
 [image source](https://sportsedtv.com/blog/what-to-pack-on-a-volleyball-trip-volleyball)
 
+## 🚀 Quick Start
 
-# Introduction to Sports Analytics
-The use of Artificial Intelligence (AI) in sports analytics has become 
-increasingly prevalent, offering teams and athletes valuable insights 
-to enhance performance, strategy, and decision-making.
+### 📥 Clone the Repository (Important!)
 
-**Video analysis** is a crucial component of sports analytics, individually in volleyball.
-It involves the use of video footage of games or training sessions to 
-gather detailed insights into player and team performance, identify strengths and 
-weaknesses, and make informed decisions to improve overall efficiency and effectiveness 
-on the court.
-This can be useful in many aspects:
+This repository uses **Git submodules** for the ML Manager. You must clone it correctly:
 
-#### Real-Time Feedback
-Some advanced video analysis tools provide real-time feedback during matches or training sessions. 
-Coaches can use this information to make immediate adjustments to tactics, substitutions, or 
-strategies based on the ongoing performance.
+```bash
+# Clone with submodules (RECOMMENDED)
+git clone --recursive https://github.com/masouduut94/volleyball_analytics.git
 
-#### Scouting Opponents
-Teams use video analysis to scout upcoming opponents. By studying their playing style, key players, 
-and preferred strategies, teams can prepare more effectively for upcoming matches.
+# OR if already cloned, initialize submodules
+git submodule update --init --recursive
+```
 
-#### Performance Evaluation
-Coaches and analysts can review match footage to evaluate player techniques, strategies, and 
-overall performance. This includes aspects such as serving, passing, setting, attacking, and 
-defensive plays.
+### 🎯 What You'll Get
 
-#### Statistical Tracking
-Video analysis software often integrates with statistical tracking systems. This enables the 
-extraction of key performance metrics, such as hitting percentages, passing accuracy, and 
-blocking effectiveness, directly from the video footage.
+- **🏐 ML Pipeline**: Video classification + Object detection for volleyball analysis
+- **🎮 Game State Classification**: Service, Play, No-Play detection using VideoMAE
+- **🎭 Action Detection**: 6 volleyball actions (serve, receive, set, spike, block, ball)
+- **🏟️ Court Segmentation**: Court boundary detection
+- **📊 Analytics**: Real-time statistics and insights
+- **🌐 API Backend**: FastAPI-based backend for data storage and retrieval
 
-#### Injury Prevention
-Video analysis can help identify movement patterns and techniques that may contribute to 
-injuries. Coaches and sports scientists can use this information to design training programs 
-focused on injury prevention and optimize players' biomechanics.
+## 🏗️ Project Architecture
 
-#### Decision Review System
-Video analysis can assist the referee by reviewing decisions using video footage. This technology can be 
-utilized in several occasions in volleyball. For example, Hawk eye technology can check if the ball bounced 
-inside the court or not. Something like this:
+This machine learning project runs in real-time on top of **2 deep learning models**:
 
-![video_challenge](assets/readme/video_challenge.gif)
+### 🎬 Video Classification Model (VideoMAE)
+In a live broadcast game, it's important to run processes only when the game is on. To extract the periods when the game is active, [HuggingFace VideoMAE](https://huggingface.co/docs/transformers/en/tasks/video_classification) is utilized.
 
-Overall, video analysis plays a pivotal role in enhancing coaching strategies, player development, and 
-team performance in volleyball and many other sports. The combination of video footage and analytics 
-provides a comprehensive understanding of the game, enabling teams to make data-driven decisions for 
-success.
+**🎯 Purpose**: Game state classification with 3 labels
+- **🏐 SERVICE**: Start of play when a player tosses the ball to serve
+- **🎮 PLAY**: Active game periods where players are playing
+- **⏸️ NO-PLAY**: Inactive periods where players are not playing
 
-# About Project
-This machine learning project runs in real-time on top of 2 deep learning models.
-
-#### Video Classification model: 
-In a live broadcast game, it is important to run processes only when game is on. To extract the periods that 
-game is on, [HuggingFace VideoMAE](https://huggingface.co/docs/transformers/en/tasks/video_classification) 
-is utilized. This model is trained on a custom dataset that consists of 3 labels **service**, **play**, 
-**no-play**. This model gets 30 frames as input, and outputs the label. it's **service**, **play**, **no-play**.
-  - **service** indicates the start of the play when a player tosses the ball to serve it.
-  - **play** indicates the periods of game where the players are playing and the game is on.
-  - **no-play** indicates the periods of the game where the players are not playing.
-
-This is the VideoMAE architecture.
+**🏗️ Architecture**: 
 ![videomae architecture](assets/readme/videomae_architecture.jpeg)
 
 [image source](https://huggingface.co/docs/transformers/model_doc/videomae)
-#### Yolov8 model: 
-This state-of-the-art model is an object detection model that is trained on a dataset which includes 
-   several objects along with several volleyball actions.
 
-This is yolov8 architecture:
+### 🎯 YOLOv8 Object Detection Model
+This state-of-the-art model is trained on a custom volleyball dataset for object detection and action recognition.
+
+**🏗️ Architecture**: 
 ![Yolov8](assets/readme/t.webp)
 
 [image source](https://medium.com/@syedzahidali969/principles-of-yolov8-6a90564e16c3)
 
-The yolov8n is chosen for fine-tuning on 6 different objects (actions). In demos,
-you can see 6 colors for bounding boxes. 
-- Red box: volleyball ball
-- Brown box: volleyball service action
-- Green box: volleyball reception action.
-- Blue box: volleyball setting action.
-- Purple box: volleyball blocking action.
-- Orange box: volleyball spike action.
+**🎨 Detection Classes** (6 different objects with color-coded bounding boxes):
+- 🔴 **Red box**: Volleyball ball
+- 🟤 **Brown box**: Volleyball service action
+- 🟢 **Green box**: Volleyball reception action
+- 🔵 **Blue box**: Volleyball setting action
+- 🟣 **Purple box**: Volleyball blocking action
+- 🟠 **Orange box**: Volleyball spike action
 
-These are the outputs indicating the video classification + object detection results. 
-The video classification model results can be seen in the top-left corner of video, and the object detection 
-results can be seen as bounding boxes with mentioned colors. please note that the object detection is running
-on the frames that are labeled as **SERVICE** and **PLAY**.
+## 🎥 Demo Results
 
-### Demo 1: FRANCE - POLAND
+The system provides real-time analysis with:
+- **🎮 Game State**: Displayed in top-left corner (SERVICE/PLAY/NO-PLAY)
+- **🎯 Object Detection**: Color-coded bounding boxes (only on SERVICE and PLAY frames)
+- **📊 Analytics**: Real-time statistics and insights
+
+### 🏆 Demo Videos
+
+#### 🇫🇷 France vs 🇵🇱 Poland
 ![demo1](assets/readme/11_f1.gif)
-### Demo 2: USA - CANADA
+
+#### 🇺🇸 USA vs 🇨🇦 Canada
 ![demo2](assets/readme/20_2_demo.gif)
-### Demo 3: USA - POLAND
+
+#### 🇺🇸 USA vs 🇵🇱 Poland
 ![demo3](assets/readme/22_2_DEMO.gif)
 
-The third step is to use the generated data to find insights about the game. 
-for example, in the below gif, one of the ace points is extracted. 
+### 🎯 Ace Point Detection
+The system can extract specific game moments, like ace points:
+![ace](assets/readme/ace.gif)
 
-### Demo 4: FRANCE - POLAND Ace score.
-![demo2](assets/readme/ace.gif)
+## 🛠️ Setup & Installation
 
-Development
----------
-The whole project is developed with python 3.11. The requirements can be
-found in `requirements.txt`.
+### 📋 Prerequisites
 
-Open the `conf/ml_models.yaml`, and configure it this way:
+- **🐍 Python**: 3.11 or higher
+- **💾 PostgreSQL**: For database functionality (optional)
+- **🎮 GPU**: Recommended for real-time inference (CUDA compatible)
 
+### 🚀 Installation Steps
+
+1. **Clone with Submodules**
+   ```bash
+   git clone --recursive https://github.com/masouduut94/volleyball_analytics.git
+   cd volleyball_analytics
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   # Using uv (recommended)
+   uv sync
+   
+   # Or using pip with pyproject.toml
+   pip install -e .
+   
+   # Or using pip with dependencies from pyproject.toml
+   pip install torch torchvision ultralytics transformers pytorchvideo opencv-python pillow numpy
+   ```
+
+3. **Download Model Weights**
+   ```bash
+   # Create weights directory
+   mkdir -p weights
+   
+   # Download weights (see Weights section below)
+   ```
+
+### 🎯 Model Weights Setup
+
+The system requires pre-trained models for inference. Download them to the `weights/` directory:
+
+#### 📁 Required Directory Structure
 ```
-yolo:
-  player_segmentation:
-    weight: "path/to/weights" # download: https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n-seg.pt
-    labels: {0: 'person'}
-  player_detection:
-    weight: "path/to/weights" # download: https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n.pt
-    labels: {0: 'person'}
-  pose_estimation:
-    weight: "path/to/weights" # download: https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n-pose.pt
-    labels: {0: 'person'}
-  ball_segmentation:
-    weight: "path/to/weights" # download: https://drive.google.com/file/d/1KXDunsC1ALOObb303n9j6HHO7Bxz1HR_/view?usp=sharing
-    labels: {0: "ball"}
-  action_detection6:
-    weight: "/path/to/weights" # download: https://drive.google.com/file/d/1o-KpRVBbjrGbqlT8tOjFv91YS8LIJZw2/view?usp=sharing
-    labels: { 0: 'ball', 1: 'block', 2: "receive", 3: 'set', 4: 'spike', 5: 'serve'}
-  court_segment:
-    weight: "/path/to/weights.pt" # donwload link: https://drive.google.com/file/d/1bShZ7hxNw_AESEgKf_EyoBXdFqCuL7V-/view?usp=sharing
-    labels: { 0: "court"}
-
-video_mae:
-  game_state_3:
-    weight: "/path/to/checkpoint directory" # download: https://drive.google.com/file/d/18vtJSLIpaRHOlvXNmwvSd9stYYAEsMcK/view?usp=sharing
+weights/
+├── 🏐 ball/                           # Ball detection & segmentation
+│   └── weights/
+│       └── best.pt                    # Download: [Ball Model](https://drive.google.com/file/d/1KXDunsC1ALOObb303n9j6HHO7Bxz1HR_/view?usp=sharing)
+├── 🎭 action/                         # Action detection (6 classes)
+│   └── weights/
+│       └── best.pt                    # Download: [Action Model](https://drive.google.com/file/d/1o-KpRVBbjrGbqlT8tOjFv91YS8LIJZw2/view?usp=sharing)
+├── 🏟️ court/                          # Court segmentation
+│   └── weights/
+│       └── best.pt                    # Download: [Court Model](https://drive.google.com/file/d/1bShZ7hxNw_AESEgKf_EyoBXdFqCuL7V-/view?usp=sharing)
+└── 🎮 game_state/                     # Game state classification
+    └── checkpoint/                    # Download: [Game State Model](https://drive.google.com/file/d/18vtJSLIpaRHOlvXNmwvSd9stYYAEsMcK/view?usp=sharing)
 ```
-For more information about datasets and weights, please have a look at the wiki page here:
-- https://github.com/masouduut94/volleyball_analytics/wiki/Datasets-and-Weights
 
-you can also find insights about the API, the models used in the project, and their structure and 
-training results.
-check it out yourself: 
-- https://github.com/masouduut94/volleyball_analytics/wiki/API
+#### 🔗 Download Links
+- **🏐 Ball Detection**: [Download Ball Model](https://drive.google.com/file/d/1KXDunsC1ALOObb303n9j6HHO7Bxz1HR_/view?usp=sharing)
+- **🎭 Action Detection**: [Download Action Model](https://drive.google.com/file/d/1o-KpRVBbjrGbqlT8tOjFv91YS8LIJZw2/view?usp=sharing)
+- **🏟️ Court Segmentation**: [Download Court Model](https://drive.google.com/file/d/1bShZ7hxNw_AESEgKf_EyoBXdFqCuL7V-/view?usp=sharing)
+- **🎮 Game State Classification**: [Download Game State Model](https://drive.google.com/file/d/18vtJSLIpaRHOlvXNmwvSd9stYYAEsMcK/view?usp=sharing)
 
-There are several scripts that can run the models and output demos that are listed here:
+## 🧪 Testing & Inference
 
-- `src/demo.py`: It uses both video classification + yolo in the inference code and 
-    outputs the demos just like the ones shared here.
-- `src/VideoMAE_inference.py`: Only runs inference with video classification.
-- `src/yolo_inferece.py`: Runs inference with yolo-v8 object detection.
+### 🎬 Quick Inference Test
 
-If you want to store the results in database, you must satisfy some dependencies:
+Test the system with a sample video:
 
-- Install Postgresql.
-- Create a yaml file on `conf` directory named `db_conf.yaml`, and put these values on it.
+```bash
+# Basic inference test
+python src/demo.py --video_path path/to/your/video.mp4
 
+# VideoMAE only (game state classification)
+python src/VideoMAE_inference.py
+
+# YOLO only (object detection)
+python src/yolo_inference.py
 ```
-development:
-  user: "user"
-  password: "*********"
-  db: "volleyball_development"
-  host: "some_ip"
-  port: 5432
-  dialect: 'postgresql'
-  driver: 'psycopg2'
-test:
-  user: "user2"
-  password: "********"
-  db: "volleyball_test"
-  host: "some_ip"
-  port: 5432
-  dialect: 'postgresql'
-  driver: 'psycopg2'
-```
-- install PostgreSQL based on [this link tutorials](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
-- Create a `.env` file like `conf/sample.env`, and copy and paste its path to `src/backend/app/core/config.py` in line 28.
 
-these are sample values in the `.env` file:    
+### 🎯 ML Manager Integration
+
+The system uses a unified **ML Manager** module for all machine learning operations:
+
+```python
+from src.ml_manager import MLManager
+
+# Initialize ML Manager
+ml_manager = MLManager(verbose=True)
+
+# Game state classification
+game_state = ml_manager.classify_game_state(frames)
+
+# Action detection
+actions = ml_manager.detect_actions(frame)
+
+# Ball detection
+ball_detections = ml_manager.detect_ball(frame)
 ```
-MODE=development or test
-DEV_USERNAME=user1
-DEV_PASSWORD=********
+
+**📚 ML Manager Documentation**: See [src/ml_manager/README.md](src/ml_manager/README.md) for comprehensive usage.
+
+### 🧪 Testing the Setup
+
+```bash
+# Test ML Manager functionality
+cd src/ml_manager
+python test_ml_manager.py
+
+# Test integration
+cd ../..
+python src/ml_manager/example_usage.py
+
+# Test main pipeline
+python src/demo.py --video_path path/to/your/video.mp4
+```
+
+## 🗄️ Database Setup (Optional)
+
+For storing results and analytics, set up PostgreSQL:
+
+### 1. Install PostgreSQL
+Follow the [PostgreSQL installation guide](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
+
+### 2. Create Configuration
+```bash
+# Create database config
+cp conf/sample.env conf/.env
+
+# Edit conf/.env with your database credentials
+MODE=development
+DEV_USERNAME=your_username
+DEV_PASSWORD=your_password
 DEV_HOST=localhost
 DEV_DB=volleyball_development
 DEV_PORT=5432
 DEV_DRIVER=postgresql
 TEST_DB_URL=sqlite:///./vb.db
 ```
- 
-- `make install` to install dependencies.
-- `make test` to run unittest tests for backend APIs.
-- `uvicorn src.backend.app.app:app` to start the APIs.
-- Then to seed the database with initial data, run `src/api_init_data.py`.
-- run `src/main.py` and check out the database to see the results.
 
-# About data 
-The video clips that are gathered as data are from 
-[this YouTube channel](https://www.youtube.com/@VolleyballWatchdog/videos).
+### 3. Initialize Database
+```bash
+# Start the API server
+uvicorn src.backend.app.app:app --reload
 
-## What comes next:
-1. Data Analysis is going to be added to the code. There are various KPIs that can be
- measured based on objects detected, like service success rate, service zone analysis, 
-  reception success rate, etc ...
-2. Publishing the datasets for video classification and volleyball object detection.
+# In another terminal, seed the database
+python src/api_init_data.py
+
+# Run the main pipeline
+python src/main.py
+```
+
+## 📊 Data Sources
+
+The video clips used for training and testing are sourced from:
+- **📺 YouTube Channel**: [Volleyball Watchdog](https://www.youtube.com/@VolleyballWatchdog/videos)
+- **🏆 Content**: International volleyball matches and tournaments
+
+## 🔮 Future Development
+
+### 📈 Planned Features
+1. **📊 Data Analysis**: Advanced KPIs and analytics
+   - Service success rate analysis
+   - Service zone analysis
+   - Reception success rate
+   - Player performance metrics
+   - Team strategy analysis
+
+2. **📚 Dataset Publication**: Open-source datasets
+   - Video classification dataset
+   - Volleyball object detection dataset
+   - Annotated training data
+
+3. **🎯 Real-time Analytics**: Live match analysis
+   - Real-time statistics
+   - Live performance metrics
+   - Instant insights for coaches
+
+## 🏗️ Project Structure
+
+```
+volleyball_analytics/
+├── 🧠 src/                           # Main source code
+│   ├── 🎮 ml_manager/               # ML Manager submodule
+│   ├── 🌐 backend/                  # FastAPI backend
+│   ├── 🎬 main.py                   # Main ML pipeline
+│   ├── 🎥 demo.py                   # Demo application
+│   └── 🛠️ utilities/               # Utility functions
+├── 📊 data/                         # Datasets and processed data
+├── 🎯 weights/                      # Model weights (download required)
+├── 📚 notebooks/                    # Jupyter notebooks
+├── 🛠️ scripts/                     # Utility scripts
+├── 📋 conf/                         # Configuration files
+└── 📖 README.md                     # This file
+```
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+1. **🚫 Import Errors**
+   ```bash
+   # Ensure submodules are initialized
+   git submodule update --init --recursive
+   
+   # Check Python path
+   python -c "from src.ml_manager import MLManager; print('Success!')"
+   ```
+
+2. **🎯 Model Weights Missing**
+   - Verify weights directory structure
+   - Check download links above
+   - Ensure file permissions are correct
+
+3. **🐍 Dependencies Issues**
+   ```bash
+   # Reinstall dependencies
+   uv sync --reinstall
+   
+   # Or using pip
+   pip install -e .
+   
+   # Or reinstall specific packages
+   pip install torch torchvision ultralytics transformers pytorchvideo opencv-python pillow numpy
+   ```
+
+4. **💾 Database Connection**
+   - Verify PostgreSQL is running
+   - Check `.env` file configuration
+   - Ensure database exists and is accessible
+
+## 🤝 Contributing
+
+1. **🔀 Fork** the repository
+2. **🌿 Create** a feature branch
+3. **💻 Make** your changes
+4. **🧪 Add** tests if applicable
+5. **📝 Submit** a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔗 Additional Resources
+
+- **📚 Wiki**: [Datasets and Weights](https://github.com/masouduut94/volleyball_analytics/wiki/Datasets-and-Weights)
+- **🌐 API Documentation**: [API Guide](https://github.com/masouduut94/volleyball_analytics/wiki/API)
+- **🎮 ML Manager**: [Comprehensive Documentation](src/ml_manager/README.md)
+- **📊 Examples**: [Usage Examples](src/ml_manager/example_usage.py)
+
+---
+
+**🏐 Happy Volleyball Analytics! Let's revolutionize the game with AI! 🚀✨**
