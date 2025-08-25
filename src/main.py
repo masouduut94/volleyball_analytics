@@ -12,7 +12,7 @@ from tqdm import tqdm
 from pathlib import Path
 from typing_extensions import List
 
-from volleyball_backend.enums.enums import GameState
+from vb_backend.enums.enums import GameState
 from ml_manager import MLManager
 
 
