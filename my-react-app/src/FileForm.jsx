@@ -74,15 +74,22 @@ export function FileForm() {
           setFiles((prevFiles) =>
             prevFiles.map((file) => {
               if (file.jobId === jobId) {
-                // close socket when job completes
-                if (backendProgress === 100 && file.ws) {
-                  file.ws.close();
+                // Auto-download when processing completes
+                if (backendProgress === 100 && !file.downloaded) {
+                  const downloadUrl = `http://localhost:8000/file/download/${jobId}`;
+                  const link = document.createElement('a');
+                  link.href = downloadUrl;
+                  link.setAttribute('download', '');
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
                 }
                 return {
                   ...file,
                   backendProgress,
                   processed: backendProgress === 100,
                   processing: backendProgress < 100,
+                  downloaded: backendProgress === 100 ? true : file.downloaded // track if downloaded
                 };
               }
               return file;
@@ -268,6 +275,42 @@ function FileItem({ file, onRemove, uploading }) {
     </div>
   );
 }
+
+// function FileItem({ file, onRemove, uploading }) {
+//   const Icon = getFileIcon(file.file.type);
+
+//   const handleManualDownload = () => {
+//     if (file.jobId) {
+//       const downloadUrl = `http://localhost:8000/file/download/${file.jobId}`;
+//       const link = document.createElement('a');
+//       link.href = downloadUrl;
+//       link.setAttribute('download', '');
+//       document.body.appendChild(link);
+//       link.click();
+//       document.body.removeChild(link);
+//     }
+//   };
+
+//   return (
+//     <div className="file-item">
+//       {/* ...existing code... */}
+//       <div className="file-progress-text" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+//         <span style={{ fontWeight: 500 }}>processing status:</span>
+//         <span>
+//           {file.processed && file.backendProgress === 100
+//             ? 'Completed'
+//             : `${Math.round(file.backendProgress)}%`}
+//         </span>
+//       </div>
+//       <ProgressBar progress={file.backendProgress} />
+//       {file.processed && file.backendProgress === 100 && (
+//         <button className="button-like" onClick={handleManualDownload}>
+//           Download
+//         </button>
+//       )}
+//     </div>
+//   );
+// }
 
 function ProgressBar({ progress }) {
   return (

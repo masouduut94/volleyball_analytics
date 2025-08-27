@@ -30,7 +30,8 @@ app.add_middleware(
 
 # In-memory job tracking
 job_progress: dict[str, int] = {}              # job_id -> percent int
-job_clients: dict[str, set[WebSocket]] = {}   # job_id -> set of websockets
+job_clients: dict[str, set[WebSocket]] = {}    # job_id -> set of websockets
+job_output: dict[str, str] = {}                # job_id -> output file path
 
 
 @app.get("/")
@@ -198,9 +199,18 @@ async def process_video_in_background(video_path_str: str, job_id: str):
 
     logger.success(f"Finished processing. Output saved to: {output_name}")
 
+    job_output[job_id] = output_name
+
     with open(f'{video_path.stem}_DEMO.csv', "w", newline="") as csvfile:
         csv_writer = csv.DictWriter(csvfile, fieldnames=["frame", "game_state"])
         csv_writer.writeheader()
         csv_writer.writerows(game_state_per_frame)
 
     await notify_progress(job_id, 100)  # Final update
+
+@app.get("/file/download/{job_id}")
+async def download_output(job_id: str):
+    while job_id not in job_output:
+        await asyncio.sleep(1)
+    return FileResponse(path=job_output[job_id], filename=Path(job_output[job_id]).name, media_type='application/octet-stream')
+
