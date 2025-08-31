@@ -28,6 +28,7 @@ dependencies = [
     "scikit-learn>=1.6.1",
     "seaborn>=0.13.2",
     "sqlalchemy>=2.0.43",
+    "supervision>=0.26.1",
     "torch>=2.7.0",
     "torchaudio>=2.7.0",
     "torchvision>=0.22.0",

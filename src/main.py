@@ -6,6 +6,19 @@ Then the statistics and outputs are stored on the db to get ready for visualizat
 
 """
 
+
+# TODO: Write a scipt that uses the ml_manager to process a video file:
+#  1. buffering the video frames. 
+#  2. the classify the list of frames into game states.
+#  3. Detect if the rally is finished according to the state changes (rally starts with serve and ends in NO_PLAY if NO_PLAY happens for 2-3 seconds consecutively (means 90 frames) )
+#  4. Give it to the queue to be processed by the object detection models.
+#  5. Input the frames to the object detection models and find the ball, players, and actions.
+#  5. Store the results to the database.
+#  6. We can write a front-end for the visualization of the results using streamlit, or use API + js for the videos processed, and then download the results for clients when ready.
+
+# TODO: Integrate the project with the automatic model download from google drive, or AWS providing the information.
+
+
 import cv2
 import numpy as np
 from tqdm import tqdm
@@ -162,7 +175,7 @@ class SimpleStateManager:
     Simplified state manager for demonstration.
     You may need to implement or adapt this based on your existing state management.
     """
-    
+
     def __init__(self, api_base_url: str):
         self.api_base_url = api_base_url
         self.video = type('Video', (), {'path': 'path/to/video.mp4'})()  # Placeholder
@@ -175,57 +188,57 @@ class SimpleStateManager:
         self.before_previous_state = GameState.NO_PLAY
         self.service_last_frame = None
         self.rally_counter = 0
-    
+
     def append_frame(self, frame, fno):
         self.temp_buffer.append(frame)
-    
+
     def is_full(self):
         return len(self.temp_buffer) >= self.buffer_size
-    
+
     def get_current_frames_and_fnos(self):
         return self.temp_buffer, list(range(len(self.temp_buffer)))
-    
+
     def update_state_from_ml(self, game_state):
         self.before_previous_state = self.previous_state
         self.previous_state = self.current_state
         self.current_state = game_state
-    
+
     def update_state(self, frames):
         # Placeholder implementation
         pass
-    
+
     def keep(self, frames, fnos, labels):
         self.long_buffer.extend(frames)
         self.long_buffer_fno.extend(fnos)
-    
+
     def get_labels(self):
         return [1] * len(self.long_buffer)  # Placeholder
-    
+
     def get_long_buffer(self):
         return self.long_buffer
-    
+
     def get_long_buffer_fno(self):
         return self.long_buffer_fno
-    
+
     def get_path(self, start_frame, video_type):
         return Path(f"outputs/{video_type}_{start_frame}.mp4")
-    
+
     def write_video(self, path, width, height, fps, labels, long_buffer, long_buffer_fno, draw_label):
         # Placeholder implementation
         pass
-    
+
     def db_store(self, path, fnos, service_frame, labels):
         # Placeholder implementation
         return {}
-    
+
     def save_objects(self, schema, objects):
         # Placeholder implementation
         return True
-    
+
     def reset_long_buffer(self):
         self.long_buffer.clear()
         self.long_buffer_fno.clear()
-    
+
     def reset_temp_buffer(self):
         self.temp_buffer.clear()
 

@@ -124,29 +124,35 @@ The system can extract specific game moments, like ace points:
 
 ### 🎯 Model Weights Setup
 
-The system requires pre-trained models for inference. Download them to the `weights/` directory:
+The system requires pre-trained models for inference. **Weights are automatically downloaded** when you first run the system, or you can download them manually.
 
-#### 📁 Required Directory Structure
+#### 🚀 Automatic Download (Recommended)
+```python
+from ml_manager import MLManager
+
+# Weights are automatically downloaded if missing
+manager = MLManager()
+```
+
+#### 📥 Manual Download
+```python
+from ml_manager.utils.downloader import download_all_models
+
+# Download all models in one ZIP file
+success = download_all_models()
+```
+
+#### 📁 Final Directory Structure
 ```
 weights/
-├── 🏐 ball/                           # Ball detection & segmentation
-│   └── weights/
-│       └── best.pt                    # Download: [Ball Model](https://drive.google.com/file/d/1KXDunsC1ALOObb303n9j6HHO7Bxz1HR_/view?usp=sharing)
-├── 🎭 action/                         # Action detection (6 classes)
-│   └── weights/
-│       └── best.pt                    # Download: [Action Model](https://drive.google.com/file/d/1o-KpRVBbjrGbqlT8tOjFv91YS8LIJZw2/view?usp=sharing)
-├── 🏟️ court/                          # Court segmentation
-│   └── weights/
-│       └── best.pt                    # Download: [Court Model](https://drive.google.com/file/d/1bShZ7hxNw_AESEgKf_EyoBXdFqCuL7V-/view?usp=sharing)
-└── 🎮 game_state/                     # Game state classification
-    └── checkpoint/                    # Download: [Game State Model](https://drive.google.com/file/d/18vtJSLIpaRHOlvXNmwvSd9stYYAEsMcK/view?usp=sharing)
+├── 🏐 ball/weights/best.pt           # Ball detection & segmentation
+├── 🎭 action/weights/best.pt         # Action detection (6 classes)  
+├── 🏟️ court/weights/best.pt          # Court segmentation
+└── 🎮 game_state/                    # Game state classification
+    └── [checkpoint files]
 ```
 
-#### 🔗 Download Links
-- **🏐 Ball Detection**: [Download Ball Model](https://drive.google.com/file/d/1KXDunsC1ALOObb303n9j6HHO7Bxz1HR_/view?usp=sharing)
-- **🎭 Action Detection**: [Download Action Model](https://drive.google.com/file/d/1o-KpRVBbjrGbqlT8tOjFv91YS8LIJZw2/view?usp=sharing)
-- **🏟️ Court Segmentation**: [Download Court Model](https://drive.google.com/file/d/1bShZ7hxNw_AESEgKf_EyoBXdFqCuL7V-/view?usp=sharing)
-- **🎮 Game State Classification**: [Download Game State Model](https://drive.google.com/file/d/18vtJSLIpaRHOlvXNmwvSd9stYYAEsMcK/view?usp=sharing)
+**Download Source**: [Complete Weights ZIP](https://drive.google.com/file/d/1__zkTmGwZo2z0EgbJvC14I_3kOpgQx3o/view)
 
 ## 🧪 Testing & Inference
 
