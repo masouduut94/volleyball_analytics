@@ -167,7 +167,8 @@ class VolleyballAnalyticsDemo:
         
         return 'unknown'
     
-    def _convert_ball_detections_to_sv(self, detections) -> sv.Detections:
+    @staticmethod
+    def _convert_ball_detections_to_sv(detections) -> sv.Detections:
         """Convert ball detections to supervision format."""
         if not detections:
             return sv.Detections.empty()
@@ -191,7 +192,8 @@ class VolleyballAnalyticsDemo:
             )
         return sv.Detections.empty()
     
-    def _convert_player_detections_to_sv(self, player_keypoints) -> sv.Detections:
+    @staticmethod
+    def _convert_player_detections_to_sv(player_keypoints) -> sv.Detections:
         """Convert player detections to supervision format."""
         if not player_keypoints:
             return sv.Detections.empty()
@@ -312,7 +314,8 @@ class VolleyballAnalyticsDemo:
         
         return frame
     
-    def _draw_action_detections(self, frame: np.ndarray, action_detections: List) -> np.ndarray:
+    @staticmethod
+    def _draw_action_detections(frame: np.ndarray, action_detections: List) -> np.ndarray:
         """Draw action detection results."""
         action_colors = {
             'spike': (255, 0, 255),    # Magenta

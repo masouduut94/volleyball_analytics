@@ -38,7 +38,7 @@ def main():
 
     """
     # Initialize ML Manager (no YAML config needed)
-    ml_manager = MLManager(verbose=True)
+    ml_manager = MLManager()
     
     # match_id = 1
     api_base_url = "http://localhost:8000"
