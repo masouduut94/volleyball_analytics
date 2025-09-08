@@ -8,7 +8,9 @@ dependencies = [
     "albumentations>=2.0.7",
     "cvat-sdk>=2.37.0",
     "dataclasses-json>=0.6.7",
+    "dill>=0.4.0",
     "fastapi>=0.115.12",
+    "gdown>=5.2.0",
     "imageio>=2.37.0",
     "ipywidgets>=8.1.7",
     "loguru>=0.7.3",
@@ -22,16 +24,16 @@ dependencies = [
     "pycocotools>=2.0.8",
     "pydantic>=2.11.5",
     "pydantic-settings>=2.9.1",
-    "pytorchvideo>=0.1.5",
+    "pytorchvideo>=0.1.3",
     "pyyaml>=6.0.2",
     "ruff>=0.11.11",
     "scikit-learn>=1.6.1",
     "seaborn>=0.13.2",
     "sqlalchemy>=2.0.43",
     "supervision>=0.26.1",
-    "torch>=2.7.0",
-    "torchaudio>=2.7.0",
-    "torchvision>=0.22.0",
+    "torch==2.3.*",
+    "torchaudio==2.3.*",
+    "torchvision==0.18.*",
     "tqdm>=4.67.1",
     "transformers>=4.52.3",
     "ultralytics>=8.3.144",
@@ -40,13 +42,16 @@ dependencies = [
 
 [tool.uv.sources]
 torch = [
-  { index = "pytorch-cu126", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+  { index = "pytorch-cu121", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
 torchvision = [
-  { index = "pytorch-cu126", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+  { index = "pytorch-cu121", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchaudio = [
+  { index = "pytorch-cu121", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
 
 [[tool.uv.index]]
-name = "pytorch-cu126"
-url = "https://download.pytorch.org/whl/cu126"
+name = "pytorch-cu121"
+url = "https://download.pytorch.org/whl/cu121"
 explicit = true

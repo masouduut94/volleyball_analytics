@@ -111,10 +111,19 @@ The system can extract specific game moments, like ace points:
    pip install -e .
    
    # Or using pip with dependencies from pyproject.toml
-   pip install torch torchvision ultralytics transformers pytorchvideo opencv-python pillow numpy
+   pip install torch torchvision ultralytics transformers opencv-python pillow numpy
    ```
 
-3. **Download Model Weights**
+3. **Fix PyTorchVideo Compatibility** (⚡ **IMPORTANT!**)
+   ```bash
+   # Uninstall old pytorchvideo to avoid compatibility issues
+   pip uninstall pytorchvideo -y
+   
+   # Install latest version from GitHub (fixes torchvision compatibility)
+   pip install git+https://github.com/facebookresearch/pytorchvideo
+   ```
+
+4. **Download Model Weights**
    ```bash
    # Create weights directory
    mkdir -p weights
@@ -317,7 +326,31 @@ volleyball_analytics/
    pip install torch torchvision ultralytics transformers pytorchvideo opencv-python pillow numpy
    ```
 
-4. **💾 Database Connection**
+4. **🎯 PyTorchVideo Compatibility Error** (⚡ **EASIEST SOLUTION**)
+   ```
+   ModuleNotFoundError: No module named 'torchvision.transforms.functional_tensor'
+   ```
+   
+   **💡 Quick Fix** (Recommended):
+   ```bash
+   # Uninstall old pytorchvideo
+   pip uninstall pytorchvideo -y
+   
+   # Install latest version from GitHub (fixes compatibility)
+   pip install git+https://github.com/facebookresearch/pytorchvideo
+   ```
+   
+   **📝 Alternative Manual Fix**:
+   If you encounter this error in your own code, replace:
+   ```python
+   import torchvision.transforms.functional_tensor as F_t
+   ```
+   with:
+   ```python
+   import torchvision.transforms.functional as F_t
+   ```
+
+5. **💾 Database Connection**
    - Verify PostgreSQL is running
    - Check `.env` file configuration
    - Ensure database exists and is accessible
