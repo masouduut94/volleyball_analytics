@@ -165,12 +165,45 @@ weights/
 
 ## 🧪 Testing & Inference
 
-### 🎬 Quick Inference Test
+### 🎬 Quick Test Script
 
-Test the system with a sample video:
+Use our comprehensive test script to validate the ML Manager with your video:
 
 ```bash
-# Basic inference test
+# Run complete test with your video
+python test_ml_manager.py --video_path path/to/your/video.mp4
+
+# Test only object detection
+python test_ml_manager.py --video_path path/to/your/video.mp4 --mode detection
+
+# Test only video classification
+python test_ml_manager.py --video_path path/to/your/video.mp4 --mode classification
+
+# Custom output directory
+python test_ml_manager.py --video_path path/to/your/video.mp4 --output_dir my_results/
+```
+
+### 📺 Download Test Video
+
+For testing the ML models, download a volleyball video clip from **[this YouTube video](https://www.youtube.com/watch?v=G9Ox3d62B_o&t=193s)** (starts at 3:13). This video contains excellent examples of volleyball actions and game states for testing.
+
+**Why this video is perfect for testing:**
+- 🏐 Clear volleyball actions (serve, spike, block, set)
+- 🎮 Multiple game states (service, play, no-play)
+- 📹 Good video quality and camera angles
+- ⏱️ Multiple rallies and game situations
+
+**How to use:**
+1. Download the video using any YouTube downloader
+2. Save it as `volleyball_test.mp4` (or any name you prefer)  
+3. Run the test script: `python test_ml_manager.py --video_path volleyball_test.mp4`
+
+### 🎯 Individual Model Testing
+
+Test specific components individually:
+
+```bash
+# Basic inference test using demo.py
 python src/demo.py --video_path path/to/your/video.mp4
 
 # VideoMAE only (game state classification)
@@ -204,17 +237,35 @@ ball_detections = ml_manager.detect_ball(frame)
 
 ### 🧪 Testing the Setup
 
+The `test_ml_manager.py` script provides comprehensive testing of all ML Manager functionality:
+
+**🔍 What the test script does:**
+- ✅ Validates video file format and properties
+- ✅ Tests ML Manager initialization and model loading
+- ✅ Verifies all detection models (ball, actions, players) 
+- ✅ Tests game state classification with video sequences
+- ✅ Runs full pipeline demos with visualization
+- ✅ Generates output videos for verification
+
+**📊 Test modes available:**
+- `full`: Complete testing with both detection and classification demos
+- `detection`: Object detection testing only (ball, actions, players)
+- `classification`: Video classification testing only (game states)
+
 ```bash
-# Test ML Manager functionality
+# Comprehensive test (recommended for first-time setup)
+python test_ml_manager.py --video_path path/to/volleyball_video.mp4
+
+# Quick model validation (no video output)
+python test_ml_manager.py --video_path path/to/volleyball_video.mp4 --mode detection
+
+# Legacy testing methods
 cd src/ml_manager
 python test_ml_manager.py
 
 # Test integration
 cd ../..
 python src/ml_manager/example_usage.py
-
-# Test main pipeline
-python src/demo.py --video_path path/to/your/video.mp4
 ```
 
 ## 🗄️ Database Setup (Optional)
