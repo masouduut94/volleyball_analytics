@@ -1,4 +1,5 @@
 # Volleyball Analytics
+<img width="1309" height="694" alt="image" src="https://github.com/user-attachments/assets/54533455-5f90-432f-8719-7b1ab46d3259" />
 
 A compact, end-to-end video analytics pipeline for volleyball that detects game state and objects (ball, set, spike, block, reception), annotates frames, produces an annotated output video and per-frame CSV, and streams real-time processing progress to a web frontend.
 
@@ -68,3 +69,4 @@ The React app (Vite) usually serves at `http://localhost:5173` by default.
 - Annotated output video and per-frame CSV that enable downstream analytics and visualization.
 - Processes a full volleyball game and splices footage based on Play state to reduce downtime
 - Example [edited footage](https://youtu.be/1guT-Q2YAzY) vs [unedited](https://youtu.be/PZltM9uduwk)
+
