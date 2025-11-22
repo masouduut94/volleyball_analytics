@@ -1,211 +1,70 @@
+# Volleyball Analytics
 
-<h1 align="center">
-    Volleyball Analytics
-</h1>
-<h1 align="center">
-    <img src="assets/readme/coach2.jpg">
-</h1>
+A compact, end-to-end video analytics pipeline for volleyball that detects game state and objects (ball, set, spike, block, reception), annotates frames, produces an annotated output video and per-frame CSV, and streams real-time processing progress to a web frontend.
 
-[image source](https://sportsedtv.com/blog/what-to-pack-on-a-volleyball-trip-volleyball)
+- Designed and implemented the backend processing pipeline and WebSocket-based progress reporting.
+- Integrated ML models for game-state and action detection and implemented frame annotation and output generation.
+- Built the React frontend to show upload and backend processing progress and support automatic/manual download of the processed video.
 
+## Project description
 
-# Introduction to Sports Analytics
-The use of Artificial Intelligence (AI) in sports analytics has become 
-increasingly prevalent, offering teams and athletes valuable insights 
-to enhance performance, strategy, and decision-making.
+This project processes raw volleyball video to detect game states (PLAY / NO-PLAY / SERVICE) and volleyball-specific objects and actions. A FastAPI backend accepts uploads, runs an ML pipeline (GameState MAE + YOLO-based detectors), annotates frames, and writes an output video and a per-frame CSV for traceability and downstream analysis. Processing progress is streamed to the React frontend over WebSockets so users see upload and processing progress in real time.
 
-**Video analysis** is a crucial component of sports analytics, individually in volleyball.
-It involves the use of video footage of games or training sessions to 
-gather detailed insights into player and team performance, identify strengths and 
-weaknesses, and make informed decisions to improve overall efficiency and effectiveness 
-on the court.
-This can be useful in many aspects:
+## Key features
 
-#### Real-Time Feedback
-Some advanced video analysis tools provide real-time feedback during matches or training sessions. 
-Coaches can use this information to make immediate adjustments to tactics, substitutions, or 
-strategies based on the ongoing performance.
+- Upload video files via the React UI and track upload progress (Axios).
+- Real-time backend processing progress via WebSockets.
+- ML-based game-state detection and object/action detection (YOLO).
+- Annotated output video and per-frame CSV export.
+- Background processing with job IDs and a download endpoint for final output.
 
-#### Scouting Opponents
-Teams use video analysis to scout upcoming opponents. By studying their playing style, key players, 
-and preferred strategies, teams can prepare more effectively for upcoming matches.
+## Tech stack
 
-#### Performance Evaluation
-Coaches and analysts can review match footage to evaluate player techniques, strategies, and 
-overall performance. This includes aspects such as serving, passing, setting, attacking, and 
-defensive plays.
+- Backend: Python, FastAPI, aiofiles, OpenCV, asyncio, tqdm
+- ML: custom GameStateDetector and YOLO-based VolleyBallObjectDetector
+- Frontend: React (progress UI, two progress bars per file)
+- Deployment: uvicorn (development); designed for containerization / cloud VMs for production
 
-#### Statistical Tracking
-Video analysis software often integrates with statistical tracking systems. This enables the 
-extraction of key performance metrics, such as hitting percentages, passing accuracy, and 
-blocking effectiveness, directly from the video footage.
+## How it works (concise)
 
-#### Injury Prevention
-Video analysis can help identify movement patterns and techniques that may contribute to 
-injuries. Coaches and sports scientists can use this information to design training programs 
-focused on injury prevention and optimize players' biomechanics.
+1. User uploads a video → backend saves the file and returns a `job_id`.
+2. A background task processes frames in batches and updates job progress via `notify_progress(job_id, percent)`.
+3. Frontend opens `ws://.../ws/progress/{job_id}` to receive live updates and display progress.
+4. When processing finishes the backend stores the output path and the frontend can download via `/file/download/{job_id}`.
 
-#### Decision Review System
-Video analysis can assist the referee by reviewing decisions using video footage. This technology can be 
-utilized in several occasions in volleyball. For example, Hawk eye technology can check if the ball bounced 
-inside the court or not. Something like this:
+## Quick install & run (dev)
 
-![video_challenge](assets/readme/video_challenge.gif)
+### Backend
 
-Overall, video analysis plays a pivotal role in enhancing coaching strategies, player development, and 
-team performance in volleyball and many other sports. The combination of video footage and analytics 
-provides a comprehensive understanding of the game, enabling teams to make data-driven decisions for 
-success.
+Create a virtual environment and install dependencies:
 
-# About Project
-This machine learning project runs in real-time on top of 2 deep learning models.
-
-#### Video Classification model: 
-In a live broadcast game, it is important to run processes only when game is on. To extract the periods that 
-game is on, [HuggingFace VideoMAE](https://huggingface.co/docs/transformers/en/tasks/video_classification) 
-is utilized. This model is trained on a custom dataset that consists of 3 labels **service**, **play**, 
-**no-play**. This model gets 30 frames as input, and outputs the label. it's **service**, **play**, **no-play**.
-  - **service** indicates the start of the play when a player tosses the ball to serve it.
-  - **play** indicates the periods of game where the players are playing and the game is on.
-  - **no-play** indicates the periods of the game where the players are not playing.
-
-This is the VideoMAE architecture.
-![videomae architecture](assets/readme/videomae_architecture.jpeg)
-
-[image source](https://huggingface.co/docs/transformers/model_doc/videomae)
-#### Yolov8 model: 
-This state-of-the-art model is an object detection model that is trained on a dataset which includes 
-   several objects along with several volleyball actions.
-
-This is yolov8 architecture:
-![Yolov8](assets/readme/t.webp)
-
-[image source](https://medium.com/@syedzahidali969/principles-of-yolov8-6a90564e16c3)
-
-The yolov8n is chosen for fine-tuning on 6 different objects (actions). In demos,
-you can see 6 colors for bounding boxes. 
-- Red box: volleyball ball
-- Brown box: volleyball service action
-- Green box: volleyball reception action.
-- Blue box: volleyball setting action.
-- Purple box: volleyball blocking action.
-- Orange box: volleyball spike action.
-
-These are the outputs indicating the video classification + object detection results. 
-The video classification model results can be seen in the top-left corner of video, and the object detection 
-results can be seen as bounding boxes with mentioned colors. please note that the object detection is running
-on the frames that are labeled as **SERVICE** and **PLAY**.
-
-### Demo 1: FRANCE - POLAND
-![demo1](assets/readme/11_f1.gif)
-### Demo 2: USA - CANADA
-![demo2](assets/readme/20_2_demo.gif)
-### Demo 3: USA - POLAND
-![demo3](assets/readme/22_2_DEMO.gif)
-
-The third step is to use the generated data to find insights about the game. 
-for example, in the below gif, one of the ace points is extracted. 
-
-### Demo 4: FRANCE - POLAND Ace score.
-![demo2](assets/readme/ace.gif)
-
-Development
----------
-The whole project is developed with python 3.11. The requirements can be
-found in `requirements.txt`.
-
-Open the `conf/ml_models.yaml`, and configure it this way:
-
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
-yolo:
-  player_segmentation:
-    weight: "path/to/weights" # download: https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n-seg.pt
-    labels: {0: 'person'}
-  player_detection:
-    weight: "path/to/weights" # download: https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n.pt
-    labels: {0: 'person'}
-  pose_estimation:
-    weight: "path/to/weights" # download: https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n-pose.pt
-    labels: {0: 'person'}
-  ball_segmentation:
-    weight: "path/to/weights" # download: https://drive.google.com/file/d/1KXDunsC1ALOObb303n9j6HHO7Bxz1HR_/view?usp=sharing
-    labels: {0: "ball"}
-  action_detection6:
-    weight: "/path/to/weights" # download: https://drive.google.com/file/d/1o-KpRVBbjrGbqlT8tOjFv91YS8LIJZw2/view?usp=sharing
-    labels: { 0: 'ball', 1: 'block', 2: "receive", 3: 'set', 4: 'spike', 5: 'serve'}
-  court_segment:
-    weight: "/path/to/weights.pt" # donwload link: https://drive.google.com/file/d/1bShZ7hxNw_AESEgKf_EyoBXdFqCuL7V-/view?usp=sharing
-    labels: { 0: "court"}
 
-video_mae:
-  game_state_3:
-    weight: "/path/to/checkpoint directory" # download: https://drive.google.com/file/d/18vtJSLIpaRHOlvXNmwvSd9stYYAEsMcK/view?usp=sharing
+Run the development server with auto-reload:
+
+```bash
+uvicorn src.app:app --host 0.0.0.0 --port 8000 --reload
 ```
-For more information about datasets and weights, please have a look at the wiki page here:
-- https://github.com/masouduut94/volleyball_analytics/wiki/Datasets-and-Weights
 
-you can also find insights about the API, the models used in the project, and their structure and 
-training results.
-check it out yourself: 
-- https://github.com/masouduut94/volleyball_analytics/wiki/API
+> If your repo uses a different entrypoint (for example `src/main.py`), run that module instead.
 
-There are several scripts that can run the models and output demos that are listed here:
+### Frontend
 
-- `src/demo.py`: It uses both video classification + yolo in the inference code and 
-    outputs the demos just like the ones shared here.
-- `src/VideoMAE_inference.py`: Only runs inference with video classification.
-- `src/yolo_inferece.py`: Runs inference with yolo-v8 object detection.
-
-If you want to store the results in database, you must satisfy some dependencies:
-
-- Install Postgresql.
-- Create a yaml file on `conf` directory named `db_conf.yaml`, and put these values on it.
-
+```bash
+cd my-react-app
+npm install
+npm start
 ```
-development:
-  user: "user"
-  password: "*********"
-  db: "volleyball_development"
-  host: "some_ip"
-  port: 5432
-  dialect: 'postgresql'
-  driver: 'psycopg2'
-test:
-  user: "user2"
-  password: "********"
-  db: "volleyball_test"
-  host: "some_ip"
-  port: 5432
-  dialect: 'postgresql'
-  driver: 'psycopg2'
-```
-- install PostgreSQL based on [this link tutorials](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
-- Create a `.env` file like `conf/sample.env`, and copy and paste its path to `src/backend/app/core/config.py` in line 28.
 
-these are sample values in the `.env` file:    
-```
-MODE=development or test
-DEV_USERNAME=user1
-DEV_PASSWORD=********
-DEV_HOST=localhost
-DEV_DB=volleyball_development
-DEV_PORT=5432
-DEV_DRIVER=postgresql
-TEST_DB_URL=sqlite:///./vb.db
-```
- 
-- `make install` to install dependencies.
-- `make test` to run unittest tests for backend APIs.
-- `uvicorn src.backend.app.app:app` to start the APIs.
-- Then to seed the database with initial data, run `src/api_init_data.py`.
-- run `src/main.py` and check out the database to see the results.
+The React app (Vite) usually serves at `http://localhost:5173` by default.
 
-# About data 
-The video clips that are gathered as data are from 
-[this YouTube channel](https://www.youtube.com/@VolleyballWatchdog/videos).
+## Outcome / results
 
-## What comes next:
-1. Data Analysis is going to be added to the code. There are various KPIs that can be
- measured based on objects detected, like service success rate, service zone analysis, 
-  reception success rate, etc ...
-2. Publishing the datasets for video classification and volleyball object detection.
+- Stable real-time progress updates during long-running video processing.
+- Annotated output video and per-frame CSV that enable downstream analytics and visualization.
+- Processes a full volleyball game and splices footage based on Play state to reduce downtime
+- Example [edited footage](https://youtu.be/1guT-Q2YAzY) vs [unedited](https://youtu.be/PZltM9uduwk)
