@@ -8,13 +8,9 @@ This script provides two main functions:
 
 import cv2
 import numpy as np
-from typing import List, Dict, Any, Optional
 import supervision as sv
 from pathlib import Path
-
-# Import ML Manager
 from ml_manager.ml_manager import MLManager
-from ml_manager.core.data_structures import Detection, GameStateResult
 
 
 def run_object_detection(video_path: str, output_path: str) -> None:
