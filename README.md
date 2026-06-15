@@ -18,7 +18,7 @@ The project also includes a **FastAPI backend** (optional) for storing and retri
 
 ## 🚀 Quick Start
 
-### 📥 Clone the Repository (Important!)
+### 📥 1. Clone the Repository including its submodules.
 
 This repository uses **Git submodules** for the ML Manager. You must clone it correctly:
 
@@ -29,6 +29,73 @@ git clone --recursive https://github.com/masouduut94/volleyball_analytics.git
 # OR if already cloned, initialize submodules
 git submodule update --init --recursive
 ```
+
+### 🐍 2. Create the Python Environment
+
+You can set up the project using either **uv** (recommended for speed) or **Conda**.
+
+#### ⚡ Option A: Using uv
+
+Install dependencies directly from the `pyproject.toml` file:
+
+```bash
+# Create and sync the virtual environment
+uv sync
+
+# Activate the environment
+source .venv/bin/activate      # Linux / macOS
+.venv\Scripts\activate         # Windows
+```
+
+#### 🐍 Option B: Using Conda
+
+Create the environment from the provided `requirements.yml` file:
+
+```bash
+# Create the conda environment
+conda env create -f requirements.yml
+
+# Activate the environment
+conda activate volleyball_analytics
+```
+
+### 🧪 3. Validate the Installation
+
+To verify that the environment and models are set up correctly, run the `setup.ipynb` notebook located in the `notebooks/` directory.
+
+Before launching Jupyter Notebook, make sure your environment is available as a Jupyter kernel.
+
+#### :memo: Register the Environment as a Jupyter Kernel
+
+If using **uv**:
+
+```bash
+python -m ipykernel install --user --name volleyball_analytics --display-name "Python (volleyball_analytics)"
+```
+
+If using **Conda**, activate the environment first and then run:
+
+```bash
+python -m ipykernel install --user --name volleyball_analytics --display-name "Python (volleyball_analytics)"
+```
+
+#### 🚀 Launch Jupyter
+
+```bash
+jupyter notebook
+```
+
+Open:
+
+```text
+notebooks/setup.ipynb
+```
+
+and select the **Python (volleyball_analytics)** kernel before running the notebook.
+
+The notebook will download any required assets (if needed) and validate that the models and dependencies are installed correctly. ✅
+
+
 
 ### 🎯 What You'll Get
 

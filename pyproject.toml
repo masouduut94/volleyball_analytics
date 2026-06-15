@@ -1,0 +1,36 @@
+[project]
+name = "volleyball-analytics"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "av>=17.1.0",
+    "dill>=0.4.1",
+    "fastapi>=0.137.1",
+    "gdown>=6.1.0",
+    "jupyterlab>=4.5.8",
+    "matplotlib>=3.10.9",
+    "norfair>=2.3.0",
+    "opencv-python>=4.11.0.86",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.1",
+    "pytorchvideo>=0.1.5",
+    "scikit-learn>=1.7.2",
+    "seaborn>=0.13.2",
+    "supervision>=0.28.0",
+    "torch>=2.12.0",
+    "torchvision>=0.27.0",
+    "transformers>=5.12.0",
+    "ultralytics>=8.4.67",
+    "uvicorn>=0.49.0",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu130" }]
+torchvision = [{ index = "pytorch-cu130" }]
