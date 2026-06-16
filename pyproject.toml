@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "av>=17.1.0",
+    "dataclasses-json>=0.6.7",
     "dill>=0.4.1",
     "fastapi>=0.137.1",
     "gdown>=6.1.0",
@@ -18,6 +19,7 @@ dependencies = [
     "pytorchvideo>=0.1.5",
     "scikit-learn>=1.7.2",
     "seaborn>=0.13.2",
+    "secretstorage>=3.5.0",
     "supervision>=0.28.0",
     "torch>=2.12.0",
     "torchvision>=0.27.0",

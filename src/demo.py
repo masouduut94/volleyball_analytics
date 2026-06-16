@@ -54,7 +54,10 @@ def run_object_detection(video_path: str, output_path: str) -> None:
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     
     print(f"Video properties: {width}x{height}, {fps} FPS, {total_frames} frames")
-    
+
+    # setup output folder
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+
     # Setup video writer
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
@@ -80,7 +83,7 @@ def run_object_detection(video_path: str, output_path: str) -> None:
     frame_count = 0
     
     print("Processing video frames...")
-    while frame_count < 500:
+    while frame_count < total_frames:
         ret, frame = cap.read()
         if not ret:
             break
@@ -283,7 +286,10 @@ def run_video_classification(video_path: str, output_path: str) -> None:
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     
     print(f"Video properties: {width}x{height}, {fps} FPS, {total_frames} frames")
-    
+
+    # setup output folder
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+
     # Setup video writer
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
