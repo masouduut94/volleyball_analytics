@@ -10,6 +10,9 @@ import cv2
 import numpy as np
 import supervision as sv
 from pathlib import Path
+
+import tqdm
+
 from ml_manager.ml_manager import MLManager
 
 
@@ -302,7 +305,7 @@ def run_video_classification(video_path: str, output_path: str) -> None:
     
     print("Processing video frames...")
     frame_count = 0
-    while True:
+    for _ in tqdm.tqdm(total=total_frames):
         ret, frame = cap.read()
         if not ret:
             break

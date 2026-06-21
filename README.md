@@ -96,6 +96,79 @@ and select the **Python (volleyball_analytics)** kernel before running the noteb
 The notebook will download any required assets (if needed) and validate that the models and dependencies are installed correctly. ✅
 
 
+### 🎯 Model Weights Setup and test individually.
+
+The system requires pre-trained models for inference. **Weights are automatically downloaded** when you first run the system, or you can download them manually.
+
+#### 🚀 Automatic Download (Recommended)
+```python
+from src.ml_manager import MLManager
+
+# Weights are automatically downloaded if missing
+manager = MLManager()
+```
+
+#### 📥 Manual Download
+```python
+from src.ml_manager.utils.downloader import download_all_models
+
+# Download all models in one ZIP file
+success = download_all_models()
+```
+
+### 🧠 Model weights URLs
+
+1. [Court segmentation](https://drive.google.com/file/d/1bShZ7hxNw_AESEgKf_EyoBXdFqCuL7V-/view?usp=drive_link)
+2. [Ball segmentation](https://drive.google.com/file/d/1KXDunsC1ALOObb303n9j6HHO7Bxz1HR_/view?usp=drive_link)
+3. [Action detection](https://drive.google.com/file/d/1o-KpRVBbjrGbqlT8tOjFv91YS8LIJZw2/view?usp=drive_link)
+4. [Gamestate classification](https://drive.google.com/file/d/18vtJSLIpaRHOlvXNmwvSd9stYYAEsMcK/view?usp=drive_link) 
+
+### 🛢️ Dataset URLs
+
+1. [Ball segmentation](https://drive.google.com/file/d/1Xb4P7s9NmSNkeAIY4a9dkznsoVKfwCCg/view?usp=drive_link)
+2. [Action detection](https://drive.google.com/file/d/10el9KW4MW-vLNf8sPJvlHjIfAIMgwnlX/view?usp=drive_link)
+3. [Gamestate classification](https://drive.google.com/file/d/1bhGTMQUIUPYMlwhNS4z6DwsnMaGKIBpn/view?usp=drive_link)
+
+
+#### 📁 Final Directory Structure
+```
+weights/
+├── 🏐 ball/weights/best.pt           # Ball detection & segmentation
+├── 🎭 action/weights/best.pt         # Action detection (6 classes)  
+├── 🏟️ court/weights/best.pt          # Court segmentation
+└── 🎮 game_state/                    # Game state classification
+    └── [checkpoint files]
+```
+
+**Download Source**: [Complete Weights ZIP](https://drive.google.com/file/d/1__zkTmGwZo2z0EgbJvC14I_3kOpgQx3o/view)
+
+### 🎯 ML Manager Integration
+
+The system uses a unified **ML Manager** module for all machine learning operations:
+
+```python
+from src.ml_manager import MLManager
+import cv2
+# Initialize ML Manager
+ml_manager = MLManager(verbose=True)
+
+cap = cv2.VideoCapture('sample_video.mp4')
+frames = []
+for i in range(16):
+    status, frame = cap.read()
+    frames.append(frame)
+# Game state classification
+game_state = ml_manager.classify_game_state(frames)
+
+# Action detection
+actions = ml_manager.detect_actions(frames[0])
+
+# Ball detection
+ball_detections = ml_manager.detect_ball(frames[0])
+```
+
+**📚 ML Manager Documentation**: See [src/ml_manager/README.md](src/ml_manager/README.md) for comprehensive usage.
+
 
 ### 🎯 What You'll Get
 
@@ -161,117 +234,6 @@ The system provides real-time analysis with:
 The system can extract specific game moments, like ace points:
 ![ace](assets/readme/ace.gif)
 
-## 🛠️ Setup & Installation
-
-### 📋 Prerequisites
-
-- **🐍 Python**: 3.11 or higher
-- **💾 PostgreSQL**: For database functionality (optional)
-- **🎮 GPU**: Recommended for real-time inference (CUDA compatible)
-
-### 🚀 Installation Steps
-
-1. **Clone with Submodules**
-   ```bash
-   git clone --recursive https://github.com/masouduut94/volleyball_analytics.git
-   cd volleyball_analytics
-   ```
-
-2. **Install Dependencies**
-   ```bash
-   # Using uv (recommended)
-   uv sync
-   
-   # Or using pip with pyproject.toml
-   pip install -e .
-   
-   # Or using pip with dependencies from pyproject.toml
-   pip install torch torchvision ultralytics transformers opencv-python pillow numpy
-   ```
-
-3. **Fix PyTorchVideo Compatibility** (⚡ **IMPORTANT!**)
-   ```bash
-   # Uninstall old pytorchvideo to avoid compatibility issues
-   pip uninstall pytorchvideo -y
-   
-   # Install latest version from GitHub (fixes torchvision compatibility)
-   pip install git+https://github.com/facebookresearch/pytorchvideo
-   ```
-
-4. **Download Model Weights**
-   ```bash
-   # Create weights directory
-   mkdir -p weights
-   
-   # Download weights (see Weights section below)
-   ```
-
-### 🎯 Model Weights Setup
-
-The system requires pre-trained models for inference. **Weights are automatically downloaded** when you first run the system, or you can download them manually.
-
-#### 🚀 Automatic Download (Recommended)
-```python
-from ml_manager import MLManager
-
-# Weights are automatically downloaded if missing
-manager = MLManager()
-```
-
-#### 📥 Manual Download
-```python
-from ml_manager.utils.downloader import download_all_models
-
-# Download all models in one ZIP file
-success = download_all_models()
-```
-
-#### 📁 Final Directory Structure
-```
-weights/
-├── 🏐 ball/weights/best.pt           # Ball detection & segmentation
-├── 🎭 action/weights/best.pt         # Action detection (6 classes)  
-├── 🏟️ court/weights/best.pt          # Court segmentation
-└── 🎮 game_state/                    # Game state classification
-    └── [checkpoint files]
-```
-
-**Download Source**: [Complete Weights ZIP](https://drive.google.com/file/d/1__zkTmGwZo2z0EgbJvC14I_3kOpgQx3o/view)
-
-## 🧪 Testing & Inference
-
-### 🎬 Quick Test Script
-
-Use our comprehensive test script to validate the ML Manager with your video:
-
-```bash
-# Run complete test with your video
-python test_ml_manager.py --video_path path/to/your/video.mp4
-
-# Test only object detection
-python test_ml_manager.py --video_path path/to/your/video.mp4 --mode detection
-
-# Test only video classification
-python test_ml_manager.py --video_path path/to/your/video.mp4 --mode classification
-
-# Custom output directory
-python test_ml_manager.py --video_path path/to/your/video.mp4 --output_dir my_results/
-```
-
-### 📺 Download Test Video
-
-For testing the ML models, download a volleyball video clip from **[this YouTube video](https://www.youtube.com/watch?v=G9Ox3d62B_o&t=193s)** (starts at 3:13). This video contains excellent examples of volleyball actions and game states for testing.
-
-**Why this video is perfect for testing:**
-- 🏐 Clear volleyball actions (serve, spike, block, set)
-- 🎮 Multiple game states (service, play, no-play)
-- 📹 Good video quality and camera angles
-- ⏱️ Multiple rallies and game situations
-
-**How to use:**
-1. Download the video using any YouTube downloader
-2. Save it as `volleyball_test.mp4` (or any name you prefer)  
-3. Run the test script: `python test_ml_manager.py --video_path volleyball_test.mp4`
 
 ### 🎯 Individual Model Testing
 
@@ -281,101 +243,6 @@ Test specific components individually:
 # Basic inference test using demo.py
 python src/demo.py --video_path path/to/your/video.mp4
 
-# VideoMAE only (game state classification)
-python src/VideoMAE_inference.py
-
-# YOLO only (object detection)
-python src/yolo_inference.py
-```
-
-### 🎯 ML Manager Integration
-
-The system uses a unified **ML Manager** module for all machine learning operations:
-
-```python
-from src.ml_manager import MLManager
-
-# Initialize ML Manager
-ml_manager = MLManager(verbose=True)
-
-# Game state classification
-game_state = ml_manager.classify_game_state(frames)
-
-# Action detection
-actions = ml_manager.detect_actions(frame)
-
-# Ball detection
-ball_detections = ml_manager.detect_ball(frame)
-```
-
-**📚 ML Manager Documentation**: See [src/ml_manager/README.md](src/ml_manager/README.md) for comprehensive usage.
-
-### 🧪 Testing the Setup
-
-The `test_ml_manager.py` script provides comprehensive testing of all ML Manager functionality:
-
-**🔍 What the test script does:**
-- ✅ Validates video file format and properties
-- ✅ Tests ML Manager initialization and model loading
-- ✅ Verifies all detection models (ball, actions, players) 
-- ✅ Tests game state classification with video sequences
-- ✅ Runs full pipeline demos with visualization
-- ✅ Generates output videos for verification
-
-**📊 Test modes available:**
-- `full`: Complete testing with both detection and classification demos
-- `detection`: Object detection testing only (ball, actions, players)
-- `classification`: Video classification testing only (game states)
-
-```bash
-# Comprehensive test (recommended for first-time setup)
-python test_ml_manager.py --video_path path/to/volleyball_video.mp4
-
-# Quick model validation (no video output)
-python test_ml_manager.py --video_path path/to/volleyball_video.mp4 --mode detection
-
-# Legacy testing methods
-cd src/ml_manager
-python test_ml_manager.py
-
-# Test integration
-cd ../..
-python src/ml_manager/example_usage.py
-```
-
-## 🗄️ Database Setup (Optional)
-
-For storing results and analytics, set up PostgreSQL:
-
-### 1. Install PostgreSQL
-Follow the [PostgreSQL installation guide](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
-
-### 2. Create Configuration
-```bash
-# Create database config
-cp conf/sample.env conf/.env
-
-# Edit conf/.env with your database credentials
-MODE=development
-DEV_USERNAME=your_username
-DEV_PASSWORD=your_password
-DEV_HOST=localhost
-DEV_DB=volleyball_development
-DEV_PORT=5432
-DEV_DRIVER=postgresql
-TEST_DB_URL=sqlite:///./vb.db
-```
-
-### 3. Initialize Database
-```bash
-# Start the API server
-uvicorn src.backend.app.app:app --reload
-
-# In another terminal, seed the database
-python src/api_init_data.py
-
-# Run the main pipeline
-python src/main.py
 ```
 
 ## 📊 Data Sources
@@ -394,12 +261,7 @@ The video clips used for training and testing are sourced from:
    - Player performance metrics
    - Team strategy analysis
 
-2. **📚 Dataset Publication**: Open-source datasets
-   - Video classification dataset
-   - Volleyball object detection dataset
-   - Annotated training data
-
-3. **🎯 Real-time Analytics**: Live match analysis
+2. **🎯 Real-time Analytics**: Live match analysis
    - Real-time statistics
    - Live performance metrics
    - Instant insights for coaches
@@ -408,90 +270,19 @@ The video clips used for training and testing are sourced from:
 
 ```
 volleyball_analytics/
-├── 🧠 src/                           # Main source code
-│   ├── 🎮 ml_manager/               # ML Manager submodule
-│   ├── 🌐 backend/                  # FastAPI backend
-│   ├── 🎬 main.py                   # Main ML pipeline
+├── 🧠 src/                         # Main source code
+│   ├── 📁 ml_manager/               # ML Manager submodule
+│   ├── 📁 vb_backend/                # FastAPI backend
+│   ├── 📁 weights/                   # Model weights
+│   ├── 🎬 main.py                    # Main ML pipeline (coming soon!)
 │   ├── 🎥 demo.py                   # Demo application
-│   └── 🛠️ utilities/               # Utility functions
 ├── 📊 data/                         # Datasets and processed data
-├── 🎯 weights/                      # Model weights (download required)
 ├── 📚 notebooks/                    # Jupyter notebooks
 ├── 🛠️ scripts/                     # Utility scripts
 ├── 📋 conf/                         # Configuration files
 └── 📖 README.md                     # This file
 ```
 
-## 🆘 Troubleshooting
-
-### Common Issues
-
-1. **🚫 Import Errors**
-   ```bash
-   # Ensure submodules are initialized
-   git submodule update --init --recursive
-   
-   # Check Python path
-   python -c "from src.ml_manager import MLManager; print('Success!')"
-   ```
-
-2. **🎯 Model Weights Missing**
-   - Verify weights directory structure
-   - Check download links above
-   - Ensure file permissions are correct
-
-3. **🐍 Dependencies Issues**
-   ```bash
-   # Reinstall dependencies
-   uv sync --reinstall
-   
-   # Or using pip
-   pip install -e .
-   
-   # Or reinstall specific packages
-   pip install torch torchvision ultralytics transformers pytorchvideo opencv-python pillow numpy
-   ```
-
-4. **🎯 PyTorchVideo Compatibility Error** (⚡ **EASIEST SOLUTION**)
-   ```
-   ModuleNotFoundError: No module named 'torchvision.transforms.functional_tensor'
-   ```
-   
-   **💡 Quick Fix** (Recommended):
-   ```bash
-   # Uninstall old pytorchvideo
-   pip uninstall pytorchvideo -y
-   
-   # Install latest version from GitHub (fixes compatibility)
-   pip install git+https://github.com/facebookresearch/pytorchvideo
-   ```
-   
-   **📝 Alternative Manual Fix**:
-   If you encounter this error in your own code, replace:
-   ```python
-   import torchvision.transforms.functional_tensor as F_t
-   ```
-   with:
-   ```python
-   import torchvision.transforms.functional as F_t
-   ```
-
-5. **💾 Database Connection**
-   - Verify PostgreSQL is running
-   - Check `.env` file configuration
-   - Ensure database exists and is accessible
-
-## 🤝 Contributing
-
-1. **🔀 Fork** the repository
-2. **🌿 Create** a feature branch
-3. **💻 Make** your changes
-4. **🧪 Add** tests if applicable
-5. **📝 Submit** a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🔗 Additional Resources
 
@@ -499,6 +290,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **🌐 API Documentation**: [API Guide](https://github.com/masouduut94/volleyball_analytics/wiki/API)
 - **🎮 ML Manager**: [Comprehensive Documentation](src/ml_manager/README.md)
 - **📊 Examples**: [Usage Examples](src/ml_manager/example_usage.py)
+- **🎮 Other datasets**: [Volleyball Spatiotemporal event spotting](https://hoangqnguyen.github.io/stes/)
 
 ---
 
