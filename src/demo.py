@@ -43,6 +43,31 @@ def det2supervision(detections: List[Detection | PlayerKeyPoints]):
     return []
 
 
+def draw_trajectory(annotated_frame: np.ndarray, ball_trajectory: List, trail_num=8):
+    # Keep only last 8 points for trailing effect
+    recent_trajectory = ball_trajectory[-trail_num:]
+    if len(recent_trajectory) > 1:
+        # Draw trajectory line using OpenCV
+        for i in range(1, len(recent_trajectory)):
+            # Calculate alpha (transparency) for fading effect
+            alpha = i / len(recent_trajectory)
+            thickness = max(1, int(3 * alpha))
+
+            # Convert points to integers
+            pt1 = (int(recent_trajectory[i - 1][0]), int(recent_trajectory[i - 1][1]))
+            pt2 = (int(recent_trajectory[i][0]), int(recent_trajectory[i][1]))
+
+            # Draw line segment with varying thickness for trailing effect
+            cv2.line(annotated_frame, pt1, pt2, (0, 255, 255), thickness)  # Yellow trail
+
+        # Draw current ball position as a circle
+        if recent_trajectory:
+            current_pos = (int(recent_trajectory[-1][0]), int(recent_trajectory[-1][1]))
+            cv2.circle(annotated_frame, current_pos, 5, (0, 0, 255), -1)  # Red dot
+
+
+
+
 def run_object_detection(ml_manager: MLManager, video_path: str, output_path: str) -> None:
     """
     Run object detection on video with ball tracking, action detection, and player detection.
@@ -84,7 +109,9 @@ def run_object_detection(ml_manager: MLManager, video_path: str, output_path: st
     ball_annotator = sv.LabelAnnotator(color=sv.Color.YELLOW, text_thickness=1, text_scale=0.5)
     label_annotator = sv.LabelAnnotator(text_thickness=1, text_scale=0.5)
     triangle_annotator = sv.TriangleAnnotator(color=sv.Color.GREEN)
-    
+    ellipse_annotator = sv.EllipseAnnotator(color=sv.Color.GREEN)
+
+
     # Define colors for different action classes (class_id -> color)
     COLORS = {
         "ball": sv.Color.RED,
@@ -115,47 +142,30 @@ def run_object_detection(ml_manager: MLManager, video_path: str, output_path: st
 
             frame_count += 1
             # Detect all objects (actions, ball, players) using detect_all
-            action_detections, ball_detection, player_detections = ml_manager.detect_all(
-                frame, conf_threshold=0.25, iou_threshold=0.45
+            actions, ball, players = ml_manager.detect_all(
+                frame,
+                conf_threshold=0.25,
+                iou_threshold=0.45
             )
 
             # Process ball detections
-            if ball_detection:
-                ball_detections_sv = ball_detection.to_supervision()
+            if ball:
+                ball_detections_sv = ball.to_supervision()
                 # Update ball trajectory for tracking
-                ball_trajectory.append(ball_detection.bbox.center)
+                ball_trajectory.append(ball.bbox.center)
 
             # Process action detections
-            action_detections_sv = det2supervision(detections=action_detections)
+            action_detections_sv = det2supervision(detections=actions)
 
             # Process player detections
-            player_detections_sv = det2supervision(detections=player_detections)
+            player_detections_sv = det2supervision(detections=players)
 
             # Annotate frame
             annotated_frame = frame.copy()
 
             # Draw ball trajectory (8 frames trailing)
             if ball_trajectory:
-                # Keep only last 8 points for trailing effect
-                recent_trajectory = ball_trajectory[-8:]
-                if len(recent_trajectory) > 1:
-                    # Draw trajectory line using OpenCV
-                    for i in range(1, len(recent_trajectory)):
-                        # Calculate alpha (transparency) for fading effect
-                        alpha = i / len(recent_trajectory)
-                        thickness = max(1, int(3 * alpha))
-
-                        # Convert points to integers
-                        pt1 = (int(recent_trajectory[i-1][0]), int(recent_trajectory[i-1][1]))
-                        pt2 = (int(recent_trajectory[i][0]), int(recent_trajectory[i][1]))
-
-                        # Draw line segment with varying thickness for trailing effect
-                        cv2.line(annotated_frame, pt1, pt2, (0, 255, 255), thickness)  # Yellow trail
-
-                    # Draw current ball position as a circle
-                    if recent_trajectory:
-                        current_pos = (int(recent_trajectory[-1][0]), int(recent_trajectory[-1][1]))
-                        cv2.circle(annotated_frame, current_pos, 5, (0, 0, 255), -1)  # Red dot
+                draw_trajectory(annotated_frame, ball_trajectory, 12)
 
             # Draw ball detections with circles (yellow)
             if len(ball_detections_sv) > 0:
@@ -200,7 +210,7 @@ def run_object_detection(ml_manager: MLManager, video_path: str, output_path: st
 
             # Draw player detections with triangles (green)
             if len(player_detections_sv) > 0:
-                annotated_frame = triangle_annotator.annotate(
+                annotated_frame = ellipse_annotator.annotate(
                     scene=annotated_frame,
                     detections=player_detections_sv
                 )
@@ -254,9 +264,7 @@ def run_video_classification(ml_manager: MLManager, video_path: str, output_path
     out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
     # Classification parameters
-    classification_interval = 30  # Classify every 30 frames
     frame_buffer = []
-    current_game_state = "Unknown"
     current_confidence = 0.0
 
     print("Processing video frames...")
@@ -390,14 +398,25 @@ def run_video_classification(ml_manager: MLManager, video_path: str, output_path
 
 
 def main():
+    # TODO:
+    #  Inference:
+    #  1. Add supervision tracker to players.
+    #  2. Add Heatmap for each player later.
+    #  3. Check if there are better and easier to work with 'trackers'.
+    #  4. Add court detection to the pipeline and filter the persons outside court.
+    #  Front-end:
+    #  1. Page 1: Inference page -> Object detection and Video slicing
+    #  2. Page 2: Annotation tool -> Being able to annotate and use the models to help out.
+    #  3. Page 3: Set the court corners and the 1/3rd line. In order to omit the court detection lines.
+    #  4. Page 4: Analysis page -> Shows the court on 2d (or maybe 3d) and plots ball, players locations on the court.
     """
     Example usage of the demo functions.
     """
     # Example video path (update with your actual video path)
-    video_path = "./tokyo2020-poland-vs-iran.mp4"
-    output_detection = "../output/object_detection_demo.mp4"
+    video_path = "../videos/m.mp4"
+    output_detection = "../output/IRN_vs_FRA_object_detection.mp4"
     ml_manager = MLManager()
-    output_classification = "../output/video_classification_demo.mp4"
+    output_classification = "../output/IRN_vs_FRA_video_classification.mp4"
     
     # Create output directory if it doesn't exist
     Path("output").mkdir(exist_ok=True)
@@ -406,7 +425,7 @@ def main():
     run_object_detection(ml_manager, video_path, output_detection)
     
     print("\nRunning video classification demo...")
-    run_video_classification(ml_manager, video_path, output_classification)
+    # run_video_classification(ml_manager, video_path, output_classification)
     
     print("\nDemo completed successfully!")
     print(f"Object detection output: {output_detection}")
