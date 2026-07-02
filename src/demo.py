@@ -66,8 +66,6 @@ def draw_trajectory(annotated_frame: np.ndarray, ball_trajectory: List, trail_nu
             cv2.circle(annotated_frame, current_pos, 5, (0, 0, 255), -1)  # Red dot
 
 
-
-
 def run_object_detection(ml_manager: MLManager, video_path: str, output_path: str) -> None:
     """
     Run object detection on video with ball tracking, action detection, and player detection.
@@ -108,8 +106,9 @@ def run_object_detection(ml_manager: MLManager, video_path: str, output_path: st
     # Initialize supervision annotators
     ball_annotator = sv.LabelAnnotator(color=sv.Color.YELLOW, text_thickness=1, text_scale=0.5)
     label_annotator = sv.LabelAnnotator(text_thickness=1, text_scale=0.5)
+    # Players annotators
     triangle_annotator = sv.TriangleAnnotator(color=sv.Color.GREEN)
-    ellipse_annotator = sv.EllipseAnnotator(color=sv.Color.GREEN)
+    # ellipse_annotator = sv.EllipseAnnotator(color=sv.Color.GREEN)
 
 
     # Define colors for different action classes (class_id -> color)
@@ -210,7 +209,7 @@ def run_object_detection(ml_manager: MLManager, video_path: str, output_path: st
 
             # Draw player detections with triangles (green)
             if len(player_detections_sv) > 0:
-                annotated_frame = ellipse_annotator.annotate(
+                annotated_frame = triangle_annotator.annotate(
                     scene=annotated_frame,
                     detections=player_detections_sv
                 )
