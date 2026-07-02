@@ -403,6 +403,11 @@ def main():
     #  2. Add Heatmap for each player later.
     #  3. Check if there are better and easier to work with 'trackers'.
     #  4. Add court detection to the pipeline and filter the persons outside court.
+    #  5. Add integration of video classification and object detection together and API endpoints in
+    #     the inference.
+    #  6. Update the GIFs and videos on the readme file with the new demos.
+    #  7. After the video classification has created the slice, add it to a job queue and process the
+    #     slices with object detection.
     #  Front-end:
     #  1. Page 1: Inference page -> Object detection and Video slicing
     #  2. Page 2: Annotation tool -> Being able to annotate and use the models to help out.
