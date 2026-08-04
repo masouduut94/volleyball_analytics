@@ -5,68 +5,23 @@ This script provides two main functions:
 1. run_object_detection: Detects and tracks ball with trailing path, detects actions
 2. run_video_classification: Classifies game state every 30 frames and visualizes results
 """
-from typing import List
-
 import cv2
 import numpy as np
 import supervision as sv
 from pathlib import Path
 from rich.progress import Progress
 
-from ml_manager.core import Detection, PlayerKeyPoints
 from ml_manager.ml_manager import MLManager
+from ml_manager.utils.tools import det2supervision, draw_trajectory
+
+from vb_gui.calibration.database import CalibrationDB
+from vb_gui.calibration.calibration_gui import create_gui
 
 
-def det2supervision(detections: List[Detection | PlayerKeyPoints]):
-    if detections:
-        boxes = []
-        confidences = []
-        class_ids = []
-        labels = []
-
-        for detection in detections:
-            if detection.bbox is not None:
-                bbox = detection.bbox
-                boxes.append([bbox.x1, bbox.y1, bbox.x2, bbox.y2])
-                confidences.append(detection.confidence)
-                class_ids.append(detection.class_id)
-                labels.append(f"{detection.class_name}: {detection.confidence:.2f}")
-
-        if boxes:
-            sv_detections = sv.Detections(
-                xyxy=np.array(boxes),
-                confidence=np.array(confidences),
-                class_id=np.array(class_ids)
-            )
-            return sv_detections
-
-    return []
-
-
-def draw_trajectory(annotated_frame: np.ndarray, ball_trajectory: List, trail_num=8):
-    # Keep only last 8 points for trailing effect
-    recent_trajectory = ball_trajectory[-trail_num:]
-    if len(recent_trajectory) > 1:
-        # Draw trajectory line using OpenCV
-        for i in range(1, len(recent_trajectory)):
-            # Calculate alpha (transparency) for fading effect
-            alpha = i / len(recent_trajectory)
-            thickness = max(1, int(3 * alpha))
-
-            # Convert points to integers
-            pt1 = (int(recent_trajectory[i - 1][0]), int(recent_trajectory[i - 1][1]))
-            pt2 = (int(recent_trajectory[i][0]), int(recent_trajectory[i][1]))
-
-            # Draw line segment with varying thickness for trailing effect
-            cv2.line(annotated_frame, pt1, pt2, (0, 255, 255), thickness)  # Yellow trail
-
-        # Draw current ball position as a circle
-        if recent_trajectory:
-            current_pos = (int(recent_trajectory[-1][0]), int(recent_trajectory[-1][1]))
-            cv2.circle(annotated_frame, current_pos, 5, (0, 0, 255), -1)  # Red dot
-
-
-def run_object_detection(ml_manager: MLManager, video_path: str, output_path: str) -> None:
+def run_object_detection(ml_manager: MLManager,
+                         video_path: str,
+                         output_path: str,
+                         court_calibration_json: dict) -> None:
     """
     Run object detection on video with ball tracking, action detection, and player detection.
     
@@ -79,19 +34,20 @@ def run_object_detection(ml_manager: MLManager, video_path: str, output_path: st
     - Saves the output video
     
     Args:
+        court_calibration_json:
         ml_manager: The MLManager instance.
         video_path: Path to input video file.
         output_path: Path to save output video with visualizations
     """
     print("Initializing ML Manager...")
-    
+
     ml_manager.check_models()
-    
+
     print("Opening video...")
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise RuntimeError(f"Could not open video: {video_path}")
-    
+
     # Get video properties
     width, height, fps, _, total_frames = [int(cap.get(prop)) for prop in range(3, 8)]
     print(f"Video properties: {width}x{height}, {fps} FPS, {total_frames} frames")
@@ -102,14 +58,13 @@ def run_object_detection(ml_manager: MLManager, video_path: str, output_path: st
     # Setup video writer
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-    
+
     # Initialize supervision annotators
     ball_annotator = sv.LabelAnnotator(color=sv.Color.YELLOW, text_thickness=1, text_scale=0.5)
     label_annotator = sv.LabelAnnotator(text_thickness=1, text_scale=0.5)
     # Players annotators
     triangle_annotator = sv.TriangleAnnotator(color=sv.Color.GREEN)
     # ellipse_annotator = sv.EllipseAnnotator(color=sv.Color.GREEN)
-
 
     # Define colors for different action classes (class_id -> color)
     COLORS = {
@@ -119,8 +74,9 @@ def run_object_detection(ml_manager: MLManager, video_path: str, output_path: st
         "set": sv.Color.from_hex("#FFA500"),
         "spike": sv.Color.from_hex("#FFC0CB")
     }
-    
+
     # Tracking state
+    tracker = sv.ByteTrack()
     ball_trajectory = []
     frame_count = 0
     print("Processing video frames...")
@@ -147,32 +103,34 @@ def run_object_detection(ml_manager: MLManager, video_path: str, output_path: st
                 iou_threshold=0.45
             )
 
-            # Process ball detections
-            if ball:
-                ball_detections_sv = ball.to_supervision()
-                # Update ball trajectory for tracking
-                ball_trajectory.append(ball.bbox.center)
-
-            # Process action detections
-            action_detections_sv = det2supervision(detections=actions)
-
-            # Process player detections
-            player_detections_sv = det2supervision(detections=players)
-
             # Annotate frame
             annotated_frame = frame.copy()
 
-            # Draw ball trajectory (8 frames trailing)
-            if ball_trajectory:
-                draw_trajectory(annotated_frame, ball_trajectory, 12)
-
-            # Draw ball detections with circles (yellow)
-            if len(ball_detections_sv) > 0:
+            # Process ball detections
+            if ball:
+                ball_detections_sv = ball.to_supervision()
                 annotated_frame = ball_annotator.annotate(
                     scene=annotated_frame,
                     detections=ball_detections_sv,
                     labels=["Ball"]
                 )
+                # Update ball trajectory for tracking
+                ball_trajectory.append(ball.bbox.center)
+
+            court = court_calibration_json["court_corners"]
+            # TODO: Filter players outside court
+            # ml_manager.filter_people_outside_court(players, court)
+
+            # Process action detections
+            action_detections_sv = det2supervision(detections=actions)
+
+            # Process player detections
+            player_detections_sv = det2supervision(detections=players, tracking_instance=tracker)
+
+            # Draw ball trajectory (8 frames trailing)
+            if ball_trajectory:
+                draw_trajectory(annotated_frame, ball_trajectory, 12)
+
 
             # Draw action detections with class-specific colors
             if len(action_detections_sv) > 0:
@@ -213,6 +171,15 @@ def run_object_detection(ml_manager: MLManager, video_path: str, output_path: st
                     scene=annotated_frame,
                     detections=player_detections_sv
                 )
+                labels = [
+                    f"Player #{tracker_id}"
+                    for tracker_id in player_detections_sv.tracker_id
+                ]
+                annotated_frame = label_annotator.annotate(
+                    scene=annotated_frame,
+                    detections=player_detections_sv,
+                    labels=labels
+                )
 
             # Write frame to output video
             out.write(annotated_frame)
@@ -220,7 +187,6 @@ def run_object_detection(ml_manager: MLManager, video_path: str, output_path: st
         # Cleanup
         cap.release()
         out.release()
-        ml_manager.cleanup()
 
         print(f"Object detection completed (ball, actions, players). Output saved to: {output_path}")
 
@@ -316,58 +282,17 @@ def run_video_classification(ml_manager: MLManager, video_path: str, output_path
             font_scale = 0.7
             thickness = 2
 
-            text_size = cv2.getTextSize(
-                state_text,
-                font,
-                font_scale,
-                thickness
-            )[0]
+            text_size = cv2.getTextSize(state_text, font, font_scale, thickness)[0]
 
-            cv2.rectangle(
-                annotated_frame,
-                (10, 10),
-                (text_size[0] + 20, 100),
-                (0, 0, 0),
-                -1
-            )
+            cv2.rectangle(annotated_frame, (10, 10), (text_size[0] + 20, 100), (0, 0, 0), -1)
 
-            cv2.rectangle(
-                annotated_frame,
-                (10, 10),
-                (text_size[0] + 20, 100),
-                (255, 255, 255),
-                2
-            )
+            cv2.rectangle(annotated_frame, (10, 10), (text_size[0] + 20, 100), (255, 255, 255), 2)
 
-            cv2.putText(
-                annotated_frame,
-                state_text,
-                (15, 35),
-                font,
-                font_scale,
-                (255, 255, 255),
-                thickness
-            )
+            cv2.putText(annotated_frame, state_text, (15, 35), font, font_scale, (255, 255, 255), thickness)
 
-            cv2.putText(
-                annotated_frame,
-                confidence_text,
-                (15, 60),
-                font,
-                font_scale,
-                (255, 255, 255),
-                thickness
-            )
+            cv2.putText(annotated_frame, confidence_text, (15, 60), font, font_scale, (255, 255, 255), thickness)
 
-            cv2.putText(
-                annotated_frame,
-                frame_text,
-                (15, 85),
-                font,
-                font_scale,
-                (255, 255, 255),
-                thickness
-            )
+            cv2.putText(annotated_frame, frame_text, (15, 85), font, font_scale, (255, 255, 255), thickness)
 
             if current_game_state == "Play":
                 color = (0, 255, 0)
@@ -378,13 +303,7 @@ def run_video_classification(ml_manager: MLManager, video_path: str, output_path
             else:
                 color = (255, 255, 255)
 
-            cv2.rectangle(
-                annotated_frame,
-                (10, 10),
-                (text_size[0] + 20, 100),
-                color,
-                3
-            )
+            cv2.rectangle(annotated_frame, (10, 10), (text_size[0] + 20, 100), color, 3)
 
             out.write(annotated_frame)
 
@@ -398,6 +317,7 @@ def run_video_classification(ml_manager: MLManager, video_path: str, output_path
 
 def main():
     # TODO:
+    #  Design the software based on this: https://chatgpt.com/share/6a6deeb9-ba74-83eb-8290-3a2afbf184f4
     #  Inference:
     #  1. Add supervision tracker to players.
     #  2. Add Heatmap for each player later.
@@ -408,6 +328,7 @@ def main():
     #  6. Update the GIFs and videos on the readme file with the new demos.
     #  7. After the video classification has created the slice, add it to a job queue and process the
     #     slices with object detection.
+    #  8. 2D visualization of the court and the ball bounce points.
     #  Front-end:
     #  1. Page 1: Inference page -> Object detection and Video slicing
     #  2. Page 2: Annotation tool -> Being able to annotate and use the models to help out.
@@ -417,20 +338,33 @@ def main():
     Example usage of the demo functions.
     """
     # Example video path (update with your actual video path)
-    video_path = "../videos/m.mp4"
-    output_detection = "../output/IRN_vs_FRA_object_detection.mp4"
+    root_path = Path().cwd().parent
+    db_path = root_path.joinpath("db").joinpath('calibration.db').as_posix()
     ml_manager = MLManager()
-    output_classification = "../output/IRN_vs_FRA_video_classification.mp4"
-    
+    # output_classification = "../output/IRN_vs_FRA_video_classification.mp4"
+
+
+    # Calibration of the video for court points.
+    db = CalibrationDB(db_path=db_path)
+
+    # Select video using the GUI.
+    result_json, video_path = create_gui(
+        video_path=None,
+        db_instance=db,
+    )
+
+    output_detection = root_path.joinpath("output").joinpath(video_path.stem + '_object_detection.mp4').as_posix()
+
+    #
     # Create output directory if it doesn't exist
     Path("output").mkdir(exist_ok=True)
-    
+
     print("Running object detection demo...")
-    run_object_detection(ml_manager, video_path, output_detection)
-    
-    print("\nRunning video classification demo...")
+    run_object_detection(ml_manager, video_path, output_detection, result_json)
+
+    # print("\nRunning video classification demo...")
     # run_video_classification(ml_manager, video_path, output_classification)
-    
+
     print("\nDemo completed successfully!")
     print(f"Object detection output: {output_detection}")
     # print(f"Video classification output: {output_classification}")
