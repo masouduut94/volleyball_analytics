@@ -7,3 +7,6 @@
 [submodule "src/vb_gui/vb_annotator"]
 	path = src/vb_gui/vb_annotator
 	url = git@github.com:masouduut94/volleyball-annotation-tool.git
+[submodule "volleyball-annotation-tool"]
+	path = volleyball-annotation-tool
+	url = git@github.com:masouduut94/volleyball-annotation-tool.git
