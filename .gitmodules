@@ -4,3 +4,6 @@
 [submodule "src/vb_backend"]
 	path = src/vb_backend
 	url = git@github.com:masouduut94/volleyball-backend.git
+[submodule "src/vb_gui/vb_annotator"]
+	path = src/vb_gui/vb_annotator
+	url = git@github.com:masouduut94/volleyball-annotation-tool.git

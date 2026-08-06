@@ -33,6 +33,7 @@ dependencies = [
     "ultralytics>=8.4.67",
     "uvicorn>=0.49.0",
     "pyside6>=6.11.1",
+    "pyqt6>=6.11.0",
 ]
 
 [[tool.uv.index]]

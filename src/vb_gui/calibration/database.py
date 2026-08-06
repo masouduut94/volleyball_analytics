@@ -1,34 +1,15 @@
+import json
 from pathlib import Path
 from datetime import datetime
 
-from sqlalchemy import (
-    create_engine,
-    String,
-    Integer,
-    DateTime,
-    Text,
-    Boolean,
-)
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapped,
-    mapped_column,
-    sessionmaker,
-)
-import json
-
-
-# -----------------------------
-# SQLAlchemy Base
-# -----------------------------
-class Base(DeclarativeBase):
-    pass
+from sqlalchemy import create_engine, String, Integer, DateTime, Text, Boolean
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 
 # -----------------------------
 # ORM Model for Calibrations
 # -----------------------------
-class CalibrationRecord(Base):
+class CalibrationRecord(DeclarativeBase):
     __tablename__ = "calibrations"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -59,7 +40,7 @@ class CalibrationRecord(Base):
 # -----------------------------
 # ORM Model for Court Models
 # -----------------------------
-class CourtModel(Base):
+class CourtModel(DeclarativeBase):
     __tablename__ = "court_models"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -89,7 +70,7 @@ class CalibrationDB:
             future=True,
         )
 
-        Base.metadata.create_all(self.engine)
+        DeclarativeBase.metadata.create_all(self.engine)
 
         self.Session = sessionmaker(
             bind=self.engine,
