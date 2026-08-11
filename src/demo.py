@@ -112,7 +112,7 @@ def run_object_detection(ml_manager: MLManager,
                 annotated_frame = ball_annotator.annotate(
                     scene=annotated_frame,
                     detections=ball_detections_sv,
-                    labels=["Ball"]
+                    labels=["ball"]
                 )
                 # Update ball trajectory for tracking
                 ball_trajectory.append(ball.bbox.center)
