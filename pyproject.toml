@@ -35,13 +35,14 @@ dependencies = [
     "pyside6>=6.11.1",
     "pyqt6>=6.11.0",
     "shapely>=2.1.2",
+    "numba>=0.67.0",
 ]
 
 [[tool.uv.index]]
-name = "pytorch-cu130"
-url = "https://download.pytorch.org/whl/cu130"
+name = "pytorch-cu132"
+url = "https://download.pytorch.org/whl/cu132"
 explicit = true
 
 [tool.uv.sources]
-torch = [{ index = "pytorch-cu130" }]
-torchvision = [{ index = "pytorch-cu130" }]
+torch = [{ index = "pytorch-cu132" }]
+torchvision = [{ index = "pytorch-cu132" }]
